@@ -1,0 +1,6 @@
+.*/
+input/
+output/
+submission/
+.DS_Store
+__pycache__/

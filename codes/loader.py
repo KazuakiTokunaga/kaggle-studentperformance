@@ -18,8 +18,8 @@ class DataLoader():
 
         print(f'read_csv from {self.input_path}')
         df_train = pl.read_csv(f'{self.input_path}/train.csv').drop(["fullscreen", "hq", "music"])
-        df_test = pl.read_csv(f'{self.input_path}/test.csv')
-        df_labels = pl.read_csv(f'{self.input_path}/train_labels.csv')
+        df_test = pd.read_csv(f'{self.input_path}/test.csv')
+        df_labels = pd.read_csv(f'{self.input_path}/train_labels.csv')
         df_submission = pd.read_csv(f'{self.input_path}/sample_submission.csv')
 
         if self.options.get('split_labels'):
@@ -32,6 +32,6 @@ class DataLoader():
             df_train = df.filter(pl.col('session_id').is_in(sample_session))
     
             if self.options.get('split_labels'):
-                df_labels = df_labels.filter(pl.col('session').is_in(sample_session))
+                df_labels = df_labels[df_labels['session'].isin(sample_session)]
 
         return df_train, df_test, df_labels, df_submission

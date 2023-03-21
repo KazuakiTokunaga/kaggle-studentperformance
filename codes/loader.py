@@ -27,7 +27,7 @@ class DataLoader():
 
         if self.options.get('sampling'):
             n_sample = self.options.get('sampling')
-            sample_session = df.get_column('session_id').unique().sample(n_sample).to_list()
+            sample_session = df_train.get_column('session_id').unique().sample(n_sample).to_list()
             
             df_train = df_train.filter(pl.col('session_id').is_in(sample_session))
     

@@ -26,7 +26,7 @@ class DataLoader():
             df_labels = preprocess.split_df_labels(df_labels)
 
         if self.options.get('sampling'):
-            n_sample = options.get('sampling')
+            n_sample = self.options.get('sampling')
             sample_session = df.get_column('session_id').unique().sample(n_sample).to_list()
             
             df_train = df.filter(pl.col('session_id').is_in(sample_session))

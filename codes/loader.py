@@ -29,7 +29,7 @@ class DataLoader():
             n_sample = self.options.get('sampling')
             sample_session = df.get_column('session_id').unique().sample(n_sample).to_list()
             
-            df_train = df.filter(pl.col('session_id').is_in(sample_session))
+            df_train = df_train.filter(pl.col('session_id').is_in(sample_session))
     
             if self.options.get('split_labels'):
                 df_labels = df_labels[df_labels['session'].isin(sample_session)]

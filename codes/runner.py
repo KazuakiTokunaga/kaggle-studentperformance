@@ -59,18 +59,19 @@ class Runner():
 
         # sessionごとにまとめる
         self.df1 = preprocess.feature_engineer_pl(df1, grp='0-4', use_extra=True, feature_suffix='')
-        print('df1 done',df1.shape)
+        print('df1 done', self.df1.shape)
         self.df2 = preprocess.feature_engineer_pl(df2, grp='5-12', use_extra=True, feature_suffix='')
-        print('df2 done',df2.shape)
+        print('df2 done', self.df2.shape)
         self.df3 = preprocess.feature_engineer_pl(df3, grp='13-22', use_extra=True, feature_suffix='')
-        print('df3 done',df3.shape)
+        print('df3 done', self.df3.shape)
     
 
     def run_validation(self, ):
 
-        self.df1 = utils.pl_to_pd(self.df1)
-        self.df2 = utils.pl_to_pd(self.df2)
-        self.df3 = utils.pl_to_pd(self.df3)
+        if type(self.df1) == pl.DataFrame:
+            self.df1 = utils.pl_to_pd(self.df1)
+            self.df2 = utils.pl_to_pd(self.df2)
+            self.df3 = utils.pl_to_pd(self.df3)
 
         ALL_USERS = self.df1.index.unique()
         print('We will train with', len(ALL_USERS) ,'users info')
@@ -111,11 +112,11 @@ class Runner():
 
                 # TRAIN MODEL
                 clf = RandomForestClassifier() 
-                clf.fit(train_x[FEATURES].astype('float32'), train_y['correct'])
+                clf.fit(train_x[FEATURES], train_y['correct'])
                 
                 # SAVE MODEL, PREDICT VALID OOF
                 models[f'{grp}_{t}'] = clf
-                self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x[FEATURES].astype('float32'))[:,1]
+                self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x[FEATURES])[:,1]
 
     def evaluate_validation(self, ):
 

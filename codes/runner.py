@@ -72,6 +72,10 @@ class Runner():
             self.df1 = utils.pl_to_pd(self.df1)
             self.df2 = utils.pl_to_pd(self.df2)
             self.df3 = utils.pl_to_pd(self.df3)
+        
+        self.df1 = self.df1.fillna(-1)
+        self.df2 = self.df2.fillna(-1)
+        self.df3 = self.df3.fillna(-1)
 
         ALL_USERS = self.df1.index.unique()
         print('We will train with', len(ALL_USERS) ,'users info')

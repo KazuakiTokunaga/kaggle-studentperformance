@@ -8,16 +8,25 @@ from sklearn.metrics import f1_score
 
 from codes import utils, loader, preprocess
 
+logger = utils.Logger()
 
 class Runner():
 
-    def __init__(self, input_path='/kaggle/input/studentperformance-my/'):
+    def __init__(self, input_path='/kaggle/input/studentperformance-my/', 
+        load_options={
+            'sampling': 5000,
+            'split_labels': True
+        },
+        validation_options={
+            'n_fold': 5
+        }):
 
         self.input_path = input_path
+        self.load_options = load_options
 
 
     def load_dataset(self, ):
-        dataloader = loader.DataLoader(input_path=self.input_path)
+        dataloader = loader.DataLoader(input_path=self.input_path, options=self.load_options)
         self.df_train, self.df_test, self.df_labels, self.df_submission = dataloader.load()
     
 
@@ -77,11 +86,11 @@ class Runner():
         self.df2 = self.df2.fillna(-1)
         self.df3 = self.df3.fillna(-1)
 
-        ALL_USERS = self.df1.index.unique()
-        print('We will train with', len(ALL_USERS) ,'users info')
+        self.ALL_USERS = self.df1.index.unique()
+        print('We will train with', len(self.ALL_USERS) ,'users info')
 
         gkf = GroupKFold(n_splits=5)
-        self.oof = pd.DataFrame(data=np.zeros((len(ALL_USERS),18)), index=ALL_USERS)
+        self.oof = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ALL_USERS)
         models = {}
 
         # COMPUTE CV SCORE WITH 5 GROUP K FOLD
@@ -128,7 +137,7 @@ class Runner():
         true = self.oof.copy()
         for k in range(18):
             # GET TRUE LABELS
-            tmp = self.df_labels.loc[self.df_labels.q == k+1].set_index('session').loc[ALL_USERS]
+            tmp = self.df_labels.loc[self.df_labels.q == k+1].set_index('session').loc[self.ALL_USERS]
             true[k] = tmp.correct.values
 
         # FIND BEST THRESHOLD TO CONVERT PROBS INTO 1s AND 0s

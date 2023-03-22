@@ -6,7 +6,6 @@ def pl_to_pd(df, index_col='session_id'):
     return df.to_pandas().set_index(index_col)
 
 
-
 class Logger:
 
     def __init__(self, log_path='/kaggle/working'):

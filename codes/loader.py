@@ -1,8 +1,11 @@
 import pandas as pd
 import numpy as np
 import polars as pl
+import logging
 
 from codes import utils, preprocess
+
+logger = utils.Logger()
 
 class DataLoader():
 
@@ -13,6 +16,7 @@ class DataLoader():
 
         self.input_path = input_path
         self.options = options
+        
         logger.info('test')
     
     def load(self, ):

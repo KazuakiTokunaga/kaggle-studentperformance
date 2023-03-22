@@ -79,11 +79,11 @@ class Runner():
 
         # sessionごとにまとめる
         self.df1 = preprocess.feature_engineer_pl(df1, grp='0-4', use_extra=True, feature_suffix='')
-        logger.info('df1 done', self.df1.shape)
+        logger.info(f'df1 done: {self.df1.shape}')
         self.df2 = preprocess.feature_engineer_pl(df2, grp='5-12', use_extra=True, feature_suffix='')
-        logger.info('df2 done', self.df2.shape)
+        logger.info(f'df2 done: {self.df2.shape}')
         self.df3 = preprocess.feature_engineer_pl(df3, grp='13-22', use_extra=True, feature_suffix='')
-        logger.info('df3 done', self.df3.shape)
+        logger.info(f'df3 done: {self.df3.shape}')
     
 
     def run_validation(self, ):
@@ -98,7 +98,8 @@ class Runner():
         self.df3 = self.df3.fillna(-1)
 
         self.ALL_USERS = self.df1.index.unique()
-        logger.info('We will train with', len(self.ALL_USERS) ,'users info')
+        user_cnt = len(self.ALL_USERS)
+        logger.info(f'We will train with {user_cnt} users info')
 
         gkf = GroupKFold(n_splits=self.n_fold)
         self.oof = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ALL_USERS)
@@ -108,7 +109,6 @@ class Runner():
 
             # ITERATE THRU QUESTIONS 1 THRU 18
             for t in range(1,19):
-                logger.info(t,', ',end='')
                 
                 # USE THIS TRAIN DATA WITH THESE QUESTIONS
                 if t<=3: 
@@ -154,8 +154,8 @@ class Runner():
         scores = []; thresholds = []
         best_score = 0; best_threshold = 0
 
+        logger.info('search optimal threshold')
         for threshold in np.arange(0.4,0.81,0.01):
-            logger.info(f'{threshold:.02f}, ',end='')
             preds = (self.oof.values.reshape((-1))>threshold).astype('int')
             m = f1_score(true.values.reshape((-1)), preds, average='macro')   
             scores.append(m)
@@ -163,18 +163,18 @@ class Runner():
             if m>best_score:
                 best_score = m
                 best_threshold = threshold
-        logger.info(f'\noptimal threshold: {best_threshold}')
+        logger.info(f'optimal threshold: {best_threshold}')
         
         logger.info('When using optimal threshold...')
         for k in range(18):
                 
             # COMPUTE F1 SCORE PER QUESTION
             m = f1_score(true[k].values, (self.oof[k].values>best_threshold).astype('int'), average='macro')
-            logger.info(f'Q{k}: F1 =',m)
+            logger.info(f'Q{k}: F1 = {m}')
             
         # COMPUTE F1 SCORE OVERALL
         m = f1_score(true.values.reshape((-1)), (self.oof.values.reshape((-1))>best_threshold).astype('int'), average='macro')
-        logger.info('==> Overall F1 =',m)
+        logger.info(f'==> Overall F1 = {m}')
 
 
     def main(self, ):

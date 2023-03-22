@@ -16,12 +16,10 @@ class DataLoader():
 
         self.input_path = input_path
         self.options = options
-        
-        logger.info('test')
     
     def load(self, ):
 
-        print(f'read_csv from {self.input_path}')
+        logger.info(f'read_csv from {self.input_path}')
         df_train = pl.read_csv(f'{self.input_path}/train.csv').drop(["fullscreen", "hq", "music"])
         df_test = pd.read_csv(f'{self.input_path}/test.csv')
         df_labels = pd.read_csv(f'{self.input_path}/train_labels.csv')

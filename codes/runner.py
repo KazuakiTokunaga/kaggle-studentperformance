@@ -24,7 +24,7 @@ class Runner():
         self.input_path = input_path
         self.load_options = load_options
         
-        self.n_fold = self.validation_options.get('n_fold')
+        self.n_fold = validation_options.get('n_fold')
 
 
     def load_dataset(self, ):

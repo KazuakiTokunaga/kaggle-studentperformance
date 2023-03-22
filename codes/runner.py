@@ -23,6 +23,8 @@ class Runner():
 
         self.input_path = input_path
         self.load_options = load_options
+        
+        self.n_fold = self.validation_options.get('n_fold')
 
 
     def load_dataset(self, ):
@@ -89,11 +91,10 @@ class Runner():
         self.ALL_USERS = self.df1.index.unique()
         print('We will train with', len(self.ALL_USERS) ,'users info')
 
-        gkf = GroupKFold(n_splits=5)
+        gkf = GroupKFold(n_splits=self.n_fold)
         self.oof = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ALL_USERS)
         models = {}
 
-        # COMPUTE CV SCORE WITH 5 GROUP K FOLD
         for i, (train_index, test_index) in enumerate(gkf.split(X=self.df1, groups=self.df1.index)):
 
             # ITERATE THRU QUESTIONS 1 THRU 18

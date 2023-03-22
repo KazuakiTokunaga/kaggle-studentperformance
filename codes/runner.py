@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import polars as pl
+import gc
 
 from sklearn.model_selection import KFold, GroupKFold
 from sklearn.ensemble import RandomForestClassifier
@@ -9,6 +10,7 @@ from sklearn.metrics import f1_score
 from codes import utils, loader, preprocess
 
 logger = utils.Logger()
+
 
 class Runner():
 
@@ -30,6 +32,13 @@ class Runner():
     def load_dataset(self, ):
         dataloader = loader.DataLoader(input_path=self.input_path, options=self.load_options)
         self.df_train, self.df_test, self.df_labels, self.df_submission = dataloader.load()
+
+
+    def delete_df_train(self, ):
+        
+        print('Delete df_train and run a full collection.')
+        del self.df_train
+        gc.collect()
     
 
     def engineer_features(self, ):
@@ -154,7 +163,8 @@ class Runner():
             if m>best_score:
                 best_score = m
                 best_threshold = threshold
-
+        print(f'\noptimal threshold: {best_threshold}')
+        
         print('When using optimal threshold...')
         for k in range(18):
                 

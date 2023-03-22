@@ -13,6 +13,7 @@ class DataLoader():
 
         self.input_path = input_path
         self.options = options
+        logger.info('test')
     
     def load(self, ):
 

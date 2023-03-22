@@ -166,15 +166,19 @@ class Runner():
         logger.info(f'optimal threshold: {best_threshold}')
         
         logger.info('When using optimal threshold...')
+        scores = []
+        
+        m = f1_score(true.values.reshape((-1)), (self.oof.values.reshape((-1))>best_threshold).astype('int'), average='macro')
+        logger.info(f'Overall F1 = {m}')
+        scores.append(m)
+
         for k in range(18):
-                
-            # COMPUTE F1 SCORE PER QUESTION
             m = f1_score(true[k].values, (self.oof[k].values>best_threshold).astype('int'), average='macro')
             logger.info(f'Q{k}: F1 = {m}')
-            
-        # COMPUTE F1 SCORE OVERALL
-        m = f1_score(true.values.reshape((-1)), (self.oof.values.reshape((-1))>best_threshold).astype('int'), average='macro')
-        logger.info(f'==> Overall F1 = {m}')
+            scores.append(m)
+        
+        logger.result_scores('test', scores)
+
 
 
     def main(self, ):

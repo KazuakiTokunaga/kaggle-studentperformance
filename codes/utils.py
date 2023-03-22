@@ -38,8 +38,8 @@ class Logger:
         # 計算結果をコンソールと計算結果用ログに出力
         dic = dict()
         dic['name'] = run_name
-        dic['score'] = np.mean(scores)
-        for i, score in enumerate(scores):
+        dic['overall_score'] = scores[0]
+        for i, score in enumerate(scores[1:]):
             dic[f'score{i}'] = score
         self.result(self.to_ltsv(dic))
 

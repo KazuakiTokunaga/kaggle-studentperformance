@@ -68,7 +68,11 @@ class WriteSheet:
         gc = gspread.authorize(credentials)
         self.worksheet = gc.open_by_key(sheet_key)
     
+
     def write(self, data, sheet_name, table_range='A1'):
 
         sheet = self.worksheet.worksheet(sheet_name)
-        sheet.append_row(data, table_range=table_range)
+
+        # 辞書のみJSONに変換、ほかはそのままにして、書き込む
+        data_json = [json.dumps(d) if type(d) == dict else d for d in data]
+        sheet.append_row(data_json, table_range=table_range)

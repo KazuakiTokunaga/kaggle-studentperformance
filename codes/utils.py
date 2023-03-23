@@ -68,7 +68,7 @@ class WriteSheet:
         gc = gspread.authorize(credentials)
         self.worksheet = gc.open_by_key(sheet_key)
     
-    def write(data, sheet_name=sheet_name, table_range='A1'):
+    def write(data, sheet_name, table_range='A1'):
 
         sheet = self.worksheet.worksheet(sheet_name)
         sheet.append_row(data, table_range=table_range)

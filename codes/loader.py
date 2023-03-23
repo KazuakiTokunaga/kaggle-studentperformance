@@ -30,8 +30,9 @@ class DataLoader():
 
         if self.options.get('sampling'):
             n_sample = self.options.get('sampling')
+            logger.info(f'Sampling data to {n_sample} sessions.')
+
             sample_session = df_train.get_column('session_id').unique().sample(n_sample).to_list()
-            
             df_train = df_train.filter(pl.col('session_id').is_in(sample_session))
     
             if self.options.get('split_labels'):

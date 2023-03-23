@@ -1,8 +1,14 @@
+import logging
+import datetime
+import gspread
+import json
+
 import pandas as pd
 import numpy as np
 import polars as pl
-import logging
-import datetime
+
+from oauth2client.service_account import ServiceAccountCredentials
+
 
 def pl_to_pd(df, index_col='session_id'):
     return df.to_pandas().set_index(index_col)
@@ -48,3 +54,21 @@ class Logger:
 
     def to_ltsv(self, dic):
         return '\t'.join(['{}:{}'.format(key, value) for key, value in dic.items()])
+
+
+class WriteSheet:
+
+    def __init__(self, 
+        json_key='/kaggle/input/studentperformance-my/ktokunaga-4094cf694f5c.json',
+        sheet_key = '1NCWjO_3V99tLybvTiwxO54_bZVMpLB1G_IEo2fq7NVk',
+    ):
+        
+        scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
+        credentials = ServiceAccountCredentials.from_json_keyfile_name(json_key, scope)
+        gc = gspread.authorize(credentials)
+        self.worksheet = gc.open_by_key(sheet_key)
+    
+    def write(data, sheet_name=sheet_name, table_range='A1'):
+
+        sheet = self.worksheet.worksheet(sheet_name)
+        sheet.append_row(data, table_range=table_range)

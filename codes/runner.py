@@ -35,13 +35,14 @@ class Runner():
 
 
     def delete_df_train(self, ):
-        
         logger.info('Delete df_train and run a full collection.')
+
         del self.df_train
         gc.collect()
     
 
     def engineer_features(self, ):
+        logger.info('Start engineer features.')
 
         # レコード単位の処理
         columns = [
@@ -89,6 +90,8 @@ class Runner():
     def run_validation(self, ):
 
         if type(self.df1) == pl.DataFrame:
+            logger.info('Convert polars df to pandas df.')
+
             self.df1 = utils.pl_to_pd(self.df1)
             self.df2 = utils.pl_to_pd(self.df2)
             self.df3 = utils.pl_to_pd(self.df3)
@@ -105,8 +108,10 @@ class Runner():
         self.oof = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ALL_USERS)
         models = {}
 
+        logger.info(f'Start validation with {self.n_fold} folds.')
         for i, (train_index, test_index) in enumerate(gkf.split(X=self.df1, groups=self.df1.index)):
 
+            logger.info(f'Fold {i}')
             # ITERATE THRU QUESTIONS 1 THRU 18
             for t in range(1,19):
                 
@@ -142,6 +147,7 @@ class Runner():
                 self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x[FEATURES])[:,1]
 
     def evaluate_validation(self, ):
+        logger.info('Start evaluating validations.')
 
         # PUT TRUE LABELS INTO DATAFRAME WITH 18 COLUMNS
         true = self.oof.copy()
@@ -154,7 +160,7 @@ class Runner():
         scores = []; thresholds = []
         best_score = 0; best_threshold = 0
 
-        logger.info('search optimal threshold')
+        logger.info('Search optimal threshold.')
         for threshold in np.arange(0.4,0.81,0.01):
             preds = (self.oof.values.reshape((-1))>threshold).astype('int')
             m = f1_score(true.values.reshape((-1)), preds, average='macro')   

@@ -1,13 +1,16 @@
 {
-    "booster": "gbtree",
-    "tree_method": "hist",
-    "objective": "binary:logistic",
-    "eval_metric":"logloss",
-    "learning_rate": 0.02,
-    "alpha": 8,
-    "max_depth": 4,
-    "subsample":0.8,
-    "colsample_bytree": 0.5,
-    "seed": 42,
-    "n_estimators": 10
+    "base": {
+        "booster": "gbtree",
+        "tree_method": "hist",
+        "objective": "binary:logistic",
+        "eval_metric":"logloss",
+        "learning_rate": 0.02,
+        "alpha": 8,
+        "max_depth": 4,
+        "subsample":0.8,
+        "colsample_bytree": 0.5,
+        "seed": 42,
+        "n_estimators": 10
+    },
+    "n_estimators": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
 }

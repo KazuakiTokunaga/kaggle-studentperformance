@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import polars as pl
 import gc
+import datetime
 
 from sklearn.model_selection import KFold, GroupKFold
 from sklearn.ensemble import RandomForestClassifier
@@ -14,15 +15,18 @@ logger = utils.Logger()
 
 class Runner():
 
-    def __init__(self, input_path='/kaggle/input/student-performance-my', 
+    def __init__(self, run_fold_name = 'run',
+        input_path='/kaggle/input/student-performance-my', 
         load_options={
             'sampling': 5000,
-            'split_labels': True
+            'split_labels': True,
+            'parquet': True
         },
         validation_options={
             'n_fold': 5
         }):
 
+        self.run_fold_name = run_fold_name
         self.input_path = input_path
         self.load_options = load_options
         
@@ -172,7 +176,7 @@ class Runner():
         logger.info(f'optimal threshold: {best_threshold}')
         
         logger.info('When using optimal threshold...')
-        scores = []
+        self.scores = []
         
         m = f1_score(true.values.reshape((-1)), (self.oof.values.reshape((-1))>best_threshold).astype('int'), average='macro')
         logger.info(f'Overall F1 = {m}')
@@ -186,6 +190,15 @@ class Runner():
         logger.result_scores('test', scores)
 
 
+    def write_sheet(self, ):
+
+        data = [str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')), self.run_fold_name] + self.scores
+        data.append(self.load_options)
+        data.append(self.validation_options)
+
+        google_sheet = utils.WriteSheet()
+        google_sheet.write(data, sheet_name='cv_scores')
+
 
     def main(self, ):
 
@@ -193,4 +206,5 @@ class Runner():
         self.engineer_features()
         self.run_validation()
         self.evaluate_validation()
+        self.write_sheet()
         

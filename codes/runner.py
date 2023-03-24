@@ -181,12 +181,12 @@ class Runner():
         
         m = f1_score(true.values.reshape((-1)), (self.oof.values.reshape((-1))>best_threshold).astype('int'), average='macro')
         logger.info(f'Overall F1 = {m}')
-        scores.append(m)
+        self.scores.append(m)
 
         for k in range(18):
             m = f1_score(true[k].values, (self.oof[k].values>best_threshold).astype('int'), average='macro')
             logger.info(f'Q{k}: F1 = {m}')
-            scores.append(m)
+            self.scores.append(m)
         
         logger.result_scores('test', scores)
 

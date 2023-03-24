@@ -30,6 +30,7 @@ class Runner():
         self.input_path = input_path
         self.load_options = load_options
         
+        self.validation_options = validation_options
         self.n_fold = validation_options.get('n_fold')
 
 

@@ -156,7 +156,7 @@ class Runner():
                 if self.model_options.get('model') == 'xgb':
                     
                     param_file = self.model_options.get('param_file')
-                    with open(f'{self.repo_path}/{param_file}') as f:
+                    with open(f'{self.repo_path}/config/{param_file}') as f:
                         params = json.load(f)
 
                     clf =  XGBClassifier(**xgb_params)

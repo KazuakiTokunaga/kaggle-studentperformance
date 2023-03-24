@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import polars as pl
 import gc
+import json
 import datetime
 
 from sklearn.model_selection import KFold, GroupKFold
@@ -16,7 +17,8 @@ logger = utils.Logger()
 class Runner():
 
     def __init__(self, run_fold_name = 'run',
-        input_path='/kaggle/input/student-performance-my', 
+        input_path='/kaggle/input/student-performance-my',
+        repo_path='/kaggle/working/kaggle_studentperformance',
         load_options={
             'sampling': 5000,
             'split_labels': True,
@@ -28,11 +30,12 @@ class Runner():
         model_options={
             'ensemble': False,
             'model': 'xgb',
-            'params': 'params_xgb001'
+            'param_file': 'params_xgb001_test.json'
         }):
 
         self.run_fold_name = run_fold_name
         self.input_path = input_path
+        self.repo_path = repo_path
         self.load_options = load_options
         self.model_options = model_options
         
@@ -151,10 +154,17 @@ class Runner():
 
                 # TRAIN MODEL
                 if self.model_options.get('model') == 'xgb':
-                    pass
                     
-                clf = RandomForestClassifier() 
-                clf.fit(train_x[FEATURES], train_y['correct'])
+                    param_file = self.model_options.get('param_file')
+                    with open(f'{self.repo_path}/{param_file}') as f:
+                        params = json.load(f)
+
+                    clf =  XGBClassifier(**xgb_params)
+                    clf.fit(train_x[FEATURES], train_y['correct'], verbose = 0)
+                
+                else:
+                    clf = RandomForestClassifier() 
+                    clf.fit(train_x[FEATURES], train_y['correct'])
                 
                 # SAVE MODEL, PREDICT VALID OOF
                 models[f'{grp}_{t}'] = clf

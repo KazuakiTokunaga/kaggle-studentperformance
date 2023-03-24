@@ -9,5 +9,5 @@
     "subsample":0.8,
     "colsample_bytree": 0.5,
     "seed": 42,
-    "n_estimators": 300
+    "n_estimators": 10
 }

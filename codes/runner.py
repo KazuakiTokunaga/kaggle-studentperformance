@@ -24,11 +24,17 @@ class Runner():
         },
         validation_options={
             'n_fold': 5
+        },
+        model_options={
+            'ensemble': False,
+            'model': 'xgb',
+            'params': 'params_xgb001'
         }):
 
         self.run_fold_name = run_fold_name
         self.input_path = input_path
         self.load_options = load_options
+        self.model_options = model_options
         
         self.validation_options = validation_options
         self.n_fold = validation_options.get('n_fold')
@@ -144,6 +150,9 @@ class Runner():
                 FEATURES = [c for c in df.columns if c != 'level_group']
 
                 # TRAIN MODEL
+                if self.model_options.get('model') == 'xgb':
+                    pass
+                    
                 clf = RandomForestClassifier() 
                 clf.fit(train_x[FEATURES], train_y['correct'])
                 
@@ -187,11 +196,10 @@ class Runner():
             m = f1_score(true[k].values, (self.oof[k].values>best_threshold).astype('int'), average='macro')
             logger.info(f'Q{k}: F1 = {m}')
             self.scores.append(m)
-        
-        logger.result_scores('test', scores)
 
 
     def write_sheet(self, ):
+        logger.info('Write scores to google sheet.')
 
         data = [str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')), self.run_fold_name] + self.scores
         data.append(self.load_options)

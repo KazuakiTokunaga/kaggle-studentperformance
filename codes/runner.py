@@ -162,7 +162,7 @@ class Runner():
                     
                     param_file = self.model_options.get('param_file')
                     with open(f'{self.repo_path}/config/{param_file}') as f:
-                        params = json.load(f)
+                        xgb_params = json.load(f)
 
                     clf =  XGBClassifier(**xgb_params)
                     clf.fit(train_x[FEATURES], train_y['correct'], verbose = 0)

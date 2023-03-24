@@ -59,7 +59,7 @@ class Logger:
 class WriteSheet:
 
     def __init__(self, 
-        json_key='/kaggle/input/studentperformance-my/ktokunaga-4094cf694f5c.json',
+        json_key='/kaggle/input/student-performance-my/ktokunaga-4094cf694f5c.json',
         sheet_key = '1NCWjO_3V99tLybvTiwxO54_bZVMpLB1G_IEo2fq7NVk',
     ):
         

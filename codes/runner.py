@@ -14,7 +14,7 @@ logger = utils.Logger()
 
 class Runner():
 
-    def __init__(self, input_path='/kaggle/input/studentperformance-my', 
+    def __init__(self, input_path='/kaggle/input/student-performance-my', 
         load_options={
             'sampling': 5000,
             'split_labels': True

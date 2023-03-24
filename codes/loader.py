@@ -9,7 +9,7 @@ logger = utils.Logger()
 
 class DataLoader():
 
-    def __init__(self, input_path='../input/', options={
+    def __init__(self, input_path='../input', options={
         'sampling': 5000,
         'split_labels': True,
         'parquet': True

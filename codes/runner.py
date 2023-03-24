@@ -133,6 +133,8 @@ class Runner():
             logger.info(f'Fold {i}')
             # ITERATE THRU QUESTIONS 1 THRU 18
             for t in range(1,19):
+                if t <= 3:
+                    logger.info(f'Fold {i} - Q {t}')
                 
                 # USE THIS TRAIN DATA WITH THESE QUESTIONS
                 if t<=3: 
@@ -165,7 +167,7 @@ class Runner():
                         params = json.load(f)
                     
                     xgb_params = params['base']
-                    xgb_params['n_estimators'] = params['n_estimators'][t]
+                    xgb_params['n_estimators'] = params['n_estimators'][t-1]
 
                     clf =  XGBClassifier(**xgb_params)
                     clf.fit(train_x[FEATURES], train_y['correct'], verbose = 0)

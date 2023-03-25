@@ -21,7 +21,9 @@ logger = utils.Logger()
 
 class Runner():
 
-    def __init__(self, run_fold_name = 'run',
+    def __init__(self, 
+        run_fold_name = 'run',
+        repo_commit_hash = None,
         input_path='/kaggle/input/student-performance-my',
         repo_path='/kaggle/working/kaggle_studentperformance',
         load_options={
@@ -39,6 +41,7 @@ class Runner():
         }):
 
         self.run_fold_name = run_fold_name
+        self.repo_commit_hash = repo_commit_hash
         self.input_path = input_path
         self.repo_path = repo_path
         self.load_options = load_options
@@ -222,7 +225,7 @@ class Runner():
         logger.info('Write scores to google sheet.')
 
         nowstr_jst = str(datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S'))
-        data = [nowstr_jst, self.run_fold_name] + self.scores
+        data = [nowstr_jst, self.run_fold_name, self.repo_commit_hash] + self.scores
         data.append(self.load_options)
         data.append(self.validation_options)
         data.append(self.model_options)

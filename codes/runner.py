@@ -221,9 +221,11 @@ class Runner():
     def write_sheet(self, ):
         logger.info('Write scores to google sheet.')
 
-        data = [str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')), self.run_fold_name] + self.scores
+        nowstr_jst = str(datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S'))
+        data = [nowstr_jst, self.run_fold_name] + self.scores
         data.append(self.load_options)
         data.append(self.validation_options)
+        data.append(self.model_options)
 
         google_sheet = utils.WriteSheet()
         google_sheet.write(data, sheet_name='cv_scores')

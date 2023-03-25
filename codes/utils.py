@@ -2,6 +2,8 @@ import logging
 import datetime
 import gspread
 import json
+import os
+import subprocess
 
 import pandas as pd
 import numpy as np
@@ -13,6 +15,19 @@ from oauth2client.service_account import ServiceAccountCredentials
 def pl_to_pd(df, index_col='session_id'):
     return df.to_pandas().set_index(index_col)
 
+
+def get_commit_hash(repo_path='/kaggle/working/kaggle_studentperformance/'):
+
+    wd = os.getcwd()
+    os.chdir(repo_path)
+    
+    cmd = "git show --format='%H' --no-patch"
+    hash_value = subprocess.check_output(cmd.split()).decode('utf-8')[1:-3]
+
+    os.chdir(wd)
+
+    return hash_value
+    
 
 class Logger:
 
@@ -50,7 +65,7 @@ class Logger:
         self.result(self.to_ltsv(dic))
 
     def now_string(self):
-        return str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        return str(datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S'))
 
     def to_ltsv(self, dic):
         return '\t'.join(['{}:{}'.format(key, value) for key, value in dic.items()])

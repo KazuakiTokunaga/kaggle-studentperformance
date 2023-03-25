@@ -126,11 +126,12 @@ class Runner():
         user_cnt = len(self.ALL_USERS)
         logger.info(f'We will train with {user_cnt} users info')
 
-        gkf = GroupKFold(n_splits=self.n_fold)
-        self.oof = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ALL_USERS)
         models = {}
+        self.oof = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ALL_USERS)
+        self.best_ntrees = np.zeros([self.n_fold, 18])
 
         logger.info(f'Start validation with {self.n_fold} folds.')
+        gkf = GroupKFold(n_splits=self.n_fold)
         for i, (train_index, test_index) in enumerate(gkf.split(X=self.df1, groups=self.df1.index)):
 
             logger.info(f'Fold {i}')
@@ -170,10 +171,21 @@ class Runner():
                         params = json.load(f)
                     
                     xgb_params = params['base']
-                    xgb_params['n_estimators'] = params['n_estimators'][t-1]
+    
+                    n_estimators_list = params['n_estimators']
+                    if len(n_estimators_list)==1:
+                        xgb_params['n_estimators'] = n_estimators_list[0]
+                    else:
+                        xgb_params['n_estimators'] = n_estimators_list[t-1]
 
-                    clf =  XGBClassifier(**xgb_params)
-                    clf.fit(train_x[FEATURES], train_y['correct'], verbose = 0)
+                    if xgb_params.get('early_stopping_rounds'):
+                        eval_set = [(valid_x[FEATURES], valid_y['correct'])]
+                        clf = XGBClassifier(**xgb_params)
+                        clf.fit(train_x[FEATURES], train_y['correct'], verbose = 20, eval_set=eval_set)
+                        self.best_ntrees[i, t-1] = clf.best_ntree_limit
+                    else:
+                        clf =  XGBClassifier(**xgb_params)
+                        clf.fit(train_x[FEATURES], train_y['correct'], verbose = 0)
                 
                 else:
                     clf = RandomForestClassifier() 
@@ -222,6 +234,9 @@ class Runner():
             m = f1_score(true[k].values, (self.oof[k].values>best_threshold).astype('int'), average='macro')
             logger.info(f'Q{k}: F1 = {m}')
             self.scores.append(m)
+        
+        if self.best_ntrees[0, 0] > 1:
+            pd.Series(self.best_ntrees.mean(axis=0)).to_csv('best_num_trees.csv')
 
 
     def write_sheet(self, ):

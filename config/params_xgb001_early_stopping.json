@@ -9,7 +9,8 @@
         "max_depth": 4,
         "subsample":0.8,
         "colsample_bytree": 0.5,
-        "seed": 42
+        "seed": 42,
+        "early_stopping_rounds": 30
     },
-    "n_estimators": [10]
+    "n_estimators": [1000]
 }

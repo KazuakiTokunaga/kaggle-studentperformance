@@ -109,7 +109,7 @@ class Runner():
         logger.info(f'df3 done: {self.df3.shape}')
     
 
-    def run_validation(self, ):
+    def run_validation(self, save_oof=True):
 
         if type(self.df1) == pl.DataFrame:
             logger.info('Convert polars df to pandas df.')
@@ -182,6 +182,9 @@ class Runner():
                 # SAVE MODEL, PREDICT VALID OOF
                 models[f'{grp}_{t}'] = clf
                 self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x[FEATURES])[:,1]
+
+        if save_oof:
+            self.oof.to_csv('oof_predict_proba.csv')
 
     def evaluate_validation(self, ):
         logger.info('Start evaluating validations.')

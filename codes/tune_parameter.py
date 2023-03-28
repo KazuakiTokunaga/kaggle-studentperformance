@@ -30,7 +30,7 @@ def main(load_options, validation_options, model_options):
         run.run_validation(adhoc_params = adhoc_params)
         run.evaluate_validation()
 
-        return scores[0]
+        return run.scores[0]
     
 
     study = optuna.create_study(direction="maximize")

@@ -23,21 +23,7 @@ def objective(trial):
 
 
 
-if __name__=="__main__":
-
-    load_options = {
-        'sampling': 1000,
-        'split_labels': True,
-        'parquet': True
-    }
-    validation_options = {
-        'n_fold': 2
-    }
-    model_options={
-        'ensemble': False,
-        'model': 'xgb',
-        'param_file': 'params_xgb001_test.json'
-    }
+def main(load_options, validation_options, model_options):
 
     run = runner.Runner(load_options = load_options, 
                         validation_options = validation_options,
@@ -45,7 +31,6 @@ if __name__=="__main__":
     run.load_dataset()
     run.engineer_features()
     run.delete_df_train()
-
 
     study = optuna.create_study(direction="maximize")
     study.optimize(objective, n_trials=10)

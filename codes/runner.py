@@ -32,7 +32,8 @@ class Runner():
             'parquet': True
         },
         validation_options={
-            'n_fold': 2
+            'n_fold': 2,
+            'questions': list(range(1, 19))
         },
         model_options={
             'ensemble': False,
@@ -49,6 +50,7 @@ class Runner():
         
         self.validation_options = validation_options
         self.n_fold = validation_options.get('n_fold')
+        self.questions = validation_options.get('questions')
 
 
     def load_dataset(self, ):
@@ -109,7 +111,10 @@ class Runner():
         logger.info(f'df3 done: {self.df3.shape}')
     
 
-    def run_validation(self, save_oof=True, adhoc_params=None):
+    def run_validation(self, 
+            save_oof=True, 
+            adhoc_params=None
+        ):
 
         if type(self.df1) == pl.DataFrame:
             logger.info('Convert polars df to pandas df.')
@@ -136,7 +141,7 @@ class Runner():
 
             logger.info(f'Fold {i}')
             # ITERATE THRU QUESTIONS 1 THRU 18
-            for t in range(1,19):
+            for t in self.questions:
                 if t <= 3:
                     logger.info(f'Fold {i} - Q {t}')
                 
@@ -208,16 +213,21 @@ class Runner():
         true = self.oof.copy()
         for k in range(18):
             # GET TRUE LABELS
-            tmp = self.df_labels.loc[self.df_labels.q == k+1].set_index('session').loc[self.ALL_USERS]
+            tmp = self.df_labels.loc[self.df_labels.q == k].set_index('session').loc[self.ALL_USERS]
             true[k] = tmp.correct.values
 
+        # Extract target columns.
+        questions_idx = [i-1 for i in self.questions]
+        oof_target = self.oof[question_idx].copy()
+        true = true[question_idx]
+        
         # FIND BEST THRESHOLD TO CONVERT PROBS INTO 1s AND 0s
         scores = []; thresholds = []
         best_score = 0; best_threshold = 0
 
         logger.info('Search optimal threshold.')
-        for threshold in np.arange(0.4,0.81,0.01):
-            preds = (self.oof.values.reshape((-1))>threshold).astype('int')
+        for threshold in np.arange(0.45,0.75,0.01):
+            preds = (oof_target.values.reshape((-1))>threshold).astype('int')
             m = f1_score(true.values.reshape((-1)), preds, average='macro')   
             scores.append(m)
             thresholds.append(threshold)
@@ -229,12 +239,12 @@ class Runner():
         logger.info('When using optimal threshold...')
         self.scores = []
         
-        m = f1_score(true.values.reshape((-1)), (self.oof.values.reshape((-1))>best_threshold).astype('int'), average='macro')
+        m = f1_score(true.values.reshape((-1)), (oof_target.values.reshape((-1))>best_threshold).astype('int'), average='macro')
         logger.info(f'Overall F1 = {m}')
         self.scores.append(m)
 
         for k in range(18):
-            m = f1_score(true[k].values, (self.oof[k].values>best_threshold).astype('int'), average='macro')
+            m = f1_score(true[k].values, (oof_target[k].values>best_threshold).astype('int'), average='macro')
             logger.info(f'Q{k}: F1 = {m}')
             self.scores.append(m)
         

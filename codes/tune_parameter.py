@@ -1,27 +1,6 @@
 import optuna
 from codes import runner
 
-load_options = {
-    'sampling': 1000,
-    'split_labels': True,
-    'parquet': True
-}
-validation_options = {
-    'n_fold': 2
-}
-model_options={
-    'ensemble': False,
-    'model': 'xgb',
-    'param_file': 'params_xgb001_test.json'
-}
-
-run = runner.Runner(load_options = load_options, 
-                    validation_options = validation_options,
-                    model_options = model_options)
-run.load_dataset()
-run.engineer_features()
-run.delete_df_train()
-
 
 def objective(trial):
 
@@ -43,8 +22,33 @@ def objective(trial):
     return scores[0]
 
 
-study = optuna.create_study(direction="maximize")
-study.optimize(objective, n_trials=10)
 
-print(f"Best objective value: {study.best_value}")
-print(f"Best parameter: {study.best_params}")
+if __name__=="__main__":
+
+    load_options = {
+        'sampling': 1000,
+        'split_labels': True,
+        'parquet': True
+    }
+    validation_options = {
+        'n_fold': 2
+    }
+    model_options={
+        'ensemble': False,
+        'model': 'xgb',
+        'param_file': 'params_xgb001_test.json'
+    }
+
+    run = runner.Runner(load_options = load_options, 
+                        validation_options = validation_options,
+                        model_options = model_options)
+    run.load_dataset()
+    run.engineer_features()
+    run.delete_df_train()
+
+
+    study = optuna.create_study(direction="maximize")
+    study.optimize(objective, n_trials=10)
+
+    print(f"Best objective value: {study.best_value}")
+    print(f"Best parameter: {study.best_params}")

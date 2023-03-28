@@ -139,7 +139,6 @@ class Runner():
         gkf = GroupKFold(n_splits=self.n_fold)
         for i, (train_index, test_index) in enumerate(gkf.split(X=self.df1, groups=self.df1.index)):
 
-            logger.info(f'Fold {i}')
             # ITERATE THRU QUESTIONS 1 THRU 18
             for t in self.questions:
                 if t <= 3:
@@ -214,7 +213,7 @@ class Runner():
         true = self.oof.copy()
         for k in range(18):
             # GET TRUE LABELS
-            tmp = self.df_labels.loc[self.df_labels.q == k].set_index('session').loc[self.ALL_USERS]
+            tmp = self.df_labels.loc[self.df_labels.q == k+1].set_index('session').loc[self.ALL_USERS]
             true[k] = tmp.correct.values
 
         # Extract target columns.

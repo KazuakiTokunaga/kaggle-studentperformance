@@ -27,7 +27,7 @@ def main(load_options, validation_options, model_options):
             'subsample': subsample
         }
 
-        run.validation(adhoc_params = adhoc_params)
+        run.run_validation(adhoc_params = adhoc_params)
         run.evaluate_validation()
 
         return scores[0]

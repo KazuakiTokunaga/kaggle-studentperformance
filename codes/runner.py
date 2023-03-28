@@ -243,7 +243,7 @@ class Runner():
         logger.info(f'Overall F1 = {m}')
         self.scores.append(m)
 
-        for k in range(18):
+        for k in question_idx:
             m = f1_score(true[k].values, (oof_target[k].values>best_threshold).astype('int'), average='macro')
             logger.info(f'Q{k}: F1 = {m}')
             self.scores.append(m)

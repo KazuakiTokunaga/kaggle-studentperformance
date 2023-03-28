@@ -217,7 +217,7 @@ class Runner():
             true[k] = tmp.correct.values
 
         # Extract target columns.
-        questions_idx = [i-1 for i in self.questions]
+        question_idx = [i-1 for i in self.questions]
         oof_target = self.oof[question_idx].copy()
         true = true[question_idx]
         

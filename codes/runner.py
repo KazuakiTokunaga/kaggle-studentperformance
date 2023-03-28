@@ -27,12 +27,12 @@ class Runner():
         input_path='/kaggle/input/student-performance-my',
         repo_path='/kaggle/working/kaggle_studentperformance',
         load_options={
-            'sampling': 5000,
+            'sampling': 1000,
             'split_labels': True,
             'parquet': True
         },
         validation_options={
-            'n_fold': 5
+            'n_fold': 2
         },
         model_options={
             'ensemble': False,
@@ -109,7 +109,7 @@ class Runner():
         logger.info(f'df3 done: {self.df3.shape}')
     
 
-    def run_validation(self, save_oof=True):
+    def run_validation(self, save_oof=True, adhoc_params=None):
 
         if type(self.df1) == pl.DataFrame:
             logger.info('Convert polars df to pandas df.')
@@ -178,10 +178,14 @@ class Runner():
                     else:
                         xgb_params['n_estimators'] = n_estimators_list[t-1]
 
+                    for key, value in adhoc_params.items():
+                        if xgb_params.get(key):
+                            xgb_params[key] = value
+
                     if xgb_params.get('early_stopping_rounds'):
                         eval_set = [(valid_x[FEATURES], valid_y['correct'])]
                         clf = XGBClassifier(**xgb_params)
-                        clf.fit(train_x[FEATURES], train_y['correct'], verbose = 20, eval_set=eval_set)
+                        clf.fit(train_x[FEATURES], train_y['correct'], verbose = 0, eval_set=eval_set)
                         self.best_ntrees[i, t-1] = clf.best_ntree_limit
                     else:
                         clf =  XGBClassifier(**xgb_params)

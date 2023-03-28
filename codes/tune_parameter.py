@@ -33,7 +33,7 @@ def main(load_options, validation_options, model_options):
         return run.scores[0]
     
 
-    study = optuna.create_study(direction="maximize")
+    study = optuna.create_study(direction="maximize", study_name="test", storage="sqlite://optuna.db")
     study.optimize(objective, n_trials=10)
 
     print(f"Best objective value: {study.best_value}")

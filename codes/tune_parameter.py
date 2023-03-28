@@ -4,14 +4,14 @@ from codes import runner
 
 def objective(trial):
 
-    max_depth = trial.suggest_int("max_depth", 3, 6)
-    alpha = trial.suggest_float("alpha", 0, 1)
-    colsample_bytree = trial.suggest_float("colsample_bytree", 0.5)
-    subsample = trial.suggest_float("subsample", 0.8)
+    max_depth = trial.suggest_int("max_depth", 3, 9)
+    min_child_weight = trial.suggest_float("min_child_weight", 0.1, 10)
+    colsample_bytree = trial.suggest_float("colsample_bytree", 0.4, 0.95)
+    subsample = trial.suggest_float("subsample", 0.6, 0.95)
 
     adhoc_params = {
-        'alpha': alpha,
         'max_depth': max_depth,
+        'min_child_weight': min_child_weight,
         'colsample_bytree': colsample_bytree,
         'subsample': subsample
     }

@@ -179,8 +179,7 @@ class Runner():
                         xgb_params['n_estimators'] = n_estimators_list[t-1]
 
                     for key, value in adhoc_params.items():
-                        if xgb_params.get(key):
-                            xgb_params[key] = value
+                        xgb_params[key] = value
 
                     if xgb_params.get('early_stopping_rounds'):
                         eval_set = [(valid_x[FEATURES], valid_y['correct'])]

@@ -165,8 +165,9 @@ class Runner():
                 FEATURES = [c for c in df.columns if c != 'level_group']
 
                 # TRAIN MODEL
-                if i==0 and t == 1: 
-                    print_info = True
+                print_info = True
+                if i>0 or t>1: print_info = False 
+                    
 
                 model_kind = self.model_options.get('model')
                 param_file = self.model_options.get('param_file')

@@ -5,12 +5,11 @@ import gc
 import json
 import datetime
 
+import xgboost as xgb
+import lightgbm as lgb
 from sklearn.model_selection import KFold, GroupKFold
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import f1_score
-from xgboost import xgb
-
-import lightgbm as lgb
 
 from codes import utils, loader, preprocess
 

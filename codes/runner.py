@@ -207,9 +207,9 @@ class Runner():
 
                         clf = lgb.LGBMClassifier(**model_params)
                         clf.fit(
-                            train_x[FEATURES], train_y['correct'], verbose = 0, eval_set=eval_set, 
+                            train_x[FEATURES], train_y['correct'], eval_set=eval_set, 
                             callbacks=[
-                                    lgb.early_stopping(stopping_rounds=stopping_rounds, verbose=True), # early_stopping用コールバック関数
+                                    lgb.early_stopping(stopping_rounds=stopping_rounds, verbose=False), # early_stopping用コールバック関数
                                     lgb.log_evaluation(0)
                             ] 
                         )

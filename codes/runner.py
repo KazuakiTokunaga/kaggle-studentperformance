@@ -128,7 +128,7 @@ class Runner():
         user_cnt = len(self.ALL_USERS)
         logger.info(f'We will train with {user_cnt} users info')
 
-        models = {}
+        self.models = {}
         self.oof = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ALL_USERS)
         self.best_ntrees = np.zeros([self.n_fold, 18])
 
@@ -191,7 +191,7 @@ class Runner():
                 if model_params.get('early_stopping_rounds'):
                     if print_info:
                         logger.info(f'Use early_stopping_rounds.')
-                        
+
                     eval_set = [(valid_x[FEATURES], valid_y['correct'])]
                     
                     if model_kind == 'xgb':
@@ -207,7 +207,7 @@ class Runner():
                             train_x[FEATURES], train_y['correct'], verbose = 0, eval_set=eval_set, 
                             callbacks=[
                                     lgb.early_stopping(stopping_rounds=stopping_rounds, verbose=True), # early_stopping用コールバック関数
-                                    lgb.log_evaluation(1)
+                                    lgb.log_evaluation(0)
                             ] 
                         )
                     
@@ -231,7 +231,7 @@ class Runner():
                         raise Exception('Wrong Model kind.')
                 
                 # SAVE MODEL, PREDICT VALID OOF
-                models[f'{grp}_{t}'] = clf
+                self.models[f'{grp}_{t}'] = clf
                 self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x[FEATURES])[:,1]
 
         if save_oof:

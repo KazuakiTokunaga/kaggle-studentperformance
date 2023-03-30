@@ -165,8 +165,12 @@ class Runner():
                 FEATURES = [c for c in df.columns if c != 'level_group']
 
                 # TRAIN MODEL
+                if i==0 and t == 1: 
+                    print_info = True
+
                 model_kind = self.model_options.get('model')
                 param_file = self.model_options.get('param_file')
+
                 with open(f'{self.repo_path}/config/{param_file}') as f:
                     params = json.load(f)
                 
@@ -181,7 +185,13 @@ class Runner():
                     for key, value in adhoc_params.items():
                         model_params[key] = value
 
+                if print_info:
+                    logger.info(f'Use {model_kind} with params {model_params}.')
+
                 if model_params.get('early_stopping_rounds'):
+                    if print_info:
+                        logger.info(f'Use early_stopping_rounds.')
+                        
                     eval_set = [(valid_x[FEATURES], valid_y['correct'])]
                     
                     if model_kind == 'xgb':
@@ -197,7 +207,7 @@ class Runner():
                             train_x[FEATURES], train_y['correct'], verbose = 0, eval_set=eval_set, 
                             callbacks=[
                                     lgb.early_stopping(stopping_rounds=stopping_rounds, verbose=True), # early_stopping用コールバック関数
-                                    lgb.log_evaluation(verbose_eval)
+                                    lgb.log_evaluation(1)
                             ] 
                         )
                     

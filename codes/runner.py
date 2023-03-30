@@ -191,7 +191,7 @@ class Runner():
                         self.best_ntrees[i, t-1] = clf.best_ntree_limit
                     
                     elif model_kind == 'lgb':
-                        stopping_rounds = model_params.pop('stopping_rounds')
+                        stopping_rounds = model_params.pop('early_stopping_rounds')
 
                         clf = lgb.LGBMClassifier(**model_params)
                         clf.fit(

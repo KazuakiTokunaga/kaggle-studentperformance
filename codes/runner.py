@@ -173,8 +173,10 @@ class Runner():
 
                 with open(f'{self.repo_path}/config/{param_file}') as f:
                     params = json.load(f)
-                
+            
                 model_params = params['base']
+
+                # Qごとにn_estimatorsを変えるかどうか
                 n_estimators_list = params['n_estimators']
                 if len(n_estimators_list)==1:
                     model_params['n_estimators'] = n_estimators_list[0]
@@ -210,9 +212,12 @@ class Runner():
                                     lgb.log_evaluation(0)
                             ] 
                         )
+                        self.best_ntrees[i, t-1] = clf.best_iteration_
                     
                     else:
                         raise Exception('Wrong Model kind with early stopping.')
+
+                # early stoppingを用いない場合
                 else:
 
                     if model_kind == 'xgb':

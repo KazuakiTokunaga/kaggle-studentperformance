@@ -8,8 +8,7 @@
         "subsample": 0.8,
         "colsample_bytree": 0.5,
         "reg_alpha": 0,
-        "reg_lambda": 0,
-        "early_stopping_rounds": 30
+        "reg_lambda": 0
     },
-    "n_estimators": [1000]
+    "n_estimators": [100]
 }

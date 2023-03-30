@@ -8,11 +8,9 @@ import datetime
 from sklearn.model_selection import KFold, GroupKFold
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import f1_score
-from xgboost import XGBClassifier
+from xgboost import xgb
 
-from lightgbm import LGBMClassifier
-from lightgbm import early_stopping
-from lightgbm import log_evaluation
+import lightgbm as lgb
 
 from codes import utils, loader, preprocess
 
@@ -168,36 +166,60 @@ class Runner():
                 FEATURES = [c for c in df.columns if c != 'level_group']
 
                 # TRAIN MODEL
-                if self.model_options.get('model') == 'xgb':
-                    
-                    param_file = self.model_options.get('param_file')
-                    with open(f'{self.repo_path}/config/{param_file}') as f:
-                        params = json.load(f)
-                    
-                    xgb_params = params['base']
-    
-                    n_estimators_list = params['n_estimators']
-                    if len(n_estimators_list)==1:
-                        xgb_params['n_estimators'] = n_estimators_list[0]
-                    else:
-                        xgb_params['n_estimators'] = n_estimators_list[t-1]
+                model_kind = self.model_options.get('model')
+                param_file = self.model_options.get('param_file')
+                with open(f'{self.repo_path}/config/{param_file}') as f:
+                    params = json.load(f)
+                
+                model_params = params['base']
+                n_estimators_list = params['n_estimators']
+                if len(n_estimators_list)==1:
+                    model_params['n_estimators'] = n_estimators_list[0]
+                else:
+                    model_params['n_estimators'] = n_estimators_list[t-1]
 
-                    if adhoc_params:
-                        for key, value in adhoc_params.items():
-                            xgb_params[key] = value
+                if adhoc_params:
+                    for key, value in adhoc_params.items():
+                        model_params[key] = value
 
-                    if xgb_params.get('early_stopping_rounds'):
-                        eval_set = [(valid_x[FEATURES], valid_y['correct'])]
-                        clf = XGBClassifier(**xgb_params)
+                if model_params.get('early_stopping_rounds'):
+                    eval_set = [(valid_x[FEATURES], valid_y['correct'])]
+                    
+                    if model_kind == 'xgb':
+                        clf = xgb.XGBClassifier(**model_params)
                         clf.fit(train_x[FEATURES], train_y['correct'], verbose = 0, eval_set=eval_set)
                         self.best_ntrees[i, t-1] = clf.best_ntree_limit
+                    
+                    elif model_kind == 'lgb':
+                        stopping_rounds = model_params.pop('stopping_rounds')
+
+                        clf = lgb.LGBMClassifier(**model_params)
+                        clf.fit(
+                            train_x[FEATURES], train_y['correct'], verbose = 0, eval_set=eval_set, 
+                            callbacks=[
+                                    lgb.early_stopping(stopping_rounds=stopping_rounds, verbose=True), # early_stopping用コールバック関数
+                                    lgb.log_evaluation(verbose_eval)
+                            ] 
+                        )
+                    
                     else:
-                        clf =  XGBClassifier(**xgb_params)
+                        raise Exception('Wrong Model kind with early stopping.')
+                else:
+
+                    if model_kind == 'xgb':
+                        clf =  xgb.XGBClassifier(**model_params)
+                        clf.fit(train_x[FEATURES], train_y['correct'], verbose = 0)
+                    
+                    elif model_kind == 'lgb':
+                        clf = lgb.LGBMClassifier(**model_params)
                         clf.fit(train_x[FEATURES], train_y['correct'], verbose = 0)
                 
-                else:
-                    clf = RandomForestClassifier() 
-                    clf.fit(train_x[FEATURES], train_y['correct'])
+                    elif model_kind == 'rf':
+                        clf = RandomForestClassifier(**model_params) 
+                        clf.fit(train_x[FEATURES], train_y['correct'])
+                    
+                    else:
+                        raise Exception('Wrong Model kind.')
                 
                 # SAVE MODEL, PREDICT VALID OOF
                 models[f'{grp}_{t}'] = clf

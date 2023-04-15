@@ -227,7 +227,7 @@ class Runner():
                     
                     elif model_kind == 'lgb':
                         clf = lgb.LGBMClassifier(**model_params)
-                        clf.fit(train_x[FEATURES], train_y['correct'], verbose = 0)
+                        clf.fit(train_x[FEATURES], train_y['correct'], callbacks=[lgb.log_evaluation(0)])
                 
                     elif model_kind == 'rf':
                         clf = RandomForestClassifier(**model_params) 

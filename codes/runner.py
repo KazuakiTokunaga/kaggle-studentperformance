@@ -48,7 +48,8 @@ class Runner():
         self.model_options = model_options
         self.models = {
             'features': {},
-            'models': {}
+            'models': {},
+            'optimal_threshold': 0.6
         }
         
         self.validation_options = validation_options
@@ -260,6 +261,7 @@ class Runner():
             if m>best_score:
                 best_score = m
                 best_threshold = threshold
+        self.models['optimal_threshold'] = best_threshold
         logger.info(f'optimal threshold: {best_threshold}')
         
         logger.info('When using optimal threshold...')

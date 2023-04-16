@@ -4,6 +4,7 @@ import polars as pl
 import gc
 import json
 import datetime
+import pickle
 
 import xgboost as xgb
 import lightgbm as lgb
@@ -23,7 +24,6 @@ class Runner():
         repo_commit_hash = None,
         input_path='/kaggle/input/student-performance-my',
         repo_path='/kaggle/working/kaggle_studentperformance',
-        output_path='/kaggle/working/',
         load_options={
             'sampling': 1000,
             'split_labels': True,
@@ -43,7 +43,6 @@ class Runner():
         self.repo_commit_hash = repo_commit_hash
         self.input_path = input_path
         self.repo_path = repo_path
-        self.output_path = output_path
         self.load_options = load_options
         self.model_options = model_options
         self.models = {
@@ -293,6 +292,10 @@ class Runner():
         google_sheet.write(data, sheet_name='cv_scores')
 
 
+    def save_models(self, ):
+        pickle.dump(self.models, open(f'models.pkl', 'wb'))
+
+
     def main(self, ):
 
         self.load_dataset()
@@ -300,4 +303,5 @@ class Runner():
         self.run_validation()
         self.evaluate_validation()
         self.write_sheet()
+        self.save_models()
         

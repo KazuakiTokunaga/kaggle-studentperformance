@@ -44,9 +44,7 @@ def add_columns(df):
 
     return df
 
-def drop_na_columns(df, grp):
-
-    
+# def drop_na_columns(df, grp):
 
 def feature_engineer_pl(x, grp, use_extra, feature_suffix):
 

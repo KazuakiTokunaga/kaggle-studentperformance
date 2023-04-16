@@ -226,7 +226,7 @@ class Runner():
                         raise Exception('Wrong Model kind.')
                 
                 # SAVE MODEL, PREDICT VALID OOF
-                self.models[f'{grp}_{t}'] = clf
+                self.models['models'][f'{grp}_{t}'] = clf
                 self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x[FEATURES])[:,1]
 
         if save_oof:

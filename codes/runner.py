@@ -46,6 +46,10 @@ class Runner():
         self.output_path = output_path
         self.load_options = load_options
         self.model_options = model_options
+        self.models = {
+            'features': {},
+            'models': {}
+        }
         
         self.validation_options = validation_options
         self.n_fold = validation_options.get('n_fold')
@@ -75,11 +79,22 @@ class Runner():
         df3 = self.df_train.filter(pl.col("level_group")=='13-22')
 
         # sessionごとにまとめる
-        self.df1 = preprocess.feature_engineer_pl(df1, grp='0-4', use_extra=True, feature_suffix='')
+        grp = '0-4'
+        df1 = preprocess.feature_engineer_pl(df1, grp=grp, use_extra=True, feature_suffix='')
+        self.df1 = preprocess.drop_columns(df1)
+        self.models['features'][grp] = self.df1.columns
         logger.info(f'df1 done: {self.df1.shape}')
-        self.df2 = preprocess.feature_engineer_pl(df2, grp='5-12', use_extra=True, feature_suffix='')
+        
+        grp = '5-12'
+        df2 = preprocess.feature_engineer_pl(df2, grp=grp, use_extra=True, feature_suffix='')
+        self.df2 = preprocess.drop_columns(df2)
+        self.models['features'][grp] = self.df2.columns
         logger.info(f'df2 done: {self.df2.shape}')
-        self.df3 = preprocess.feature_engineer_pl(df3, grp='13-22', use_extra=True, feature_suffix='')
+
+        grp = '13-22'
+        df3 = preprocess.feature_engineer_pl(df3, grp=grp, use_extra=True, feature_suffix='')
+        self.df3 = preprocess.drop_columns(df3)
+        self.models['features'][grp] = self.df3.columns
         logger.info(f'df3 done: {self.df3.shape}')
     
 
@@ -103,7 +118,6 @@ class Runner():
         user_cnt = len(self.ALL_USERS)
         logger.info(f'We will train with {user_cnt} users info')
 
-        self.models = {}
         self.oof = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ALL_USERS)
         self.best_ntrees = np.zeros([self.n_fold, 18])
 

@@ -44,7 +44,23 @@ def add_columns(df):
 
     return df
 
-# def drop_na_columns(df, grp):
+
+def drop_columns(df, thre=0.1):
+
+    null_rates = (df.null_counts() / df.height) <= thre
+    columns_flag = null_rates.to_numpy()[0]
+    columns = np.array(df.columns)[columns_flag]
+    df = df_pl.select(columns)
+
+    drop_columns = []
+    for col in df.columns:
+        if df.get_column(col).n_unique() == 1:
+            drop_columns.append(col)
+    
+    df = df.drop(drop_columns)
+
+    return df
+
 
 def feature_engineer_pl(x, grp, use_extra, feature_suffix):
 

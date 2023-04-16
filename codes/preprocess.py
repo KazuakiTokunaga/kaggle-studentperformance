@@ -47,7 +47,7 @@ def add_columns(df):
 
 def drop_columns(df, thre=0.1):
 
-    null_rates = (df.null_counts() / df.height) <= thre
+    null_rates = (df.null_count() / df.height) <= thre
     columns_flag = null_rates.to_numpy()[0]
     columns = np.array(df.columns)[columns_flag]
     df = df_pl.select(columns)

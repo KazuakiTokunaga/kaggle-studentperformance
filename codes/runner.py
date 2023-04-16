@@ -23,6 +23,7 @@ class Runner():
         repo_commit_hash = None,
         input_path='/kaggle/input/student-performance-my',
         repo_path='/kaggle/working/kaggle_studentperformance',
+        output_path='/kaggle/working/',
         load_options={
             'sampling': 1000,
             'split_labels': True,
@@ -42,6 +43,7 @@ class Runner():
         self.repo_commit_hash = repo_commit_hash
         self.input_path = input_path
         self.repo_path = repo_path
+        self.output_path = output_path
         self.load_options = load_options
         self.model_options = model_options
         
@@ -65,34 +67,7 @@ class Runner():
     def engineer_features(self, ):
         logger.info('Start engineer features.')
 
-        # レコード単位の処理
-        columns = [
-
-            pl.col("page").cast(pl.Float32),
-            (
-                (pl.col("elapsed_time") - pl.col("elapsed_time").shift(1)) 
-                .fill_null(0)
-                .clip(0, 1e9)
-                .over(["session_id", "level_group"])
-                .alias("elapsed_time_diff")
-            ),
-            (
-                (pl.col("screen_coor_x") - pl.col("screen_coor_x").shift(1)) 
-                .abs()
-                .over(["session_id", "level_group"])
-                .alias("location_x_diff") 
-            ),
-            (
-                (pl.col("screen_coor_y") - pl.col("screen_coor_y").shift(1)) 
-                .abs()
-                .over(["session_id", "level_group"])
-                .alias("location_y_diff") 
-            ),
-            pl.col("fqid").fill_null("fqid_None"),
-            pl.col("text_fqid").fill_null("text_fqid_None")
-        ]
-
-        self.df_train = self.df_train.with_columns(columns)
+        self.df_train = preprocess.add_columns(self.df_train)
 
         # グループごとに分割
         df1 = self.df_train.filter(pl.col("level_group")=='0-4')

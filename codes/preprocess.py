@@ -3,9 +3,6 @@ import pandas as pd
 import polars as pl
 import logging
 
-from codes import utils
-
-logger = utils.Logger()
 
 def split_df_labels(df_labels):
 
@@ -15,6 +12,41 @@ def split_df_labels(df_labels):
     return df_labels
 
 
+def add_columns(df):
+
+    columns = [
+
+        pl.col("page").cast(pl.Float32),
+        (
+            (pl.col("elapsed_time") - pl.col("elapsed_time").shift(1)) 
+            .fill_null(0)
+            .clip(0, 1e9)
+            .over(["session_id", "level_group"])
+            .alias("elapsed_time_diff")
+        ),
+        (
+            (pl.col("screen_coor_x") - pl.col("screen_coor_x").shift(1)) 
+            .abs()
+            .over(["session_id", "level_group"])
+            .alias("location_x_diff") 
+        ),
+        (
+            (pl.col("screen_coor_y") - pl.col("screen_coor_y").shift(1)) 
+            .abs()
+            .over(["session_id", "level_group"])
+            .alias("location_y_diff") 
+        ),
+        pl.col("fqid").fill_null("fqid_None"),
+        pl.col("text_fqid").fill_null("text_fqid_None")
+    ]
+
+    df = df.with_columns(columns)
+
+    return df
+
+def drop_na_columns(df, grp):
+
+    
 
 def feature_engineer_pl(x, grp, use_extra, feature_suffix):
 

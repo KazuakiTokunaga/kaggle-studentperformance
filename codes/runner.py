@@ -80,8 +80,8 @@ class Runner():
 
         # sessionごとにまとめる
         grp = '0-4'
-        df1 = preprocess.feature_engineer_pl(df1, grp=grp, use_extra=True, feature_suffix='')
-        self.df1 = preprocess.drop_columns(df1)
+        self.df1 = preprocess.feature_engineer_pl(df1, grp=grp, use_extra=True, feature_suffix='')
+        self.df1 = preprocess.drop_columns(self.df1)
         self.models['features'][grp] = self.df1.columns
         logger.info(f'df1 done: {self.df1.shape}')
         

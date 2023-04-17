@@ -48,7 +48,7 @@ class Runner():
         self.models = {
             'features': {},
             'models': {},
-            'optimal_threshold': 0.6
+            'optimal_threshold': 0.625
         }
         self.print_model_info = True
         
@@ -102,7 +102,6 @@ class Runner():
     def get_trained_clf(self, t, train_x, train_y, valid_x=None, valid_y=None, adhoc_params=None):
             
         validation = valid_x is not None
-        FEATURES = [c for c in train_x.columns if c != 'level_group']
         model_kind = self.model_options.get('model')
         param_file = self.model_options.get('param_file')
 
@@ -129,11 +128,11 @@ class Runner():
             if self.print_model_info:
                 logger.info(f'Use early_stopping_rounds.')
 
-            eval_set = [(valid_x[FEATURES], valid_y['correct'])]
+            eval_set = [(valid_x, valid_y['correct'])]
             
             if model_kind == 'xgb':
                 clf = xgb.XGBClassifier(**model_params)
-                clf.fit(train_x[FEATURES], train_y['correct'], verbose = 0, eval_set=eval_set)
+                clf.fit(train_x, train_y['correct'], verbose = 0, eval_set=eval_set)
                 self.best_ntrees[i, t-1] = clf.best_ntree_limit
             
             elif model_kind == 'lgb':
@@ -141,7 +140,7 @@ class Runner():
 
                 clf = lgb.LGBMClassifier(**model_params)
                 clf.fit(
-                    train_x[FEATURES], train_y['correct'], eval_set=eval_set, 
+                    train_x, train_y['correct'], eval_set=eval_set, 
                     callbacks=[
                             lgb.early_stopping(stopping_rounds=stopping_rounds, verbose=False), # early_stopping用コールバック関数
                             lgb.log_evaluation(0)
@@ -157,15 +156,15 @@ class Runner():
 
             if model_kind == 'xgb':
                 clf =  xgb.XGBClassifier(**model_params)
-                clf.fit(train_x[FEATURES], train_y['correct'], verbose = 0)
+                clf.fit(train_x, train_y['correct'], verbose = 0)
             
             elif model_kind == 'lgb':
                 clf = lgb.LGBMClassifier(**model_params)
-                clf.fit(train_x[FEATURES], train_y['correct'], callbacks=[lgb.log_evaluation(0)])
+                clf.fit(train_x, train_y['correct'], callbacks=[lgb.log_evaluation(0)])
         
             elif model_kind == 'rf':
                 clf = RandomForestClassifier(**model_params) 
-                clf.fit(train_x[FEATURES], train_y['correct'])
+                clf.fit(train_x, train_y['correct'])
             
             else:
                 raise Exception('Wrong Model kind.')
@@ -230,8 +229,7 @@ class Runner():
 
                 clf = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params)
                 
-                FEATURES = [c for c in df.columns if c != 'level_group']
-                self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x[FEATURES])[:,1]
+                self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x)[:,1]
 
         if save_oof:
             self.oof.to_csv('oof_predict_proba.csv')
@@ -303,10 +301,7 @@ class Runner():
                 
             # TRAIN DATA
             train_x = df
-            train_users = train_x.index.values
             train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session')
-            
-            FEATURES = [c for c in df.columns if c != 'level_group']
 
             clf = self.get_trained_clf(t, train_x, train_y)    
 

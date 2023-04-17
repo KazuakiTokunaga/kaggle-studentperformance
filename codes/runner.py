@@ -230,6 +230,7 @@ class Runner():
 
                 clf = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params)
                 
+                FEATURES = [c for c in df.columns if c != 'level_group']
                 self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x[FEATURES])[:,1]
 
         if save_oof:

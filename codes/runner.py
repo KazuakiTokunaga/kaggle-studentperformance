@@ -50,6 +50,7 @@ class Runner():
             'models': {},
             'optimal_threshold': 0.6
         }
+        self.print_model_info = True
         
         self.validation_options = validation_options
         self.n_fold = validation_options.get('n_fold')
@@ -339,5 +340,6 @@ class Runner():
         self.run_validation()
         self.evaluate_validation()
         self.write_sheet()
+        self.train_all_clf()
         self.save_models()
         

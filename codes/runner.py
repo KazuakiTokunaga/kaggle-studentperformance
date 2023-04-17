@@ -154,6 +154,10 @@ class Runner():
 
         # early stoppingを用いない場合
         else:
+            
+            # train全体で予測する場合、除外する必要
+            if model_params.get('early_stopping_rounds'):
+                model_params.pop('early_stopping_rounds')
 
             if model_kind == 'xgb':
                 clf =  xgb.XGBClassifier(**model_params)

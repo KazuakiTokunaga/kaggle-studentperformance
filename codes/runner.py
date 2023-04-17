@@ -102,6 +102,7 @@ class Runner():
     def get_trained_clf(self, t, train_x, train_y, valid_x=None, valid_y=None, adhoc_params=None):
             
         validation = valid_x is not None
+        ntree = None
         model_kind = self.model_options.get('model')
         param_file = self.model_options.get('param_file')
 
@@ -133,7 +134,7 @@ class Runner():
             if model_kind == 'xgb':
                 clf = xgb.XGBClassifier(**model_params)
                 clf.fit(train_x, train_y['correct'], verbose = 0, eval_set=eval_set)
-                self.best_ntrees[i, t-1] = clf.best_ntree_limit
+                ntree = clf.best_ntree_limit
             
             elif model_kind == 'lgb':
                 stopping_rounds = model_params.pop('early_stopping_rounds')
@@ -146,7 +147,7 @@ class Runner():
                             lgb.log_evaluation(0)
                     ] 
                 )
-                self.best_ntrees[i, t-1] = clf.best_iteration_
+                ntree = clf.best_iteration_
             
             else:
                 raise Exception('Wrong Model kind with early stopping.')
@@ -171,7 +172,7 @@ class Runner():
         
         self.print_model_info = False
 
-        return clf
+        return clf, ntree
 
 
     def run_validation(self, 
@@ -227,7 +228,8 @@ class Runner():
                 valid_users = valid_x.index.values
                 valid_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[valid_users]
 
-                clf = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params)
+                clf, ntree = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params)
+                self.best_ntrees[i, t-1] = ntree
                 
                 self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x)[:,1]
 

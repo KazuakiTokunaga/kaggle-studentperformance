@@ -96,7 +96,82 @@ class Runner():
         self.df3 = preprocess.drop_columns(df3)
         self.models['features'][grp] = self.df3.columns
         logger.info(f'df3 done: {self.df3.shape}')
+
+
+    def get_trained_clf(self, t, train_x, train_y, valid_x=None, valid_y=None, adhoc_params=None):
+            
+        validation = valid_x is not None
+        model_kind = self.model_options.get('model')
+        param_file = self.model_options.get('param_file')
+
+        with open(f'{self.repo_path}/config/{param_file}') as f:
+            params = json.load(f)
     
+        model_params = params['base']
+
+        # Qごとにn_estimatorsを変えるかどうか
+        n_estimators_list = params['n_estimators']
+        if len(n_estimators_list)==1:
+            model_params['n_estimators'] = n_estimators_list[0]
+        else:
+            model_params['n_estimators'] = n_estimators_list[t-1]
+
+        if adhoc_params:
+            for key, value in adhoc_params.items():
+                model_params[key] = value
+
+        if self.print_model_info:
+            logger.info(f'Use {model_kind} with params {model_params}.')
+
+        if validation and model_params.get('early_stopping_rounds'):
+            if self.print_model_info:
+                logger.info(f'Use early_stopping_rounds.')
+
+            eval_set = [(valid_x[FEATURES], valid_y['correct'])]
+            
+            if model_kind == 'xgb':
+                clf = xgb.XGBClassifier(**model_params)
+                clf.fit(train_x[FEATURES], train_y['correct'], verbose = 0, eval_set=eval_set)
+                self.best_ntrees[i, t-1] = clf.best_ntree_limit
+            
+            elif model_kind == 'lgb':
+                stopping_rounds = model_params.pop('early_stopping_rounds')
+
+                clf = lgb.LGBMClassifier(**model_params)
+                clf.fit(
+                    train_x[FEATURES], train_y['correct'], eval_set=eval_set, 
+                    callbacks=[
+                            lgb.early_stopping(stopping_rounds=stopping_rounds, verbose=False), # early_stopping用コールバック関数
+                            lgb.log_evaluation(0)
+                    ] 
+                )
+                self.best_ntrees[i, t-1] = clf.best_iteration_
+            
+            else:
+                raise Exception('Wrong Model kind with early stopping.')
+
+        # early stoppingを用いない場合
+        else:
+
+            if model_kind == 'xgb':
+                clf =  xgb.XGBClassifier(**model_params)
+                clf.fit(train_x[FEATURES], train_y['correct'], verbose = 0)
+            
+            elif model_kind == 'lgb':
+                clf = lgb.LGBMClassifier(**model_params)
+                clf.fit(train_x[FEATURES], train_y['correct'], callbacks=[lgb.log_evaluation(0)])
+        
+            elif model_kind == 'rf':
+                clf = RandomForestClassifier(**model_params) 
+                clf.fit(train_x[FEATURES], train_y['correct'])
+            
+            else:
+                raise Exception('Wrong Model kind.')
+        
+        self.print_model_info = False
+
+        return clf
+
 
     def run_validation(self, 
             save_oof=True, 
@@ -153,84 +228,13 @@ class Runner():
                 
                 FEATURES = [c for c in df.columns if c != 'level_group']
 
-                # TRAIN MODEL
-                print_info = True
-                if i>0 or t>1: print_info = False 
-                    
-
-                model_kind = self.model_options.get('model')
-                param_file = self.model_options.get('param_file')
-
-                with open(f'{self.repo_path}/config/{param_file}') as f:
-                    params = json.load(f)
-            
-                model_params = params['base']
-
-                # Qごとにn_estimatorsを変えるかどうか
-                n_estimators_list = params['n_estimators']
-                if len(n_estimators_list)==1:
-                    model_params['n_estimators'] = n_estimators_list[0]
-                else:
-                    model_params['n_estimators'] = n_estimators_list[t-1]
-
-                if adhoc_params:
-                    for key, value in adhoc_params.items():
-                        model_params[key] = value
-
-                if print_info:
-                    logger.info(f'Use {model_kind} with params {model_params}.')
-
-                if model_params.get('early_stopping_rounds'):
-                    if print_info:
-                        logger.info(f'Use early_stopping_rounds.')
-
-                    eval_set = [(valid_x[FEATURES], valid_y['correct'])]
-                    
-                    if model_kind == 'xgb':
-                        clf = xgb.XGBClassifier(**model_params)
-                        clf.fit(train_x[FEATURES], train_y['correct'], verbose = 0, eval_set=eval_set)
-                        self.best_ntrees[i, t-1] = clf.best_ntree_limit
-                    
-                    elif model_kind == 'lgb':
-                        stopping_rounds = model_params.pop('early_stopping_rounds')
-
-                        clf = lgb.LGBMClassifier(**model_params)
-                        clf.fit(
-                            train_x[FEATURES], train_y['correct'], eval_set=eval_set, 
-                            callbacks=[
-                                    lgb.early_stopping(stopping_rounds=stopping_rounds, verbose=False), # early_stopping用コールバック関数
-                                    lgb.log_evaluation(0)
-                            ] 
-                        )
-                        self.best_ntrees[i, t-1] = clf.best_iteration_
-                    
-                    else:
-                        raise Exception('Wrong Model kind with early stopping.')
-
-                # early stoppingを用いない場合
-                else:
-
-                    if model_kind == 'xgb':
-                        clf =  xgb.XGBClassifier(**model_params)
-                        clf.fit(train_x[FEATURES], train_y['correct'], verbose = 0)
-                    
-                    elif model_kind == 'lgb':
-                        clf = lgb.LGBMClassifier(**model_params)
-                        clf.fit(train_x[FEATURES], train_y['correct'], callbacks=[lgb.log_evaluation(0)])
+                clf = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params)
                 
-                    elif model_kind == 'rf':
-                        clf = RandomForestClassifier(**model_params) 
-                        clf.fit(train_x[FEATURES], train_y['correct'])
-                    
-                    else:
-                        raise Exception('Wrong Model kind.')
-                
-                # SAVE MODEL, PREDICT VALID OOF
-                self.models['models'][f'{grp}_{t}'] = clf
                 self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x[FEATURES])[:,1]
 
         if save_oof:
             self.oof.to_csv('oof_predict_proba.csv')
+        
 
     def evaluate_validation(self, ):
         logger.info('Start evaluating validations.')
@@ -277,6 +281,38 @@ class Runner():
         
         if self.best_ntrees[0, 0] > 1:
             pd.Series(self.best_ntrees.mean(axis=0)).to_csv('best_num_trees.csv')
+
+
+    def train_all_clf(self, ):
+        logger.info(f'Train clf using all train data.')
+
+        # ITERATE THRU QUESTIONS 1 THRU 18
+        for t in self.questions:
+            
+            # USE THIS TRAIN DATA WITH THESE QUESTIONS
+            if t<=3: 
+                grp = '0-4'
+                df = self.df1
+            elif t<=13: 
+                grp = '5-12'
+                df = self.df2
+            elif t<=22: 
+                grp = '13-22'
+                df = self.df3
+                
+            # TRAIN DATA
+            train_x = df
+            train_users = train_x.index.values
+            train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session')
+            
+            FEATURES = [c for c in df.columns if c != 'level_group']
+
+            clf = self.get_trained_clf(t, train_x, train_y)    
+
+            # SAVE MODEL.
+            self.models['models'][f'{grp}_{t}'] = clf
+
+        logger.info(f'Saved trained model.')
 
 
     def write_sheet(self, ):

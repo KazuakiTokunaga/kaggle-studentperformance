@@ -102,6 +102,7 @@ class Runner():
     def get_trained_clf(self, t, train_x, train_y, valid_x=None, valid_y=None, adhoc_params=None):
             
         validation = valid_x is not None
+        FEATURES = [c for c in train_x.columns if c != 'level_group']
         model_kind = self.model_options.get('model')
         param_file = self.model_options.get('param_file')
 
@@ -226,8 +227,6 @@ class Runner():
                 valid_x = df.iloc[test_index]
                 valid_users = valid_x.index.values
                 valid_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[valid_users]
-                
-                FEATURES = [c for c in df.columns if c != 'level_group']
 
                 clf = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params)
                 

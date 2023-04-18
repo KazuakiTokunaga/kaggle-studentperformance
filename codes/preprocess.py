@@ -176,6 +176,6 @@ def feature_engineer_pl(x, grp, use_extra=True, use_time=True, feature_suffix = 
             pl.col('session_id').apply(lambda x: int(str(x)[10:12])).alias('second')
         ]
 
-        df = df.with_columns(*time_columns)
+        # df = df.with_columns(*time_columns)
         
     return df

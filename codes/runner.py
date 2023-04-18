@@ -8,6 +8,7 @@ import pickle
 
 import xgboost as xgb
 import lightgbm as lgb
+from catboost import CatBoostClassifier, Pool
 from sklearn.model_selection import KFold, GroupKFold
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import f1_score
@@ -125,6 +126,7 @@ class Runner():
         if self.print_model_info:
             logger.info(f'Use {model_kind} with params {model_params}.')
 
+        # early_stoppingを用いる場合
         if validation and model_params.get('early_stopping_rounds'):
             if self.print_model_info:
                 logger.info(f'Use early_stopping_rounds.')
@@ -149,6 +151,16 @@ class Runner():
                 )
                 ntree = clf.best_iteration_
             
+            elif model_kind == 'cat':
+                
+                train_pool = Pool(train_x.astype('float32'), train_y['correct'])
+                valid_pool = Pool(valid_x.astype('float32'), valid_y['correct'])
+
+                clf = CatBoostClassifier(**model_params)
+                clf.fit(train_pool, eval_set=valid_pool)
+
+                ntree = clf.get_best_iteration()
+            
             else:
                 raise Exception('Wrong Model kind with early stopping.')
 
@@ -166,6 +178,11 @@ class Runner():
             elif model_kind == 'lgb':
                 clf = lgb.LGBMClassifier(**model_params)
                 clf.fit(train_x, train_y['correct'], callbacks=[lgb.log_evaluation(0)])
+            
+            elif model_kind == 'cat':
+                train_pool = Pool(train_x.astype('float32'), train_y['correct'])
+                clf = CatBoostClassifier(**model_params)
+                clf.fit(train_pool)
         
             elif model_kind == 'rf':
                 clf = RandomForestClassifier(**model_params) 
@@ -309,7 +326,7 @@ class Runner():
             train_x = df
             train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session')
 
-            clf = self.get_trained_clf(t, train_x, train_y)    
+            clf, ntree = self.get_trained_clf(t, train_x, train_y)    
 
             # SAVE MODEL.
             self.models['models'][f'{grp}_{t}'] = clf
@@ -338,6 +355,7 @@ class Runner():
 
         self.load_dataset()
         self.engineer_features()
+        self.delete_df_train()
         self.run_validation()
         self.evaluate_validation()
         self.write_sheet()

@@ -62,7 +62,7 @@ def drop_columns(df, thre=0.1):
     return df
 
 
-def feature_engineer_pl(x, grp, use_extra, feature_suffix):
+def feature_engineer_pl(x, grp, use_extra=True, use_time=True, feature_suffix = ''):
 
     CATS = ['event_name', 'name', 'fqid', 'room_fqid', 'text_fqid']
     NUMS = ['page', 'room_coor_x', 'room_coor_y', 'screen_coor_x', 'screen_coor_y',
@@ -164,5 +164,18 @@ def feature_engineer_pl(x, grp, use_extra, feature_suffix):
             ]
             tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
             df = df.join(tmp, on="session_id", how='left')
+    
+    if use_time:
+
+        time_columns = [
+            pl.col('session_id').apply(lambda x: int(str(x)[:2])).alias('year')
+            pl.col('session_id').apply(lambda x: int(str(x)[2:4])+1).alias('month'),
+            pl.col('session_id').apply(lambda x: int(str(x)[4:6])).alias('day'),
+            pl.col('session_id').apply(lambda x: int(str(x)[6:8])).alias('hour'),
+            pl.col('session_id').apply(lambda x: int(str(x)[8:10])).alias('minute'),
+            pl.col('session_id').apply(lambda x: int(str(x)[10:12])).alias('second')
+        ]
+
+        df = df.with_columns(*time_columns)
         
     return df

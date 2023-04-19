@@ -69,6 +69,7 @@ def feature_engineer_pl(x, grp, use_extra=True, use_time=True, feature_suffix = 
             'hover_duration', 'elapsed_time_diff']
 
     LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+    level_groups = ["0-4", "5-12", "13-22"]
     DIALOGS = ['that', 'this', 'it', 'you', 'flag', 'can','and','is','the','to']
     name_feature = ['basic', 'undefined', 'close', 'open', 'prev', 'next']
     event_name_feature = ['cutscene_click', 'person_click', 'navigate_click',
@@ -150,7 +151,12 @@ def feature_engineer_pl(x, grp, use_extra=True, use_time=True, feature_suffix = 
         *[pl.col("elapsed_time_diff").filter((pl.col('text').str.contains(c))).mean().alias(f'word_mean_{c}') for c in DIALOGS],
         *[pl.col("elapsed_time_diff").filter((pl.col('text').str.contains(c))).std().alias(f'word_std_{c}') for c in DIALOGS],
         *[pl.col("elapsed_time_diff").filter(pl.col('text').str.contains(c)).max().alias(f'word_max_{c}') for c in DIALOGS],
-        *[pl.col("elapsed_time_diff").filter(pl.col('text').str.contains(c)).sum().alias(f'word_sum_{c}') for c in DIALOGS]
+        *[pl.col("elapsed_time_diff").filter(pl.col('text').str.contains(c)).sum().alias(f'word_sum_{c}') for c in DIALOGS],
+
+        *[pl.col("level_group").filter(pl.col("level_group") == c).count().alias(f"{c}_LEVEL_group_count{feature_suffix}") for c in level_groups],
+        *[pl.col("elapsed_time_diff").filter(pl.col("level_group") == c).std().alias(f"{c}_ET_std_{feature_suffix}") for c in level_groups],
+        *[pl.col("elapsed_time_diff").filter(pl.col("level_group") == c).mean().alias(f"{c}_ET_mean_{feature_suffix}") for c in level_groups],
+        *[pl.col("elapsed_time_diff").filter(pl.col("level_group") == c).sum().alias(f"{c}_ET_sum_{feature_suffix}") for c in level_groups]
     ]
     
     df = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")

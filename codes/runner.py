@@ -49,7 +49,7 @@ class Runner():
         self.models = {
             'features': {},
             'models': {},
-            'optimal_threshold': 0.625
+            'optimal_threshold': 0.620
         }
         self.print_model_info = True
         
@@ -70,7 +70,7 @@ class Runner():
         gc.collect()
     
 
-    def engineer_features(self, ):
+    def engineer_features(self, return_pd=True):
         logger.info('Start engineer features.')
 
         self.df_train = preprocess.add_columns(self.df_train)
@@ -99,6 +99,17 @@ class Runner():
         self.models['features'][grp] = self.df3.columns
         logger.info(f'df3 done: {self.df3.shape}')
 
+        if return_pd:
+            if type(self.df1) == pl.DataFrame:
+                logger.info('Convert polars df to pandas df.')
+
+                self.df1 = utils.pl_to_pd(self.df1)
+                self.df2 = utils.pl_to_pd(self.df2)
+                self.df3 = utils.pl_to_pd(self.df3)
+            
+            self.df1 = self.df1.fillna(-1)
+            self.df2 = self.df2.fillna(-1)
+            self.df3 = self.df3.fillna(-1)
 
     def get_trained_clf(self, t, train_x, train_y, valid_x=None, valid_y=None, adhoc_params=None):
             
@@ -200,17 +211,6 @@ class Runner():
             save_oof=True, 
             adhoc_params=None
         ):
-
-        if type(self.df1) == pl.DataFrame:
-            logger.info('Convert polars df to pandas df.')
-
-            self.df1 = utils.pl_to_pd(self.df1)
-            self.df2 = utils.pl_to_pd(self.df2)
-            self.df3 = utils.pl_to_pd(self.df3)
-        
-        self.df1 = self.df1.fillna(-1)
-        self.df2 = self.df2.fillna(-1)
-        self.df3 = self.df3.fillna(-1)
 
         self.ALL_USERS = self.df1.index.unique()
         user_cnt = len(self.ALL_USERS)

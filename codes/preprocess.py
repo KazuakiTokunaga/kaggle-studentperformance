@@ -187,16 +187,16 @@ def feature_engineer_pl(x, grp, use_extra=True, use_time=True, feature_suffix = 
     
     # if use_time:
 
-        time_columns = [
-            pl.col('session_id').apply(lambda x: int(str(x)[:2])).alias('year'),
-            pl.col('session_id').apply(lambda x: int(str(x)[2:4])+1).alias('month'),
-            pl.col('session_id').apply(lambda x: int(str(x)[4:6])).alias('day'),
-            pl.col('session_id').apply(lambda x: int(str(x)[6:8])).alias('hour'),
-            pl.col('session_id').apply(lambda x: int(str(x)[8:10])).alias('minute'),
-            pl.col('session_id').apply(lambda x: int(str(x)[10:12])).alias('second')
-        ]
+        # time_columns = [
+        #     pl.col('session_id').apply(lambda x: int(str(x)[:2])).alias('year'),
+        #     pl.col('session_id').apply(lambda x: int(str(x)[2:4])+1).alias('month'),
+        #     pl.col('session_id').apply(lambda x: int(str(x)[4:6])).alias('day'),
+        #     pl.col('session_id').apply(lambda x: int(str(x)[6:8])).alias('hour'),
+        #     pl.col('session_id').apply(lambda x: int(str(x)[8:10])).alias('minute'),
+        #     pl.col('session_id').apply(lambda x: int(str(x)[10:12])).alias('second')
+        # ]
 
-        df = df.with_columns(*time_columns)
+        # df = df.with_columns(*time_columns)
         
     # return df
 

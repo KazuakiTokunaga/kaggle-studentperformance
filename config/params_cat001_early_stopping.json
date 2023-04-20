@@ -11,5 +11,5 @@
         "verbose": 0,
         "l2_leaf_reg": 20
     },
-    "n_estimators": [1000]
+    "n_estimators": [2000]
 }

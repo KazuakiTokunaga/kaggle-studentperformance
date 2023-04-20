@@ -52,6 +52,7 @@ class Runner():
             'optimal_threshold': 0.620
         }
         self.print_model_info = True
+        self.best_ntrees = None
         
         self.validation_options = validation_options
         self.n_fold = validation_options.get('n_fold')
@@ -129,6 +130,10 @@ class Runner():
             model_params['n_estimators'] = n_estimators_list[0]
         else:
             model_params['n_estimators'] = n_estimators_list[t-1]
+
+        # validation時にbest_iterationを保存している場合はそちらを優先する
+        if self.best_ntrees is not None:
+            model_params['n_estimators'] = self.best_ntrees[t-1]
 
         if adhoc_params:
             for key, value in adhoc_params.items():
@@ -217,7 +222,7 @@ class Runner():
         logger.info(f'We will train with {user_cnt} users info')
 
         self.oof = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ALL_USERS)
-        self.best_ntrees = np.zeros([self.n_fold, 18])
+        best_ntrees_mat = np.zeros([self.n_fold, 18])
 
         logger.info(f'Start validation with {self.n_fold} folds.')
         gkf = GroupKFold(n_splits=self.n_fold)
@@ -250,9 +255,13 @@ class Runner():
                 valid_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[valid_users]
 
                 clf, ntree = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params)
-                self.best_ntrees[i, t-1] = ntree
+                best_ntrees_mat[i, t-1] = ntree
                 
                 self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x)[:,1]
+
+        if best_ntrees_mat[0, 0] > 1:
+            self.best_ntrees = pd.Series(best_ntrees_mat.mean(axis=0))
+            pd.Series(self.best_ntrees).to_csv('best_num_trees.csv')
 
         if save_oof:
             self.oof.to_csv('oof_predict_proba.csv')
@@ -300,9 +309,6 @@ class Runner():
             m = f1_score(true[k].values, (oof_target[k].values>best_threshold).astype('int'), average='macro')
             logger.info(f'Q{k}: F1 = {m}')
             self.scores.append(m)
-        
-        if self.best_ntrees[0, 0] > 1:
-            pd.Series(self.best_ntrees.mean(axis=0)).to_csv('best_num_trees.csv')
 
 
     def train_all_clf(self, ):

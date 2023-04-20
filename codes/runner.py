@@ -260,7 +260,7 @@ class Runner():
                 self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x)[:,1]
 
         if best_ntrees_mat[0, 0] > 1:
-            self.best_ntrees = pd.Series(best_ntrees_mat.mean(axis=0))
+            self.best_ntrees = pd.Series(best_ntrees_mat.mean(axis=0).astype('int'))
             pd.Series(self.best_ntrees).to_csv('best_num_trees.csv')
 
         if save_oof:

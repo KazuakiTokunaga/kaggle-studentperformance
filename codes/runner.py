@@ -133,7 +133,9 @@ class Runner():
 
         # validation時にbest_iterationを保存している場合はそちらを優先する
         if self.best_ntrees is not None:
-            model_params['n_estimators'] = self.best_ntrees[t-1]
+            n = self.best_ntrees[t-1]
+            logger.info(f'Q{t}: n_estimators {n}')
+            model_params['n_estimators'] = n
 
         if adhoc_params:
             for key, value in adhoc_params.items():

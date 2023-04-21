@@ -10,7 +10,7 @@
         "subsample":0.8,
         "colsample_bytree": 0.5,
         "seed": 42,
-        "early_stopping_rounds": 30
+        "early_stopping_rounds": 60
     },
-    "n_estimators": [1000]
+    "n_estimators": [1200]
 }

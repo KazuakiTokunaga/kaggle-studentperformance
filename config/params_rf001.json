@@ -1,0 +1,8 @@
+{
+    "base": {
+        "max_depth": 5,
+        "criterion": "gini",
+        "random_state": 42
+    },
+    "n_estimators": [100]
+}

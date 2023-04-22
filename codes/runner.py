@@ -72,7 +72,7 @@ class Runner():
         gc.collect()
     
 
-    def engineer_features(self, return_pd=True):
+    def engineer_features(self, return_pd=True, fillna=True):
         logger.info('Start engineer features.')
 
         self.df_train = preprocess.add_columns(self.df_train)
@@ -87,39 +87,37 @@ class Runner():
         self.df1 = preprocess.feature_engineer_pl(df1, grp=grp, use_extra=True, feature_suffix='')
         self.df1 = preprocess.drop_columns(self.df1)
         self.models['features'][grp] = self.df1.columns
-
         logger.info(f'df1 done: {self.df1.shape}')
-        self.note['df1_shape'] = self.df1.shape
         
         grp = '5-12'
         df2 = preprocess.feature_engineer_pl(df2, grp=grp, use_extra=True, feature_suffix='')
         self.df2 = preprocess.drop_columns(df2)
         self.models['features'][grp] = self.df2.columns
-
         logger.info(f'df2 done: {self.df2.shape}')
-        self.note['df2_shape'] = self.df2.shape
 
         grp = '13-22'
         df3 = preprocess.feature_engineer_pl(df3, grp=grp, use_extra=True, feature_suffix='')
         self.df3 = preprocess.drop_columns(df3)
         self.models['features'][grp] = self.df3.columns
-        
         logger.info(f'df3 done: {self.df3.shape}')
-        self.note['df3_shape'] = self.df3.shape
 
+        self.note['df1_shape'] = self.df1.shape
+        self.note['df2_shape'] = self.df2.shape
+        self.note['df3_shape'] = self.df3.shape
         self.note['feature'] = ''
 
         if return_pd:
             if type(self.df1) == pl.DataFrame:
                 logger.info('Convert polars df to pandas df.')
-
                 self.df1 = utils.pl_to_pd(self.df1)
                 self.df2 = utils.pl_to_pd(self.df2)
                 self.df3 = utils.pl_to_pd(self.df3)
-            
-            self.df1 = self.df1.fillna(-1)
-            self.df2 = self.df2.fillna(-1)
-            self.df3 = self.df3.fillna(-1)
+        
+            if fillna:
+                logger.info('Execute fillna with -1 to pandas df.')
+                self.df1 = self.df1.fillna(-1)
+                self.df2 = self.df2.fillna(-1)
+                self.df3 = self.df3.fillna(-1)
 
     def get_trained_clf(self, t, train_x, train_y, valid_x=None, valid_y=None, adhoc_params=None):
             
@@ -322,7 +320,7 @@ class Runner():
             self.scores.append(m)
 
 
-    def train_all_clf(self, ):
+    def train_all_clf(self, save_model=True):
         logger.info(f'Train clf using all train data.')
 
         # ITERATE THRU QUESTIONS 1 THRU 18
@@ -350,6 +348,9 @@ class Runner():
 
         logger.info(f'Saved trained model.')
 
+        pickle.dump(self.models, open(f'models.pkl', 'wb'))
+        logger.info('Export trained model.')
+
 
     def write_sheet(self, ):
         logger.info('Write scores to google sheet.')
@@ -365,10 +366,6 @@ class Runner():
         google_sheet.write(data, sheet_name='cv_scores')
 
 
-    def save_models(self, ):
-        pickle.dump(self.models, open(f'models.pkl', 'wb'))
-
-
     def main(self, ):
 
         self.load_dataset()
@@ -378,5 +375,4 @@ class Runner():
         self.evaluate_validation()
         self.write_sheet()
         self.train_all_clf()
-        self.save_models()
         

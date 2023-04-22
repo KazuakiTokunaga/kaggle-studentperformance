@@ -53,6 +53,7 @@ class Runner():
         }
         self.print_model_info = True
         self.best_ntrees = None
+        self.note = dict()
         
         self.validation_options = validation_options
         self.n_fold = validation_options.get('n_fold')
@@ -86,19 +87,27 @@ class Runner():
         self.df1 = preprocess.feature_engineer_pl(df1, grp=grp, use_extra=True, feature_suffix='')
         self.df1 = preprocess.drop_columns(self.df1)
         self.models['features'][grp] = self.df1.columns
+
         logger.info(f'df1 done: {self.df1.shape}')
+        self.note['df1_shape'] = self.df1.shape
         
         grp = '5-12'
         df2 = preprocess.feature_engineer_pl(df2, grp=grp, use_extra=True, feature_suffix='')
         self.df2 = preprocess.drop_columns(df2)
         self.models['features'][grp] = self.df2.columns
+
         logger.info(f'df2 done: {self.df2.shape}')
+        self.note['df2_shape'] = self.df2.shape
 
         grp = '13-22'
         df3 = preprocess.feature_engineer_pl(df3, grp=grp, use_extra=True, feature_suffix='')
         self.df3 = preprocess.drop_columns(df3)
         self.models['features'][grp] = self.df3.columns
+        
         logger.info(f'df3 done: {self.df3.shape}')
+        self.note['df3_shape'] = self.df3.shape
+
+        self.note['feature'] = ''
 
         if return_pd:
             if type(self.df1) == pl.DataFrame:
@@ -350,6 +359,7 @@ class Runner():
         data.append(self.load_options)
         data.append(self.validation_options)
         data.append(self.model_options)
+        data.append(self.note)
 
         google_sheet = utils.WriteSheet()
         google_sheet.write(data, sheet_name='cv_scores')

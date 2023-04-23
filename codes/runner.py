@@ -273,6 +273,7 @@ class Runner():
         if best_ntrees_mat[0, 0] > 1:
             logger.info('Save best iterations.')
             self.best_ntrees = pd.Series(best_ntrees_mat.mean(axis=0).astype('int'))
+            self.note['best_ntrees'] = self.best_ntrees
             pd.Series(self.best_ntrees).to_csv('best_num_trees.csv')
 
         if save_oof:
@@ -308,7 +309,9 @@ class Runner():
             if m>best_score:
                 best_score = m
                 best_threshold = threshold
+
         self.models['optimal_threshold'] = best_threshold
+        self.note['best_threshold'] = best_threshold
         logger.info(f'optimal threshold: {best_threshold}')
         
         logger.info('When using optimal threshold...')

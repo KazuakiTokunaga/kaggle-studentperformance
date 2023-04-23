@@ -89,5 +89,5 @@ class WriteSheet:
         sheet = self.worksheet.worksheet(sheet_name)
 
         # 辞書のみJSONに変換、ほかはそのままにして、書き込む
-        data_json = [json.dumps(d) if type(d) == dict else d for d in data]
+        data_json = [json.dumps(d, ensure_ascii=False) if type(d) == dict else d for d in data]
         sheet.append_row(data_json, table_range=table_range)

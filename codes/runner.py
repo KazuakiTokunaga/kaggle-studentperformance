@@ -104,7 +104,9 @@ class Runner():
         self.note['df1_shape'] = self.df1.shape
         self.note['df2_shape'] = self.df2.shape
         self.note['df3_shape'] = self.df3.shape
-        self.note['feature'] = ''
+        self.note['feature'] = {
+            "time": 'year,month,dayはなし'
+        }
 
         if return_pd:
             if type(self.df1) == pl.DataFrame:

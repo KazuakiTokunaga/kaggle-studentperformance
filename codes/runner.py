@@ -311,7 +311,7 @@ class Runner():
                 best_score = m
                 best_threshold = threshold
 
-        self.models['optimal_threshold'] = best_threshold
+        self.models['optimal_threshold'] = np.round(best_threshold, 6)
         self.note['best_threshold'] = best_threshold
         logger.info(f'optimal threshold: {best_threshold}')
         

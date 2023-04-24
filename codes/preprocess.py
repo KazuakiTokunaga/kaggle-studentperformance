@@ -167,7 +167,7 @@ def feature_engineer_pl(x, grp, use_extra=True, use_time=True, feature_suffix = 
         *[pl.col("level_group").filter(pl.col("level_group") == c).count().alias(f"{c}_LEVEL_group_count{feature_suffix}") for c in level_groups],
         *[pl.col("elapsed_time_diff").filter(pl.col("level_group") == c).std().alias(f"{c}_ET_std_{feature_suffix}") for c in level_groups],
         *[pl.col("elapsed_time_diff").filter(pl.col("level_group") == c).mean().alias(f"{c}_ET_mean_{feature_suffix}") for c in level_groups],
-        *[pl.col("elapsed_time_diff").filter(pl.col("level_group") == c).sum().alias(f"{c}_ET_sum_{feature_suffix}") for c in level_groups]
+        *[pl.col("elapsed_time_diff").filter(pl.col("level_group") == c).sum().alias(f"{c}_ET_sum_{feature_suffix}") for c in level_groups],
 
         ## 追加
         # levelの経過時間
@@ -182,7 +182,7 @@ def feature_engineer_pl(x, grp, use_extra=True, use_time=True, feature_suffix = 
         
         # text, levelの組での経過時間と回数
         *[pl.col("elapsed_time").filter((pl.col("text_fqid") == t)&(pl.col('level')==l)).apply(lambda s: s.max() - s.min() if s.len()>0 else 0).alias(f"{t}_{l}ET_diff_{feature_suffix}") for t, l in zip(tl_cs[0], tl_cs[1])],
-        *[pl.col("elapsed_time").filter((pl.col("text_fqid") == t)&(pl.col('level')==l)).count().alias(f"{t}_{l}ET_count_{feature_suffix}") for t, l in zip(tl_cs[0], tl_cs[1])],
+        *[pl.col("elapsed_time").filter((pl.col("text_fqid") == t)&(pl.col('level')==l)).count().alias(f"{t}_{l}ET_count_{feature_suffix}") for t, l in zip(tl_cs[0], tl_cs[1])]
 
     ]
     

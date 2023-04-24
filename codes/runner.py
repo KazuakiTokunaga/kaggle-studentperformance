@@ -105,7 +105,8 @@ class Runner():
         self.note['df2_shape'] = self.df2.shape
         self.note['df3_shape'] = self.df3.shape
         self.note['feature'] = {
-            "time": 'year,month,dayはなし'
+            "time": 'year,month,dayはなし',
+            "ver2": '集約を追加、不審なクリックを追加'
         }
 
         if return_pd:

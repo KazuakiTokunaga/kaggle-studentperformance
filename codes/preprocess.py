@@ -211,6 +211,7 @@ def feature_engineer_pl(x, grp, use_extra=True, use_time=True, feature_suffix = 
     
     if version>=2:
 
+        # 集計統計量の追加
         aggs = [
             # levelの経過時間
             *[pl.col("elapsed_time").filter(pl.col("level") == c).apply(lambda s: s.max() - s.min() if s.len()>0 else 0).alias(f"{c}_ET_diff_{feature_suffix}") for c in LEVELS],

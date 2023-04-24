@@ -62,7 +62,7 @@ def drop_columns(df, thre=0.9):
     return df
 
 
-def feature_engineer_pl(x, grp, use_extra=True, use_time=True, feature_suffix = ''):
+def feature_engineer_pl(x, grp, use_extra=True, use_time=True, feature_suffix = '', version=2):
 
     # from https://www.kaggle.com/code/leehomhuang/catboost-baseline-with-lots-features-inference :
 
@@ -169,21 +169,6 @@ def feature_engineer_pl(x, grp, use_extra=True, use_time=True, feature_suffix = 
         *[pl.col("elapsed_time_diff").filter(pl.col("level_group") == c).mean().alias(f"{c}_ET_mean_{feature_suffix}") for c in level_groups],
         *[pl.col("elapsed_time_diff").filter(pl.col("level_group") == c).sum().alias(f"{c}_ET_sum_{feature_suffix}") for c in level_groups],
 
-        ## 追加
-        # levelの経過時間
-        *[pl.col("elapsed_time").filter(pl.col("level") == c).apply(lambda s: s.max() - s.min() if s.len()>0 else 0).alias(f"{c}_ET_diff_{feature_suffix}") for c in LEVELS],
-        
-        # levelと主要イベントの回数
-        *[pl.col("event_name").filter((pl.col("event_name")==c)&(pl.col("level")==l)).count().alias(f"{c}_{l}_ET_min_{feature_suffix}") for c in event_name_short for l in LEVELS],
-        
-        # fqid, room, levelの組での経過時間と回数
-        *[pl.col("elapsed_time").filter((pl.col("fqid") == f)&(pl.col("room_fqid")==r)&(pl.col("level")==l)).apply(lambda s: s.max() - s.min() if s.len()>0 else 0).alias(f"{f}_{r}_{l}_diff{feature_suffix}") for f, l, r in zip(flr_cs[0], flr_cs[1], flr_cs[2])],
-        *[pl.col("fqid").filter((pl.col("fqid") == f)&(pl.col("room_fqid")==r)&(pl.col("level")==l)).count().alias(f"{f}_{r}_{l}_counts{feature_suffix}") for f, l, r in zip(flr_cs[0], flr_cs[1], flr_cs[2])],
-        
-        # text, levelの組での経過時間と回数
-        *[pl.col("elapsed_time").filter((pl.col("text_fqid") == t)&(pl.col('level')==l)).apply(lambda s: s.max() - s.min() if s.len()>0 else 0).alias(f"{t}_{l}ET_diff_{feature_suffix}") for t, l in zip(tl_cs[0], tl_cs[1])],
-        *[pl.col("elapsed_time").filter((pl.col("text_fqid") == t)&(pl.col('level')==l)).count().alias(f"{t}_{l}ET_count_{feature_suffix}") for t, l in zip(tl_cs[0], tl_cs[1])]
-
     ]
     
     df = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
@@ -223,5 +208,32 @@ def feature_engineer_pl(x, grp, use_extra=True, use_time=True, feature_suffix = 
         ]
 
         df = df.with_columns(*time_columns)
+    
+    if version>=2:
+
+        aggs = [
+            # levelの経過時間
+            *[pl.col("elapsed_time").filter(pl.col("level") == c).apply(lambda s: s.max() - s.min() if s.len()>0 else 0).alias(f"{c}_ET_diff_{feature_suffix}") for c in LEVELS],
+            
+            # levelと主要イベントの回数
+            *[pl.col("event_name").filter((pl.col("event_name")==c)&(pl.col("level")==l)).count().alias(f"{c}_{l}_ET_min_{feature_suffix}") for c in event_name_short for l in LEVELS],
+            
+            # fqid, room, levelの組での経過時間と回数
+            *[pl.col("elapsed_time").filter((pl.col("fqid") == f)&(pl.col("room_fqid")==r)&(pl.col("level")==l)).apply(lambda s: s.max() - s.min() if s.len()>0 else 0).alias(f"{f}_{r}_{l}_diff{feature_suffix}") for f, l, r in zip(flr_cs[0], flr_cs[1], flr_cs[2])],
+            *[pl.col("fqid").filter((pl.col("fqid") == f)&(pl.col("room_fqid")==r)&(pl.col("level")==l)).count().alias(f"{f}_{r}_{l}_counts{feature_suffix}") for f, l, r in zip(flr_cs[0], flr_cs[1], flr_cs[2])],
+            
+            # text, levelの組での経過時間と回数
+            *[pl.col("elapsed_time").filter((pl.col("text_fqid") == t)&(pl.col('level')==l)).apply(lambda s: s.max() - s.min() if s.len()>0 else 0).alias(f"{t}_{l}ET_diff_{feature_suffix}") for t, l in zip(tl_cs[0], tl_cs[1])],
+            *[pl.col("elapsed_time").filter((pl.col("text_fqid") == t)&(pl.col('level')==l)).count().alias(f"{t}_{l}ET_count_{feature_suffix}") for t, l in zip(tl_cs[0], tl_cs[1])]
+        ]
+        tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
+        df = df.join(tmp, on="session_id", how='left')
+        
+        # 不審なクリック
+        click_list = x.filter(pl.col('screen_coor_x').is_not_null()).groupby('screen_coor_x', 'screen_coor_y', 'session_id').count().sort('count', descending=True)
+        tmp = click_list.groupby('session_id').max().select('session_id', pl.col('count').alias('click_same_max'))
+        tmp2 = click_list.filter(pl.col('count')>=5).groupby('session_id').count().select('session_id', pl.col('count').alias('click_same_over5_count'))
+        tmp = tmp.join(tmp2, on='session_id', how='left')
+        df = df.join(tmp, on='session_id', how='left')
         
     return df

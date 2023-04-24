@@ -86,7 +86,7 @@ def feature_engineer_pl(x, grp, use_extra=True, use_time=True, feature_suffix = 
     room_lists = ['tunic.historicalsociety.entry', 'tunic.wildlife.center', 'tunic.historicalsociety.cage', 'tunic.library.frontdesk', 'tunic.historicalsociety.frontdesk', 'tunic.historicalsociety.stacks', 'tunic.historicalsociety.closet_dirty', 'tunic.humanecology.frontdesk', 'tunic.historicalsociety.basement', 'tunic.kohlcenter.halloffame', 'tunic.library.microfiche', 'tunic.drycleaner.frontdesk', 'tunic.historicalsociety.collection', 'tunic.historicalsociety.closet', 'tunic.flaghouse.entry', 'tunic.historicalsociety.collection_flag', 'tunic.capitol_1.hall', 'tunic.capitol_0.hall', 'tunic.capitol_2.hall']
 
     #　fqid, level, roomと、text, levelで、ある程度レコードが存在する組み合わせをみつける
-    session_cnt = df.select('session_id').n_unique()
+    session_cnt = x.select('session_id').n_unique()
     low = int(session_cnt * 0.1) 
     flr_list = df.select('fqid', 'level', 'room_fqid', 'session_id').groupby('fqid', 'level', 'room_fqid').n_unique().filter(pl.col('session_id')>=low).drop('session_id')
     flr_cs = flr_list.get_columns()

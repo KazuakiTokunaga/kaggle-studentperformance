@@ -254,7 +254,3 @@ def feature_engineer_pl(x, grp,
         df = df.join(tmp, on='session_id', how='left')
         
     return df
-
-
-def get_flr():
-    return 

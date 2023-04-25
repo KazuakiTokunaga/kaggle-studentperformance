@@ -107,7 +107,7 @@ def feature_engineer_pl(x, grp,
         flr_cs = flr_list.get_columns()
 
         tl_list = pl.read_csv(f'{csv_path}/tl_list.csv')
-        tl_list = tl_list.get_columns()
+        tl_cs = tl_list.get_columns()
 
     aggs = [
         pl.col("index").count().alias(f"session_number_{feature_suffix}"),

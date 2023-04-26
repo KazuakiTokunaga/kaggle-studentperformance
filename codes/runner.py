@@ -238,14 +238,12 @@ class Runner():
 
         logger.info(f'Start validation with {self.n_fold} folds.')
         gkf = GroupKFold(n_splits=self.n_fold)
-        for i, (train_index, test_index) in enumerate(gkf.split(X=self.df1, groups=self.df1.index)):
+        gkf_split_list = list(gkf.split(X=self.df1, groups=self.df1.index))
 
-            # ITERATE THRU QUESTIONS 1 THRU 18
-            for t in self.questions:
-                if t <= 3:
-                    logger.info(f'Fold {i} - Q {t}')
+        for t in self.questions:
+
+            for train_index, test_index in gkf_split_list:
                 
-                # USE THIS TRAIN DATA WITH THESE QUESTIONS
                 if t<=3: 
                     grp = '0-4'
                     df = self.df1
@@ -260,9 +258,11 @@ class Runner():
                 # TRAIN DATA
                 train_x = df.iloc[train_index]
                 train_users = train_x.index.values
-                prev_answers = self.oof.loc[train_users, [i for i in range(1, t)]].copy()
+                prev_answers = self.train_predict.loc[train_users, [i for i in range(1, t)]].copy()
                 train_x = train_x.merge(prev_answers, left_index=True, right_index=True, how='left')
-                self.train_x = train_x
+
+                if t == 15:
+                    self.train_x = train_x
 
                 train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[train_users]
                 
@@ -272,6 +272,9 @@ class Runner():
                 prev_answers = self.oof.loc[valid_users, [i for i in range(1, t)]].copy()
                 valid_x = valid_x.merge(prev_answers, left_index=True, right_index=True, how='left')
                 valid_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[valid_users]
+
+                if t == 15:
+                    self.valid_x = valid_x
 
                 clf, ntree = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params)
                 best_ntrees_mat[i, t-1] = ntree

@@ -255,15 +255,21 @@ class Runner():
                 elif t<=22: 
                     grp = '13-22'
                     df = self.df3
+                
                     
                 # TRAIN DATA
                 train_x = df.iloc[train_index]
                 train_users = train_x.index.values
+                prev_answers = self.oof.loc[train_users, [i for i in range(1, t)]].copy()
+                train_x = train_x.merge(prev_answers, how='left')
+
                 train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[train_users]
                 
                 # VALID DATA
                 valid_x = df.iloc[test_index]
                 valid_users = valid_x.index.values
+                prev_answers = self.oof.loc[valid_users, [i for i in range(1, t)]].copy()
+                valid_x = valid_x.merge(prev_answers, how='left')
                 valid_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[valid_users]
 
                 clf, ntree = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params)

@@ -270,7 +270,7 @@ class Runner():
                 valid_x = df.iloc[test_index]
                 valid_users = valid_x.index.values
                 prev_answers = self.oof.loc[valid_users, [i for i in range(1, t)]].copy()
-                valid_x = valid_x.merge(prev_answers, how='left')
+                valid_x = valid_x.merge(prev_answers, left_index=True, right_index=True, how='left')
                 valid_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[valid_users]
 
                 clf, ntree = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params)

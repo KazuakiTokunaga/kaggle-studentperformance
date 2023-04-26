@@ -243,6 +243,7 @@ class Runner():
         for t in self.questions:
 
             for k, (train_index, test_index) in enumerate(gkf_split_list):
+                logger.info(f'{t}, {k}')
                 
                 if t<=3: 
                     grp = '0-4'

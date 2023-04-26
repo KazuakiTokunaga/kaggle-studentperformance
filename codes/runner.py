@@ -354,6 +354,9 @@ class Runner():
                 
             # TRAIN DATA
             train_x = df
+            prev_answers = self.oof[[i for i in range(1, t)].copy()]
+            train_x = train_x.merge(prev_answers, left_index=True, right_index=True, how='left')
+            
             train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session')
 
             clf, ntree = self.get_trained_clf(t, train_x, train_y)    

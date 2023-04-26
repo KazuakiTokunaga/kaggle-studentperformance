@@ -84,19 +84,19 @@ class Runner():
 
         # sessionごとにまとめる
         grp = '0-4'
-        self.df1 = preprocess.feature_engineer_pl(df1, grp=grp, use_extra=True, feature_suffix='')
+        self.df1 = preprocess.feature_engineer_pl(df1, grp=grp, use_extra=True, feature_suffix='', version=1)
         self.df1 = preprocess.drop_columns(self.df1)
         self.models['features'][grp] = self.df1.columns
         logger.info(f'df1 done: {self.df1.shape}')
         
         grp = '5-12'
-        df2 = preprocess.feature_engineer_pl(df2, grp=grp, use_extra=True, feature_suffix='')
+        df2 = preprocess.feature_engineer_pl(df2, grp=grp, use_extra=True, feature_suffix='', version=1)
         self.df2 = preprocess.drop_columns(df2)
         self.models['features'][grp] = self.df2.columns
         logger.info(f'df2 done: {self.df2.shape}')
 
         grp = '13-22'
-        df3 = preprocess.feature_engineer_pl(df3, grp=grp, use_extra=True, feature_suffix='')
+        df3 = preprocess.feature_engineer_pl(df3, grp=grp, use_extra=True, feature_suffix='', version=1)
         self.df3 = preprocess.drop_columns(df3)
         self.models['features'][grp] = self.df3.columns
         logger.info(f'df3 done: {self.df3.shape}')
@@ -105,8 +105,9 @@ class Runner():
         self.note['df2_shape'] = self.df2.shape
         self.note['df3_shape'] = self.df3.shape
         self.note['feature'] = {
-            "time": 'year,month,dayはなし',
-            "ver2": '集約を追加、不審なクリックを追加'
+            "time": 'year,month,dayはなし, hour, second, minuteあり',
+            "feature": "ver1",
+            "prev_predict": "True"
         }
 
         if return_pd:
@@ -243,7 +244,8 @@ class Runner():
         for t in self.questions:
 
             for k, (train_index, test_index) in enumerate(gkf_split_list):
-                logger.info(f'{t}, {k}')
+                if t <= 2 and k <= 2:
+                    logger.info(f'Question {t}, Fold {k}.')
                 
                 if t<=3: 
                     grp = '0-4'
@@ -261,10 +263,6 @@ class Runner():
                 train_users = train_x.index.values
                 prev_answers = self.oof.loc[train_users, [i for i in range(1, t)]].copy()
                 train_x = train_x.merge(prev_answers, left_index=True, right_index=True, how='left')
-
-                if t == 15:
-                    self.train_x = train_x
-
                 train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[train_users]
                 
                 # VALID DATA
@@ -273,9 +271,6 @@ class Runner():
                 prev_answers = self.oof.loc[valid_users, [i for i in range(1, t)]].copy()
                 valid_x = valid_x.merge(prev_answers, left_index=True, right_index=True, how='left')
                 valid_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[valid_users]
-
-                if t == 15:
-                    self.valid_x = valid_x
 
                 clf, ntree = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params)
                 best_ntrees_mat[k, t-1] = ntree

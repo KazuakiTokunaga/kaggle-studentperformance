@@ -189,68 +189,68 @@ def feature_engineer_pl(x, grp,
     
     df = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
   
-    # if use_extra:
-    #     if grp=='5-12':
-    #         aggs = [
-    #             pl.col("elapsed_time").filter((pl.col("text")=="Here's the log book.")|(pl.col("fqid")=='logbook.page.bingo')).apply(lambda s: s.max()-s.min()).alias("logbook_bingo_duration"),
-    #             pl.col("index").filter((pl.col("text")=="Here's the log book.")|(pl.col("fqid")=='logbook.page.bingo')).apply(lambda s: s.max()-s.min()).alias("logbook_bingo_indexCount"),
-    #             pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader'))|(pl.col("fqid")=="reader.paper2.bingo")).apply(lambda s: s.max()-s.min()).alias("reader_bingo_duration"),
-    #             pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader'))|(pl.col("fqid")=="reader.paper2.bingo")).apply(lambda s: s.max()-s.min()).alias("reader_bingo_indexCount"),
-    #             pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals'))|(pl.col("fqid")=="journals.pic_2.bingo")).apply(lambda s: s.max()-s.min()).alias("journals_bingo_duration"),
-    #             pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals'))|(pl.col("fqid")=="journals.pic_2.bingo")).apply(lambda s: s.max()-s.min()).alias("journals_bingo_indexCount"),
-    #         ]
-    #         tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
-    #         df = df.join(tmp, on="session_id", how='left')
+    if use_extra:
+        if grp=='5-12':
+            aggs = [
+                pl.col("elapsed_time").filter((pl.col("text")=="Here's the log book.")|(pl.col("fqid")=='logbook.page.bingo')).apply(lambda s: s.max()-s.min()).alias("logbook_bingo_duration"),
+                pl.col("index").filter((pl.col("text")=="Here's the log book.")|(pl.col("fqid")=='logbook.page.bingo')).apply(lambda s: s.max()-s.min()).alias("logbook_bingo_indexCount"),
+                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader'))|(pl.col("fqid")=="reader.paper2.bingo")).apply(lambda s: s.max()-s.min()).alias("reader_bingo_duration"),
+                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader'))|(pl.col("fqid")=="reader.paper2.bingo")).apply(lambda s: s.max()-s.min()).alias("reader_bingo_indexCount"),
+                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals'))|(pl.col("fqid")=="journals.pic_2.bingo")).apply(lambda s: s.max()-s.min()).alias("journals_bingo_duration"),
+                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals'))|(pl.col("fqid")=="journals.pic_2.bingo")).apply(lambda s: s.max()-s.min()).alias("journals_bingo_indexCount"),
+            ]
+            tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
+            df = df.join(tmp, on="session_id", how='left')
 
-    #     if grp=='13-22':
-    #         aggs = [
-    #             pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader_flag'))|(pl.col("fqid")=="tunic.library.microfiche.reader_flag.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("reader_flag_duration"),
-    #             pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader_flag'))|(pl.col("fqid")=="tunic.library.microfiche.reader_flag.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("reader_flag_indexCount"),
-    #             pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals_flag'))|(pl.col("fqid")=="journals_flag.pic_0.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("journalsFlag_bingo_duration"),
-    #             pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals_flag'))|(pl.col("fqid")=="journals_flag.pic_0.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("journalsFlag_bingo_indexCount"),
-    #         ]
-    #         tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
-    #         df = df.join(tmp, on="session_id", how='left')
+        if grp=='13-22':
+            aggs = [
+                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader_flag'))|(pl.col("fqid")=="tunic.library.microfiche.reader_flag.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("reader_flag_duration"),
+                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader_flag'))|(pl.col("fqid")=="tunic.library.microfiche.reader_flag.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("reader_flag_indexCount"),
+                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals_flag'))|(pl.col("fqid")=="journals_flag.pic_0.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("journalsFlag_bingo_duration"),
+                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals_flag'))|(pl.col("fqid")=="journals_flag.pic_0.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("journalsFlag_bingo_indexCount"),
+            ]
+            tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
+            df = df.join(tmp, on="session_id", how='left')
     
-    # if use_time:
+    if use_time:
 
-    #     time_columns = [
-    #         pl.col('session_id').apply(lambda x: int(str(x)[:2])).alias('year'),
-    #         pl.col('session_id').apply(lambda x: int(str(x)[2:4])+1).alias('month'),
-    #         pl.col('session_id').apply(lambda x: int(str(x)[4:6])).alias('day'),
-    #         pl.col('session_id').apply(lambda x: int(str(x)[6:8])).alias('hour'),
-    #         pl.col('session_id').apply(lambda x: int(str(x)[8:10])).alias('minute'),
-    #         pl.col('session_id').apply(lambda x: int(str(x)[10:12])).alias('second')
-    #     ]
+        time_columns = [
+            pl.col('session_id').apply(lambda x: int(str(x)[:2])).alias('year'),
+            pl.col('session_id').apply(lambda x: int(str(x)[2:4])+1).alias('month'),
+            pl.col('session_id').apply(lambda x: int(str(x)[4:6])).alias('day'),
+            # pl.col('session_id').apply(lambda x: int(str(x)[6:8])).alias('hour'),
+            # pl.col('session_id').apply(lambda x: int(str(x)[8:10])).alias('minute'),
+            # pl.col('session_id').apply(lambda x: int(str(x)[10:12])).alias('second')
+        ]
 
-    #     df = df.with_columns(*time_columns)
+        df = df.with_columns(*time_columns)
     
-    # if version>=2:
+    if version>=2:
 
-    #     # 集計統計量の追加
-    #     aggs = [
-    #         # levelの経過時間
-    #         *[pl.col("elapsed_time").filter(pl.col("level") == c).apply(lambda s: s.max() - s.min() if s.len()>0 else 0).alias(f"{c}_ET_diff_{feature_suffix}") for c in LEVELS],
+        # 集計統計量の追加
+        aggs = [
+            # levelの経過時間
+            *[pl.col("elapsed_time").filter(pl.col("level") == c).apply(lambda s: s.max() - s.min() if s.len()>0 else 0).alias(f"{c}_ET_diff_{feature_suffix}") for c in LEVELS],
             
-    #         # levelと主要イベントの回数
-    #         *[pl.col("event_name").filter((pl.col("event_name")==c)&(pl.col("level")==l)).count().alias(f"{c}_{l}_ET_min_{feature_suffix}") for c in event_name_short for l in LEVELS],
+            # levelと主要イベントの回数
+            *[pl.col("event_name").filter((pl.col("event_name")==c)&(pl.col("level")==l)).count().alias(f"{c}_{l}_ET_min_{feature_suffix}") for c in event_name_short for l in LEVELS],
             
-    #         # fqid, room, levelの組での経過時間と回数
-    #         *[pl.col("elapsed_time").filter((pl.col("fqid") == f)&(pl.col("room_fqid")==r)&(pl.col("level")==l)).apply(lambda s: s.max() - s.min() if s.len()>0 else 0).alias(f"{f}_{r}_{l}_diff{feature_suffix}") for f, l, r in zip(flr_cs[0], flr_cs[1], flr_cs[2])],
-    #         *[pl.col("fqid").filter((pl.col("fqid") == f)&(pl.col("room_fqid")==r)&(pl.col("level")==l)).count().alias(f"{f}_{r}_{l}_counts{feature_suffix}") for f, l, r in zip(flr_cs[0], flr_cs[1], flr_cs[2])],
+            # fqid, room, levelの組での経過時間と回数
+            *[pl.col("elapsed_time").filter((pl.col("fqid") == f)&(pl.col("room_fqid")==r)&(pl.col("level")==l)).apply(lambda s: s.max() - s.min() if s.len()>0 else 0).alias(f"{f}_{r}_{l}_diff{feature_suffix}") for f, l, r in zip(flr_cs[0], flr_cs[1], flr_cs[2])],
+            *[pl.col("fqid").filter((pl.col("fqid") == f)&(pl.col("room_fqid")==r)&(pl.col("level")==l)).count().alias(f"{f}_{r}_{l}_counts{feature_suffix}") for f, l, r in zip(flr_cs[0], flr_cs[1], flr_cs[2])],
             
-    #         # text, levelの組での経過時間と回数
-    #         *[pl.col("elapsed_time").filter((pl.col("text_fqid") == t)&(pl.col('level')==l)).apply(lambda s: s.max() - s.min() if s.len()>0 else 0).alias(f"{t}_{l}ET_diff_{feature_suffix}") for t, l in zip(tl_cs[0], tl_cs[1])],
-    #         *[pl.col("elapsed_time").filter((pl.col("text_fqid") == t)&(pl.col('level')==l)).count().alias(f"{t}_{l}ET_count_{feature_suffix}") for t, l in zip(tl_cs[0], tl_cs[1])]
-    #     ]
-    #     tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
-    #     df = df.join(tmp, on="session_id", how='left')
+            # text, levelの組での経過時間と回数
+            *[pl.col("elapsed_time").filter((pl.col("text_fqid") == t)&(pl.col('level')==l)).apply(lambda s: s.max() - s.min() if s.len()>0 else 0).alias(f"{t}_{l}ET_diff_{feature_suffix}") for t, l in zip(tl_cs[0], tl_cs[1])],
+            *[pl.col("elapsed_time").filter((pl.col("text_fqid") == t)&(pl.col('level')==l)).count().alias(f"{t}_{l}ET_count_{feature_suffix}") for t, l in zip(tl_cs[0], tl_cs[1])]
+        ]
+        tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
+        df = df.join(tmp, on="session_id", how='left')
         
-    #     # 不審なクリック
-    #     click_list = x.filter(pl.col('screen_coor_x').is_not_null()).groupby('screen_coor_x', 'screen_coor_y', 'session_id').count().sort('count', descending=True)
-    #     tmp = click_list.groupby('session_id').max().select('session_id', pl.col('count').alias('click_same_max'))
-    #     tmp2 = click_list.filter(pl.col('count')>=5).groupby('session_id').count().select('session_id', pl.col('count').alias('click_same_over5_count'))
-    #     tmp = tmp.join(tmp2, on='session_id', how='left')
-    #     df = df.join(tmp, on='session_id', how='left')
+        # 不審なクリック
+        click_list = x.filter(pl.col('screen_coor_x').is_not_null()).groupby('screen_coor_x', 'screen_coor_y', 'session_id').count().sort('count', descending=True)
+        tmp = click_list.groupby('session_id').max().select('session_id', pl.col('count').alias('click_same_max'))
+        tmp2 = click_list.filter(pl.col('count')>=5).groupby('session_id').count().select('session_id', pl.col('count').alias('click_same_over5_count'))
+        tmp = tmp.join(tmp2, on='session_id', how='left')
+        df = df.join(tmp, on='session_id', how='left')
         
     return df

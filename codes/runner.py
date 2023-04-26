@@ -258,7 +258,7 @@ class Runner():
                 # TRAIN DATA
                 train_x = df.iloc[train_index]
                 train_users = train_x.index.values
-                prev_answers = self.train_predict.loc[train_users, [i for i in range(1, t)]].copy()
+                prev_answers = self.oof.loc[train_users, [i for i in range(1, t)]].copy()
                 train_x = train_x.merge(prev_answers, left_index=True, right_index=True, how='left')
 
                 if t == 15:

@@ -242,7 +242,7 @@ class Runner():
 
         for t in self.questions:
 
-            for train_index, test_index in gkf_split_list:
+            for k, (train_index, test_index) in enumerate(gkf_split_list):
                 
                 if t<=3: 
                     grp = '0-4'
@@ -277,7 +277,7 @@ class Runner():
                     self.valid_x = valid_x
 
                 clf, ntree = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params)
-                best_ntrees_mat[i, t-1] = ntree
+                best_ntrees_mat[k, t-1] = ntree
                 
                 self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x)[:,1]
 

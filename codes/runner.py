@@ -234,7 +234,7 @@ class Runner():
         user_cnt = len(self.ALL_USERS)
         logger.info(f'We will train with {user_cnt} users info')
 
-        self.oof = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ALL_USERS)
+        self.oof = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ALL_USERS) # Question t はカラム t-1 に対応する
         best_ntrees_mat = np.zeros([self.n_fold, 18])
 
         logger.info(f'Start validation with {self.n_fold} folds.')
@@ -257,18 +257,18 @@ class Runner():
                     grp = '13-22'
                     df = self.df3
                 
-                    
                 # TRAIN DATA
                 train_x = df.iloc[train_index]
                 train_users = train_x.index.values
-                prev_answers = self.oof.loc[train_users, [i for i in range(1, t)]].copy()
+                prev_answers = self.oof.loc[train_users, [i for i in range(t-1)]].copy()
                 train_x = train_x.merge(prev_answers, left_index=True, right_index=True, how='left')
                 train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[train_users]
+
                 
                 # VALID DATA
                 valid_x = df.iloc[test_index]
                 valid_users = valid_x.index.values
-                prev_answers = self.oof.loc[valid_users, [i for i in range(1, t)]].copy()
+                prev_answers = self.oof.loc[valid_users, [i for i in range(t-1)]].copy()
                 valid_x = valid_x.merge(prev_answers, left_index=True, right_index=True, how='left')
                 valid_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[valid_users]
 
@@ -354,7 +354,7 @@ class Runner():
                 
             # TRAIN DATA
             train_x = df
-            prev_answers = self.oof[[i for i in range(1, t)].copy()]
+            prev_answers = self.oof[[i for i in range(t-1)]].copy()
             train_x = train_x.merge(prev_answers, left_index=True, right_index=True, how='left')
             
             train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session')

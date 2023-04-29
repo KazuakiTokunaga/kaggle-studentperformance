@@ -84,19 +84,19 @@ class Runner():
 
         # sessionごとにまとめる
         grp = '0-4'
-        self.df1 = preprocess.feature_engineer_pl(df1, grp=grp, use_extra=True, feature_suffix='', version=1)
+        self.df1 = preprocess.feature_engineer_pl(df1, grp=grp, use_extra=True, feature_suffix='', version=2)
         self.df1 = preprocess.drop_columns(self.df1)
         self.models['features'][grp] = self.df1.columns
         logger.info(f'df1 done: {self.df1.shape}')
         
         grp = '5-12'
-        df2 = preprocess.feature_engineer_pl(df2, grp=grp, use_extra=True, feature_suffix='', version=1)
+        df2 = preprocess.feature_engineer_pl(df2, grp=grp, use_extra=True, feature_suffix='', version=2)
         self.df2 = preprocess.drop_columns(df2)
         self.models['features'][grp] = self.df2.columns
         logger.info(f'df2 done: {self.df2.shape}')
 
         grp = '13-22'
-        df3 = preprocess.feature_engineer_pl(df3, grp=grp, use_extra=True, feature_suffix='', version=1)
+        df3 = preprocess.feature_engineer_pl(df3, grp=grp, use_extra=True, feature_suffix='', version=2)
         self.df3 = preprocess.drop_columns(df3)
         self.models['features'][grp] = self.df3.columns
         logger.info(f'df3 done: {self.df3.shape}')
@@ -245,7 +245,7 @@ class Runner():
         for t in self.questions:
 
             for k, (train_index, test_index) in enumerate(gkf_split_list):
-                if t <= 2 and k <= 2:
+                if k==0 or (t <= 2 and k <= 2):
                     logger.info(f'Question {t}, Fold {k}.')
                 
                 if t<=3: 

@@ -234,7 +234,8 @@ class Runner():
         user_cnt = len(self.ALL_USERS)
         logger.info(f'We will train with {user_cnt} users info')
 
-        self.oof = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ALL_USERS) # Question t はカラム t-1 に対応する
+        arr = [0.728, 0.978, 0.933, 0.8, 0.548, 0.776, 0.736, 0.612, 0.734, 0.505, 0.642, 0.86 , 0.275, 0.707, 0.481, 0.733, 0.684, 0.95]
+        self.oof = pd.DataFrame(data=np.multiply(np.ones((len(self.ALL_USERS), 1)), arr), index=self.ALL_USERS) # Question t はカラム t-1 に対応する
         best_ntrees_mat = np.zeros([self.n_fold, 18])
 
         logger.info(f'Start validation with {self.n_fold} folds.')
@@ -293,7 +294,7 @@ class Runner():
         logger.info('Start evaluating validations.')
 
         # PUT TRUE LABELS INTO DATAFRAME WITH 18 COLUMNS
-        true = self.oof.copy()
+        true = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ALL_USERS)
         for k in range(18):
             # GET TRUE LABELS
             tmp = self.df_labels.loc[self.df_labels.q == k+1].set_index('session').loc[self.ALL_USERS]

@@ -30,6 +30,9 @@ class Runner():
             'split_labels': True,
             'parquet': True
         },
+        feature_options={
+            'version': 2
+        },
         validation_options={
             'n_fold': 2,
             'questions': list(range(1, 19))
@@ -45,6 +48,7 @@ class Runner():
         self.input_path = input_path
         self.repo_path = repo_path
         self.load_options = load_options
+        self.feature_options = feature_options
         self.model_options = model_options
         self.models = {
             'features': {},
@@ -82,21 +86,27 @@ class Runner():
         df2 = self.df_train.filter(pl.col("level_group")=='5-12')
         df3 = self.df_train.filter(pl.col("level_group")=='13-22')
 
+        params = {
+            use_extra=True,
+            feature_suffix='',
+            version = self.feature_options.get('version')
+        }
+
         # sessionごとにまとめる
         grp = '0-4'
-        self.df1 = preprocess.feature_engineer_pl(df1, grp=grp, use_extra=True, feature_suffix='', version=2)
+        self.df1 = preprocess.feature_engineer_pl(df1, grp=grp, **params)
         self.df1 = preprocess.drop_columns(self.df1)
         self.models['features'][grp] = self.df1.columns
         logger.info(f'df1 done: {self.df1.shape}')
         
         grp = '5-12'
-        df2 = preprocess.feature_engineer_pl(df2, grp=grp, use_extra=True, feature_suffix='', version=2)
+        df2 = preprocess.feature_engineer_pl(df2, grp=grp, **params)
         self.df2 = preprocess.drop_columns(df2)
         self.models['features'][grp] = self.df2.columns
         logger.info(f'df2 done: {self.df2.shape}')
 
         grp = '13-22'
-        df3 = preprocess.feature_engineer_pl(df3, grp=grp, use_extra=True, feature_suffix='', version=2)
+        df3 = preprocess.feature_engineer_pl(df3, grp=grp, **params)
         self.df3 = preprocess.drop_columns(df3)
         self.models['features'][grp] = self.df3.columns
         logger.info(f'df3 done: {self.df3.shape}')

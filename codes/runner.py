@@ -400,6 +400,7 @@ class Runner():
         data.append(self.load_options)
         data.append(self.validation_options)
         data.append(self.model_options)
+        data.append(self.feature_options)
         data.append(self.note)
 
         google_sheet = utils.WriteSheet()

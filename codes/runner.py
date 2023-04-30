@@ -106,6 +106,7 @@ class Runner():
         
         grp = '5-12'
         if self.feature_options.get('bs'):
+            logger('test')
             self.df2 = preprocess.feature_engineer_pl_bs(df2, grp=grp, **params)
         else:
             self.df2 = preprocess.feature_engineer_pl(df2, grp=grp, **params)

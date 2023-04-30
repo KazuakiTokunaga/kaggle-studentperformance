@@ -31,7 +31,8 @@ class Runner():
             'parquet': True
         },
         feature_options={
-            'version': 2
+            'version': 2,
+            'bs': False
         },
         validation_options={
             'n_fold': 2,
@@ -94,19 +95,29 @@ class Runner():
 
         # sessionごとにまとめる
         grp = '0-4'
-        self.df1 = preprocess.feature_engineer_pl_bs(df1, grp=grp, **params)
+        if self.feature_options.get('bs'):
+            self.df1 = preprocess.feature_engineer_pl_bs(df1, grp=grp, **params)
+        else:
+            self.df1 = preprocess.feature_engineer_pl(df1, grp=grp, **params)
+    
         self.df1 = preprocess.drop_columns(self.df1)
         self.models['features'][grp] = self.df1.columns
         logger.info(f'df1 done: {self.df1.shape}')
         
         grp = '5-12'
-        df2 = preprocess.feature_engineer_pl_bs(df2, grp=grp, **params)
+        if self.feature_options.get('bs'):
+            self.df2 = preprocess.feature_engineer_pl_bs(df2, grp=grp, **params)
+        else:
+            self.df2 = preprocess.feature_engineer_pl(df2, grp=grp, **params)
         self.df2 = preprocess.drop_columns(df2)
         self.models['features'][grp] = self.df2.columns
         logger.info(f'df2 done: {self.df2.shape}')
 
         grp = '13-22'
-        df3 = preprocess.feature_engineer_pl_bs(df3, grp=grp, **params)
+        if self.feature_options.get('bs'):
+            self.df3 = preprocess.feature_engineer_pl_bs(df3, grp=grp, **params)
+        else:
+            self.df3 = preprocess.feature_engineer_pl(df3, grp=grp, **params)
         self.df3 = preprocess.drop_columns(df3)
         self.models['features'][grp] = self.df3.columns
         logger.info(f'df3 done: {self.df3.shape}')
@@ -320,7 +331,7 @@ class Runner():
         best_score = 0; best_threshold = 0
 
         logger.info('Search optimal threshold.')
-        for threshold in np.arange(0.45,0.75,0.01):
+        for threshold in np.arange(0.55,0.75,0.01):
             preds = (oof_target.values.reshape((-1))>threshold).astype('int')
             m = f1_score(true.values.reshape((-1)), preds, average='macro')   
             scores.append(m)

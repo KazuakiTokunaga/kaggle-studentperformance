@@ -87,9 +87,9 @@ class Runner():
         df3 = self.df_train.filter(pl.col("level_group")=='13-22')
 
         params = {
-            use_extra=True,
-            feature_suffix='',
-            version = self.feature_options.get('version')
+            'use_extra': True,
+            'feature_suffix': '',
+            'version': self.feature_options.get('version')
         }
 
         # sessionごとにまとめる

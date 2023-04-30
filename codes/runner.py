@@ -94,19 +94,19 @@ class Runner():
 
         # sessionごとにまとめる
         grp = '0-4'
-        self.df1 = preprocess.feature_engineer_pl(df1, grp=grp, **params)
+        self.df1 = preprocess.feature_engineer_pl_bs(df1, grp=grp, **params)
         self.df1 = preprocess.drop_columns(self.df1)
         self.models['features'][grp] = self.df1.columns
         logger.info(f'df1 done: {self.df1.shape}')
         
         grp = '5-12'
-        df2 = preprocess.feature_engineer_pl(df2, grp=grp, **params)
+        df2 = preprocess.feature_engineer_pl_bs(df2, grp=grp, **params)
         self.df2 = preprocess.drop_columns(df2)
         self.models['features'][grp] = self.df2.columns
         logger.info(f'df2 done: {self.df2.shape}')
 
         grp = '13-22'
-        df3 = preprocess.feature_engineer_pl(df3, grp=grp, **params)
+        df3 = preprocess.feature_engineer_pl_bs(df3, grp=grp, **params)
         self.df3 = preprocess.drop_columns(df3)
         self.models['features'][grp] = self.df3.columns
         logger.info(f'df3 done: {self.df3.shape}')

@@ -126,8 +126,7 @@ class Runner():
         self.note['df2_shape'] = self.df2.shape
         self.note['df3_shape'] = self.df3.shape
         self.note['feature'] = {
-            "time": 'year,month,dayはなし, hour, second, minuteあり',
-            "feature": "ver1",
+            "feature": "best scoreと基本的に同じ",
             "prev_predict": "True"
         }
 

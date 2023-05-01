@@ -199,10 +199,10 @@ def feature_engineer_pl(x, grp,
     if use_extra:
         if grp=='0-4':
             aggs = [
-                pl.col("elapsed_time").filter((pl.col("text")=="It's a women's basketball jersey!")|(pl.col("text")=="That settles it.")).apply(lambda s: s.max()-s.min()).alias("shirt_watch_duration"),
-                pl.col("index").filter((pl.col("text")=="It's a women's basketball jersey!")|(pl.col("text")=="That settles it.")).apply(lambda s: s.max()-s.min()).alias("shirt_watch_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("text")=="Now where did I put my notebook?")|(pl.col("text")=="Found it!")).apply(lambda s: s.max()-s.min()).alias("notebook_found_duration"),
-                pl.col("index").filter((pl.col("text")=="Now where did I put my notebook?")|(pl.col("text")=="Found it!")).apply(lambda s: s.max()-s.min()).alias("notebook_found_indexCount"),
+                pl.col("elapsed_time").filter((pl.col("text")=="It's a women's basketball jersey!")|(pl.col("text")=="That settles it.")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("shirt_watch_duration"),
+                pl.col("index").filter((pl.col("text")=="It's a women's basketball jersey!")|(pl.col("text")=="That settles it.")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("shirt_watch_indexCount"),
+                pl.col("elapsed_time").filter((pl.col("text")=="Now where did I put my notebook?")|(pl.col("text")=="Found it!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("notebook_found_duration"),
+                pl.col("index").filter((pl.col("text")=="Now where did I put my notebook?")|(pl.col("text")=="Found it!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("notebook_found_indexCount"),
 
                 pl.col("elapsed_time").filter(pl.col("text")=="Hey Jo, let's take a look at the shirt!").max().alias("to_shirt_be_et"),
                 pl.col("index").filter(pl.col("text")=="Hey Jo, let's take a look at the shirt!").max().alias("to_shirt_be_id"),

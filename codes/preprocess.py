@@ -100,21 +100,22 @@ def feature_engineer_pl(x, grp,
     room_lists = ['tunic.historicalsociety.entry', 'tunic.wildlife.center', 'tunic.historicalsociety.cage', 'tunic.library.frontdesk', 'tunic.historicalsociety.frontdesk', 'tunic.historicalsociety.stacks', 'tunic.historicalsociety.closet_dirty', 'tunic.humanecology.frontdesk', 'tunic.historicalsociety.basement', 'tunic.kohlcenter.halloffame', 'tunic.library.microfiche', 'tunic.drycleaner.frontdesk', 'tunic.historicalsociety.collection', 'tunic.historicalsociety.closet', 'tunic.flaghouse.entry', 'tunic.historicalsociety.collection_flag', 'tunic.capitol_1.hall', 'tunic.capitol_0.hall', 'tunic.capitol_2.hall']
 
     #　fqid, level, roomと、text, levelで、ある程度レコードが存在する組み合わせをみつける
-    if not use_csv:
-        session_cnt = x.select('session_id').n_unique()
-        low = int(session_cnt * 0.1) 
-        flr_list = x.select('fqid', 'level', 'room_fqid', 'session_id').groupby('fqid', 'level', 'room_fqid').n_unique().filter(pl.col('session_id')>=low).drop('session_id')
-        flr_cs = flr_list.get_columns()
-        tl_list = x.select('text_fqid', 'level', 'session_id').groupby('text_fqid', 'level').n_unique().filter(pl.col('session_id')>=low).drop('session_id')
-        tl_cs = tl_list.get_columns()
+    if version >= 2:
+      if not use_csv:
+          session_cnt = x.select('session_id').n_unique()
+          low = int(session_cnt * 0.1) 
+          flr_list = x.select('fqid', 'level', 'room_fqid', 'session_id').groupby('fqid', 'level', 'room_fqid').n_unique().filter(pl.col('session_id')>=low).drop('session_id')
+          flr_cs = flr_list.get_columns()
+          tl_list = x.select('text_fqid', 'level', 'session_id').groupby('text_fqid', 'level').n_unique().filter(pl.col('session_id')>=low).drop('session_id')
+          tl_cs = tl_list.get_columns()
 
-    # submissionの場合はこちら
-    else:
-        flr_list = pl.read_csv(f'{csv_path}/flr_list.csv')
-        flr_cs = flr_list.get_columns()
+      # submissionの場合はこちら
+      else:
+          flr_list = pl.read_csv(f'{csv_path}/flr_list.csv')
+          flr_cs = flr_list.get_columns()
 
-        tl_list = pl.read_csv(f'{csv_path}/tl_list.csv')
-        tl_cs = tl_list.get_columns()
+          tl_list = pl.read_csv(f'{csv_path}/tl_list.csv')
+          tl_cs = tl_list.get_columns()
 
     aggs = [
         pl.col("index").count().alias(f"session_number_{feature_suffix}"),

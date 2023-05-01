@@ -204,8 +204,8 @@ def feature_engineer_pl(x, grp,
                 pl.col("elapsed_time").filter((pl.col("text")=="Now where did I put my notebook?")|(pl.col("text")=="Found it!")).apply(lambda s: s.max()-s.min()).alias("notebook_found_duration"),
                 pl.col("index").filter((pl.col("text")=="Now where did I put my notebook?")|(pl.col("text")=="Found it!")).apply(lambda s: s.max()-s.min()).alias("notebook_found_indexCount"),
 
-                pl.col("elapsed_time").filter(pl.col("text")=="Hey Jo, let's take a look at the shirt!").max().alias("to_shrit_be_et"),
-                pl.col("index").filter(pl.col("text")=="Hey Jo, let's take a look at the shirt!").max().alias("to_shrit_be_id"),
+                pl.col("elapsed_time").filter(pl.col("text")=="Hey Jo, let's take a look at the shirt!").max().alias("to_shirt_be_et"),
+                pl.col("index").filter(pl.col("text")=="Hey Jo, let's take a look at the shirt!").max().alias("to_shirt_be_id"),
                 pl.col("elapsed_time").filter(pl.col("text_fqid")=="tunic.historicalsociety.collection.cs").min().alias("to_shirt_af_et"),
                 pl.col("index").filter(pl.col("text_fqid")=="tunic.historicalsociety.collection.cs").min().alias("to_shirt_af_id"),
             ]
@@ -215,7 +215,7 @@ def feature_engineer_pl(x, grp,
               (pl.col('to_shirt_af_et') - pl.col('to_shirt_be_et')).alias('to_shirt_et'),
               (pl.col('to_shirt_af_id') - pl.col('to_shirt_be_id')).alias('to_shirt_id')
             ]
-            tmp = tmp.with_columns(columns).drop('to_shirt_af_et', 'to_shirt_af_id', 'to_shirt_be_et', 'to_shiart_be_id')
+            tmp = tmp.with_columns(columns).drop('to_shirt_af_et', 'to_shirt_af_id', 'to_shirt_be_et', 'to_shirt_be_id')
             df = df.join(tmp, on="session_id", how='left')
 
         if grp=='5-12':

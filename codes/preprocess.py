@@ -18,11 +18,18 @@ def add_columns(df):
 
         pl.col("page").cast(pl.Float32),
         (
-            (pl.col("elapsed_time") - pl.col("elapsed_time").shift(1)) 
+            (pl.col("elapsed_time") - pl.col("elapsed_time").shift(1)) # 前のアクションから
             .fill_null(0)
             .clip(0, 1e9)
             .over(["session_id", "level_group"])
             .alias("elapsed_time_diff")
+        ),
+        (
+            (pl.col("elapsed_time").shift(-1) - pl.col("elapsed_time")) # 次のアクションまで 
+            .fill_null(0)
+            .clip(0, 1e9)
+            .over(["session_id", "level_group"])
+            .alias("elapsed_time_diff_to")
         ),
         (
             (pl.col("screen_coor_x") - pl.col("screen_coor_x").shift(1)) 
@@ -190,10 +197,33 @@ def feature_engineer_pl(x, grp,
     df = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
   
     if use_extra:
+        if grp=='0-4':
+            aggs = [
+                pl.col("elapsed_time").filter((pl.col("text")=="It's a women's basketball jersey!")|(pl.col("text")=="That settles it.")).apply(lambda s: s.max()-s.min()).alias("shirt_watch_duration"),
+                pl.col("index").filter((pl.col("text")=="It's a women's basketball jersey!")|(pl.col("text")=="That settles it.")).apply(lambda s: s.max()-s.min()).alias("shirt_watch_indexCount"),
+                pl.col("elapsed_time").filter((pl.col("text")=="Now where did I put my notebook?")|(pl.col("text")=="Found it!")).apply(lambda s: s.max()-s.min()).alias("notebook_found_duration"),
+                pl.col("index").filter((pl.col("text")=="Now where did I put my notebook?")|(pl.col("text")=="Found it!")).apply(lambda s: s.max()-s.min()).alias("notebook_found_indexCount"),
+
+                pl.col("elapsed_time").filter(pl.col("text")=="Hey Jo, let's take a look at the shirt!").max().alias("to_shrit_be_et"),
+                pl.col("index").filter(pl.col("text")=="Hey Jo, let's take a look at the shirt!").max().alias("to_shrit_be_id"),
+                pl.col("elapsed_time").filter(pl.col("text_fqid")=="tunic.historicalsociety.collection.cs").min().alias("to_shirt_af_et"),
+                pl.col("index").filter(pl.col("text_fqid")=="tunic.historicalsociety.collection.cs").min().alias("to_shirt_af_id"),
+            ]
+            tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
+
+            columns = [
+              (pl.col('to_shirt_af_et') - pl.col('to_shirt_be_et')).alias('to_shirt_et'),
+              (pl.col('to_shirt_af_id') - pl.col('to_shirt_be_id')).alias('to_shirt_id')
+            ]
+            tmp = tmp.with_columns(columns).drop('to_shirt_af_et', 'to_shirt_af_id', 'to_shirt_be_et', 'to_shiart_be_id')
+            df = df.join(tmp, on="session_id", how='left')
+
         if grp=='5-12':
             aggs = [
                 pl.col("elapsed_time").filter((pl.col("text")=="Here's the log book.")|(pl.col("fqid")=='logbook.page.bingo')).apply(lambda s: s.max()-s.min()).alias("logbook_bingo_duration"),
                 pl.col("index").filter((pl.col("text")=="Here's the log book.")|(pl.col("fqid")=='logbook.page.bingo')).apply(lambda s: s.max()-s.min()).alias("logbook_bingo_indexCount"),
+                pl.col("elapsed_time").filter((pl.col("fqid")=="businesscards")|(pl.col("fqid")=='businesscards.card_bingo.bingo')).apply(lambda s: s.max()-s.min()).alias("businesscard_bingo_duration"),
+                pl.col("index").filter((pl.col("fqid")=="businesscards")|(pl.col("fqid")=='businesscards.card_bingo.bingo')).apply(lambda s: s.max()-s.min()).alias("businesscard_bingo_indexCount"),
                 pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader'))|(pl.col("fqid")=="reader.paper2.bingo")).apply(lambda s: s.max()-s.min()).alias("reader_bingo_duration"),
                 pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader'))|(pl.col("fqid")=="reader.paper2.bingo")).apply(lambda s: s.max()-s.min()).alias("reader_bingo_indexCount"),
                 pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals'))|(pl.col("fqid")=="journals.pic_2.bingo")).apply(lambda s: s.max()-s.min()).alias("journals_bingo_duration"),
@@ -204,6 +234,12 @@ def feature_engineer_pl(x, grp,
 
         if grp=='13-22':
             aggs = [
+                pl.col("elapsed_time").filter((pl.col("fqid")=="I'll go look at everyone's pictures!")|(pl.col("text")=="Those are the same glasses!")).apply(lambda s: s.max()-s.min()).alias("glasses_bingo_duration"),
+                pl.col("index").filter((pl.col("text")=="I'll go look at everyone's pictures!")|(pl.col("text")=="Those are the same glasses!")).apply(lambda s: s.max()-s.min()).alias("glasses_bingo_indexCount"),              
+                pl.col("elapsed_time").filter((pl.col("text")=="Go take a look!")|(pl.col("text")=="That hoofprint doesn't match the flag!")).apply(lambda s: s.max()-s.min()).alias("hoofprint_bingo_duration"),
+                pl.col("index").filter((pl.col("text")=="Go take a look!")|(pl.col("text")=="That hoofprint doesn't match the flag!")).apply(lambda s: s.max()-s.min()).alias("hoofprint_indexCount"),
+                pl.col("elapsed_time").filter((pl.col("text")=="It's an ecology flag!")|(pl.col("text")=="Hey, I've seen that symbol before! Check it out!")).apply(lambda s: s.max()-s.min()).alias("ecologyflag_check_duration"),
+                pl.col("index").filter((pl.col("text")=="It's an ecology flag!")|(pl.col("text")=="Hey, I've seen that symbol before! Check it out!")).apply(lambda s: s.max()-s.min()).alias("ecologyflag_check_indexCount"),              
                 pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader_flag'))|(pl.col("fqid")=="tunic.library.microfiche.reader_flag.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("reader_flag_duration"),
                 pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader_flag'))|(pl.col("fqid")=="tunic.library.microfiche.reader_flag.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("reader_flag_indexCount"),
                 pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals_flag'))|(pl.col("fqid")=="journals_flag.pic_0.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("journalsFlag_bingo_duration"),
@@ -229,19 +265,20 @@ def feature_engineer_pl(x, grp,
 
         # 集計統計量の追加
         aggs = [
-            # levelの経過時間
-            *[pl.col("elapsed_time").filter(pl.col("level") == c).apply(lambda s: s.max() - s.min() if s.len()>0 else 0).alias(f"{c}_ET_diff_{feature_suffix}") for c in LEVELS],
             
-            # levelと主要イベントの回数
+            # levelと主要イベントの組での回数
             *[pl.col("event_name").filter((pl.col("event_name")==c)&(pl.col("level")==l)).count().alias(f"{c}_{l}_ET_min_{feature_suffix}") for c in event_name_short for l in LEVELS],
             
             # fqid, room, levelの組での経過時間と回数
-            *[pl.col("elapsed_time").filter((pl.col("fqid") == f)&(pl.col("room_fqid")==r)&(pl.col("level")==l)).apply(lambda s: s.max() - s.min() if s.len()>0 else 0).alias(f"{f}_{r}_{l}_diff{feature_suffix}") for f, l, r in zip(flr_cs[0], flr_cs[1], flr_cs[2])],
-            *[pl.col("fqid").filter((pl.col("fqid") == f)&(pl.col("room_fqid")==r)&(pl.col("level")==l)).count().alias(f"{f}_{r}_{l}_counts{feature_suffix}") for f, l, r in zip(flr_cs[0], flr_cs[1], flr_cs[2])],
+            *[pl.col("elapsed_time_diff").filter((pl.col("fqid") == f)&(pl.col("room_fqid")==r)&(pl.col("level")==l)).sum().alias(f"{f}_{r}_{l}_ET_sum_{feature_suffix}") for f, l, r in zip(flr_cs[0], flr_cs[1], flr_cs[2])],
+            *[pl.col("index").filter((pl.col("fqid") == f)&(pl.col("room_fqid")==r)&(pl.col("level")==l)).count().alias(f"{f}_{r}_{l}_counts{feature_suffix}") for f, l, r in zip(flr_cs[0], flr_cs[1], flr_cs[2])],
             
             # text, levelの組での経過時間と回数
-            *[pl.col("elapsed_time").filter((pl.col("text_fqid") == t)&(pl.col('level')==l)).apply(lambda s: s.max() - s.min() if s.len()>0 else 0).alias(f"{t}_{l}ET_diff_{feature_suffix}") for t, l in zip(tl_cs[0], tl_cs[1])],
-            *[pl.col("elapsed_time").filter((pl.col("text_fqid") == t)&(pl.col('level')==l)).count().alias(f"{t}_{l}ET_count_{feature_suffix}") for t, l in zip(tl_cs[0], tl_cs[1])]
+            *[pl.col("elapsed_time_diff").filter((pl.col("text_fqid") == t)&(pl.col('level')==l)).sum().alias(f"{t}_{l}_ET_sum_{feature_suffix}") for t, l in zip(tl_cs[0], tl_cs[1])],
+            *[pl.col("index").filter((pl.col("text_fqid") == t)&(pl.col('level')==l)).count().alias(f"{t}_{l}ET_count_{feature_suffix}") for t, l in zip(tl_cs[0], tl_cs[1])],
+
+            # nameとevent_nameの組み合わせ
+            *[pl.col("index").filter((pl.col("event_name")==e)&(pl.col("name")==n)).count().alias(f"{e}_{n}_count_{feature_suffix}") for e in ["map_click", "notebook_click"] for n in name_feature]
         ]
         tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
         df = df.join(tmp, on="session_id", how='left')

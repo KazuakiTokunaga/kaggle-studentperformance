@@ -80,7 +80,7 @@ class Runner():
         gc.collect()
     
 
-    def engineer_features(self, return_pd=True, fillna=True):
+    def engineer_features(self, return_pd=True, fillna=True, add_random=False):
         logger.info('Start engineer features.')
 
         self.df_train = preprocess.add_columns(self.df_train)
@@ -101,9 +101,13 @@ class Runner():
         self.df1 = preprocess.drop_columns(self.df1)
         self.df1 = preprocess.add_columns_session(self.df1)
 
+        if add_random:
+            self.df1 = preprocess.add_random_feature(df1)
+
         self.models['features'][grp] = self.df1.columns
         logger.info(f'df1 done: {self.df1.shape}')
         
+
         grp = '5-12'
         self.df2 = preprocess.feature_engineer_pl(df2_raw, grp=grp, feature_suffix='grp5-12',  **params)
         self.df2 = preprocess.drop_columns(self.df2)
@@ -112,6 +116,9 @@ class Runner():
             self.df2 = self.df2.join(self.df1, on='session_id', how='left')
         else:
             self.df2 = preprocess.add_columns_session(self.df2)
+
+        if add_random:
+            self.df2 = preprocess.add_random_feature(df2)
 
         self.models['features'][grp] = self.df2.columns
         logger.info(f'df2 done: {self.df2.shape}')
@@ -124,6 +131,9 @@ class Runner():
             self.df3 = self.df3.join(self.df2, on='session_id', how='left')
         else:
             self.df3 = preprocess.add_columns_session(self.df3)
+        
+        if add_random:
+            self.df3 = preprocess.add_random_feature(df3)
 
         self.models['features'][grp] = self.df3.columns
         logger.info(f'df3 done: {self.df3.shape}')

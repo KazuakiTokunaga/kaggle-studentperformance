@@ -306,6 +306,19 @@ def feature_engineer_pl(x, grp,
         
     return df
 
+
+def add_random_feature(df, n=10):
+    
+    height = df.shape[0]
+    data = np.random.randint(1, 1000, size=(height, n))
+
+    df_rand = pl.DataFrame(data=data, schema=[f'random{i}' for i in range(n)])
+    
+    df = pl.concat([df, df_rand], how='horizontal')
+    
+    return df
+
+
 def add_columns_session(df):
 
     time_columns = [

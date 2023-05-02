@@ -125,7 +125,7 @@ class Runner():
             self.df3 = preprocess.feature_engineer_pl(df3_raw, grp=grp, **params)
 
         if self.feature_options.get('merge'):
-            self.df3 = self.df3.join(df2, on='session_id', how='left')
+            self.df3 = self.df3.join(self.df2, on='session_id', how='left')
 
         del df1_raw, df2_raw, df3_raw
         gc.collect()

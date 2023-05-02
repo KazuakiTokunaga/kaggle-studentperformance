@@ -273,7 +273,7 @@ class Runner():
 
         random_state_validation = self.validation_options.get('random_state')
         logger.info(f'Start validation with {self.n_fold} folds, random_state {random_state_validation}.')
-        kf = KFold(n_splits=self.n_fold, random_state = random_state_validation)
+        kf = KFold(n_splits=self.n_fold, shuffle=True, random_state = random_state_validation)
         kf_split_list = list(kf.split(X=self.df1))
 
         for t in self.questions:

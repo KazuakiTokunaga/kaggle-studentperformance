@@ -102,7 +102,7 @@ class Runner():
         self.df1 = preprocess.add_columns_session(self.df1)
 
         if add_random:
-            self.df1 = preprocess.add_random_feature(df1)
+            self.df1 = preprocess.add_random_feature(self.df1)
 
         self.models['features'][grp] = self.df1.columns
         logger.info(f'df1 done: {self.df1.shape}')

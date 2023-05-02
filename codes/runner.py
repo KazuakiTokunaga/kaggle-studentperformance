@@ -41,7 +41,8 @@ class Runner():
         model_options={
             'ensemble': False,
             'model': 'xgb',
-            'param_file': 'params_xgb001_test.json'
+            'param_file': 'params_xgb001_test.json',
+            'random': True
         }):
 
         self.run_fold_name = run_fold_name
@@ -59,6 +60,7 @@ class Runner():
         self.print_model_info = True
         self.best_ntrees = None
         self.note = dict()
+        self.fold_models = dict()
         
         self.validation_options = validation_options
         self.n_fold = validation_options.get('n_fold')
@@ -167,6 +169,9 @@ class Runner():
             model_params['n_estimators'] = n_estimators_list[0]
         else:
             model_params['n_estimators'] = n_estimators_list[t-1]
+        
+        if self.model_options.get('random'):
+            model_params['random_state'] = np.random.randint(1, 100)
 
         # validation時にbest_iterationを保存している場合はそちらを優先する
         if self.best_ntrees is not None:
@@ -253,7 +258,8 @@ class Runner():
 
     def run_validation(self, 
             save_oof=True, 
-            adhoc_params=None
+            adhoc_params=None,
+            save_fold_models=False
         ):
 
         self.ALL_USERS = self.df1.index.unique()
@@ -304,6 +310,9 @@ class Runner():
                 
                 self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x)[:,1]
 
+                if save_fold_models:
+                    self.fold_models[f'q{t}_fold{k}'] = clf
+
         if best_ntrees_mat[0, 0] > 1:
             logger.info('Save best iterations.')
             self.best_ntrees = pd.Series(best_ntrees_mat.mean(axis=0).astype('int'))
@@ -314,6 +323,9 @@ class Runner():
         if save_oof:
             logger.info('Export oof_predict_proba.')
             self.oof.to_csv('oof_predict_proba.csv')
+        
+        if save_fold_models:
+            pickle.dump(self.fold_models, open(f'fold_models.pkl', 'wb'))
         
 
     def evaluate_validation(self, ):

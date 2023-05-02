@@ -84,9 +84,9 @@ class Runner():
         self.df_train = preprocess.add_columns(self.df_train)
 
         # グループごとに分割
-        df1 = self.df_train.filter(pl.col("level_group")=='0-4')
-        df2 = self.df_train.filter(pl.col("level_group")=='5-12')
-        df3 = self.df_train.filter(pl.col("level_group")=='13-22')
+        df1_raw = self.df_train.filter(pl.col("level_group")=='0-4')
+        df2_raw = self.df_train.filter(pl.col("level_group")=='5-12')
+        df3_raw = self.df_train.filter(pl.col("level_group")=='13-22')
 
         params = {
             'use_extra': True,
@@ -97,9 +97,9 @@ class Runner():
         # sessionごとにまとめる
         grp = '0-4'
         if self.feature_options.get('bs'):
-            self.df1 = preprocess.feature_engineer_pl_bs(df1, grp=grp, **params)
+            self.df1 = preprocess.feature_engineer_pl_bs(df1_raw, grp=grp, **params)
         else:
-            self.df1 = preprocess.feature_engineer_pl(df1, grp=grp, **params)
+            self.df1 = preprocess.feature_engineer_pl(df1_raw, grp=grp, **params)
     
         self.df1 = preprocess.drop_columns(self.df1)
         self.models['features'][grp] = self.df1.columns
@@ -107,26 +107,29 @@ class Runner():
         
         grp = '5-12'
         if self.feature_options.get('bs'):
-            self.df2 = preprocess.feature_engineer_pl_bs(df2, grp=grp, **params)
+            self.df2 = preprocess.feature_engineer_pl_bs(df2_raw, grp=grp, **params)
         else:
-            self.df2 = preprocess.feature_engineer_pl(df2, grp=grp, **params)
+            self.df2 = preprocess.feature_engineer_pl(self.df2_raw, grp=grp, **params)
         self.df2 = preprocess.drop_columns(self.df2)
 
         if self.feature_options.get('merge'):
-            self.df2 = self.df2.join(df1, on='session_id', how='left')
+            self.df2 = self.df2.join(self.df1, on='session_id', how='left')
 
         self.models['features'][grp] = self.df2.columns
         logger.info(f'df2 done: {self.df2.shape}')
 
         grp = '13-22'
         if self.feature_options.get('bs'):
-            self.df3 = preprocess.feature_engineer_pl_bs(df3, grp=grp, **params)
+            self.df3 = preprocess.feature_engineer_pl_bs(df3_raw, grp=grp, **params)
         else:
-            self.df3 = preprocess.feature_engineer_pl(df3, grp=grp, **params)
+            self.df3 = preprocess.feature_engineer_pl(df3_raw, grp=grp, **params)
 
         if self.feature_options.get('merge'):
             self.df3 = self.df3.join(df2, on='session_id', how='left')
-            
+
+        del df1, df2, df3
+        gc.collect()
+
         self.df3 = preprocess.drop_columns(self.df3)
         self.models['features'][grp] = self.df3.columns
         logger.info(f'df3 done: {self.df3.shape}')

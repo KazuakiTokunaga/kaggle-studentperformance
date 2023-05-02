@@ -96,6 +96,7 @@ class Runner():
         grp = '0-4'
         self.df1 = preprocess.feature_engineer_pl(df1_raw, grp=grp, feature_suffix='grp0-4', **params)
         self.df1 = preprocess.drop_columns(self.df1)
+        self.df1 = preprocess.add_columns_session(self.df1)
 
         self.models['features'][grp] = self.df1.columns
         logger.info(f'df1 done: {self.df1.shape}')
@@ -106,6 +107,8 @@ class Runner():
 
         if self.feature_options.get('merge'):
             self.df2 = self.df2.join(self.df1, on='session_id', how='left')
+        else:
+            self.df2 = preprocess.add_columns_session(self.df2)
 
         self.models['features'][grp] = self.df2.columns
         logger.info(f'df2 done: {self.df2.shape}')
@@ -116,6 +119,8 @@ class Runner():
 
         if self.feature_options.get('merge'):
             self.df3 = self.df3.join(self.df2, on='session_id', how='left')
+        else:
+            self.df3 = preprocess.add_columns_session(self.df3)
 
         self.models['features'][grp] = self.df3.columns
         logger.info(f'df3 done: {self.df3.shape}')

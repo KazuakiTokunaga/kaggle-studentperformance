@@ -182,11 +182,11 @@ def feature_engineer_pl(x, grp,
         *[pl.col("elapsed_time_diff").filter(pl.col("level") == c).mean().alias(f"{c}_ET_mean_{feature_suffix}") for c in LEVELS],
         *[pl.col("elapsed_time_diff").filter(pl.col("level") == c).sum().alias(f"{c}_ET_sum_{feature_suffix}") for c in LEVELS],
 
-        *[pl.col('index').filter(pl.col('text').str.contains(c)).count().alias(f'word_{c}') for c in DIALOGS],
-        *[pl.col("elapsed_time_diff").filter((pl.col('text').str.contains(c))).mean().alias(f'word_mean_{c}') for c in DIALOGS],
-        *[pl.col("elapsed_time_diff").filter((pl.col('text').str.contains(c))).std().alias(f'word_std_{c}') for c in DIALOGS],
-        *[pl.col("elapsed_time_diff").filter(pl.col('text').str.contains(c)).max().alias(f'word_max_{c}') for c in DIALOGS],
-        *[pl.col("elapsed_time_diff").filter(pl.col('text').str.contains(c)).sum().alias(f'word_sum_{c}') for c in DIALOGS],
+        *[pl.col('index').filter(pl.col('text').str.contains(c)).count().alias(f'word_{c}_{feature_suffix}') for c in DIALOGS],
+        *[pl.col("elapsed_time_diff").filter((pl.col('text').str.contains(c))).mean().alias(f'word_mean_{c}_{feature_suffix}') for c in DIALOGS],
+        *[pl.col("elapsed_time_diff").filter((pl.col('text').str.contains(c))).std().alias(f'word_std_{c}_{feature_suffix}') for c in DIALOGS],
+        *[pl.col("elapsed_time_diff").filter(pl.col('text').str.contains(c)).max().alias(f'word_max_{c}_{feature_suffix}') for c in DIALOGS],
+        *[pl.col("elapsed_time_diff").filter(pl.col('text').str.contains(c)).sum().alias(f'word_sum_{c}_{feature_suffix}') for c in DIALOGS],
 
         *[pl.col("level_group").filter(pl.col("level_group") == c).count().alias(f"{c}_LEVEL_group_count{feature_suffix}") for c in level_groups],
         *[pl.col("elapsed_time_diff").filter(pl.col("level_group") == c).std().alias(f"{c}_ET_std_{feature_suffix}") for c in level_groups],
@@ -267,19 +267,6 @@ def feature_engineer_pl(x, grp,
             tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
             df = df.join(tmp, on="session_id", how='left')
     
-    if use_time:
-
-        time_columns = [
-            # pl.col('session_id').apply(lambda x: int(str(x)[:2])).alias('year'),
-            # pl.col('session_id').apply(lambda x: int(str(x)[2:4])+1).alias('month'),
-            # pl.col('session_id').apply(lambda x: int(str(x)[4:6])).alias('day'),
-            pl.col('session_id').apply(lambda x: int(str(x)[6:8])).alias('hour'),
-            pl.col('session_id').apply(lambda x: int(str(x)[8:10])).alias('minute'),
-            pl.col('session_id').apply(lambda x: int(str(x)[10:12])).alias('second')
-        ]
-
-        df = df.with_columns(*time_columns)
-    
     if version>=2:
 
         # 集計統計量の追加
@@ -309,4 +296,19 @@ def feature_engineer_pl(x, grp,
         tmp = tmp.join(tmp2, on='session_id', how='left')
         df = df.join(tmp, on='session_id', how='left')
         
+    return df
+
+def add_columns_session(df):
+
+    time_columns = [
+        # pl.col('session_id').apply(lambda x: int(str(x)[:2])).alias('year'),
+        # pl.col('session_id').apply(lambda x: int(str(x)[2:4])+1).alias('month'),
+        # pl.col('session_id').apply(lambda x: int(str(x)[4:6])).alias('day'),
+        pl.col('session_id').apply(lambda x: int(str(x)[6:8])).alias('hour'),
+        pl.col('session_id').apply(lambda x: int(str(x)[8:10])).alias('minute'),
+        pl.col('session_id').apply(lambda x: int(str(x)[10:12])).alias('second')
+    ]
+
+    df = df.with_columns(*time_columns)
+  
     return df

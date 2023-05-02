@@ -284,7 +284,7 @@ class Runner():
                 
                 if t<=3: 
                     grp = '0-4'
-                    df = self.df1
+                    df = self.df2
                 elif t<=13: 
                     grp = '5-12'
                     df = self.df2

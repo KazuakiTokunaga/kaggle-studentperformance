@@ -32,8 +32,7 @@ class Runner():
         },
         feature_options={
             'version': 2,
-            'merge': False,
-            'bs': False
+            'merge': False
         },
         validation_options={
             'n_fold': 2,
@@ -96,20 +95,14 @@ class Runner():
 
         # sessionごとにまとめる
         grp = '0-4'
-        if self.feature_options.get('bs'):
-            self.df1 = preprocess.feature_engineer_pl_bs(df1_raw, grp=grp, **params)
-        else:
-            self.df1 = preprocess.feature_engineer_pl(df1_raw, grp=grp, **params)
-    
+        self.df1 = preprocess.feature_engineer_pl(df1_raw, grp=grp, feature_suffix='grp0-4', **params)
         self.df1 = preprocess.drop_columns(self.df1)
+
         self.models['features'][grp] = self.df1.columns
         logger.info(f'df1 done: {self.df1.shape}')
         
         grp = '5-12'
-        if self.feature_options.get('bs'):
-            self.df2 = preprocess.feature_engineer_pl_bs(df2_raw, grp=grp, **params)
-        else:
-            self.df2 = preprocess.feature_engineer_pl(df2_raw, grp=grp, **params)
+        self.df2 = preprocess.feature_engineer_pl(df2_raw, grp=grp, feature_suffix='grp5-12',  **params)
         self.df2 = preprocess.drop_columns(self.df2)
 
         if self.feature_options.get('merge'):
@@ -119,20 +112,17 @@ class Runner():
         logger.info(f'df2 done: {self.df2.shape}')
 
         grp = '13-22'
-        if self.feature_options.get('bs'):
-            self.df3 = preprocess.feature_engineer_pl_bs(df3_raw, grp=grp, **params)
-        else:
-            self.df3 = preprocess.feature_engineer_pl(df3_raw, grp=grp, **params)
+        self.df3 = preprocess.feature_engineer_pl(df3_raw, grp=grp, **params)
+        self.df3 = preprocess.drop_columns(self.df3)
 
         if self.feature_options.get('merge'):
             self.df3 = self.df3.join(self.df2, on='session_id', how='left')
 
-        del df1_raw, df2_raw, df3_raw
-        gc.collect()
-
-        self.df3 = preprocess.drop_columns(self.df3)
         self.models['features'][grp] = self.df3.columns
         logger.info(f'df3 done: {self.df3.shape}')
+
+        del df1_raw, df2_raw, df3_raw
+        gc.collect()
 
         self.note['df1_shape'] = self.df1.shape
         self.note['df2_shape'] = self.df2.shape

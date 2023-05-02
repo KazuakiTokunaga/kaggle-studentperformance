@@ -89,7 +89,6 @@ class Runner():
 
         params = {
             'use_extra': True,
-            'feature_suffix': '',
             'version': self.feature_options.get('version')
         }
 
@@ -112,7 +111,7 @@ class Runner():
         logger.info(f'df2 done: {self.df2.shape}')
 
         grp = '13-22'
-        self.df3 = preprocess.feature_engineer_pl(df3_raw, grp=grp, **params)
+        self.df3 = preprocess.feature_engineer_pl(df3_raw, grp=grp, feature_suffix='grp13-22', **params)
         self.df3 = preprocess.drop_columns(self.df3)
 
         if self.feature_options.get('merge'):

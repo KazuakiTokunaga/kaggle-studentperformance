@@ -287,10 +287,10 @@ class Runner():
                     df = self.df1
                 elif t<=13: 
                     grp = '5-12'
-                    df = self.df1
+                    df = self.df2
                 elif t<=22: 
                     grp = '13-22'
-                    df = self.df1
+                    df = self.df2
                 
                 # TRAIN DATA
                 train_x = df.iloc[train_index]

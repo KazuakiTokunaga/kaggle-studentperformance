@@ -118,7 +118,7 @@ class Runner():
             self.df2 = preprocess.add_columns_session(self.df2)
 
         if add_random:
-            self.df2 = preprocess.add_random_feature(df2)
+            self.df2 = preprocess.add_random_feature(self.df2)
 
         self.models['features'][grp] = self.df2.columns
         logger.info(f'df2 done: {self.df2.shape}')
@@ -133,7 +133,7 @@ class Runner():
             self.df3 = preprocess.add_columns_session(self.df3)
         
         if add_random:
-            self.df3 = preprocess.add_random_feature(df3)
+            self.df3 = preprocess.add_random_feature(self.df3)
 
         self.models['features'][grp] = self.df3.columns
         logger.info(f'df3 done: {self.df3.shape}')

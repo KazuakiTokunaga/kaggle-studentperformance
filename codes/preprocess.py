@@ -304,8 +304,8 @@ def feature_engineer_pl(x, grp,
         
         # 不審なクリック
         click_list = x.filter(pl.col('screen_coor_x').is_not_null()).groupby('screen_coor_x', 'screen_coor_y', 'session_id').count().sort('count', descending=True)
-        tmp = click_list.groupby('session_id').max().select('session_id', pl.col('count').alias('click_same_max'))
-        tmp2 = click_list.filter(pl.col('count')>=5).groupby('session_id').count().select('session_id', pl.col('count').alias('click_same_over5_count'))
+        tmp = click_list.groupby('session_id').max().select('session_id', pl.col('count').alias(f'click_same_max_{feature_suffix}'))
+        tmp2 = click_list.filter(pl.col('count')>=5).groupby('session_id').count().select('session_id', pl.col('count').alias(f'click_same_over5_count_{feature_suffix}'))
         tmp = tmp.join(tmp2, on='session_id', how='left')
         df = df.join(tmp, on='session_id', how='left')
         

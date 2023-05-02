@@ -36,7 +36,8 @@ class Runner():
         },
         validation_options={
             'n_fold': 2,
-            'questions': list(range(1, 19))
+            'questions': list(range(1, 19)),
+            'random_state': 42
         },
         model_options={
             'ensemble': False,
@@ -270,13 +271,14 @@ class Runner():
         self.oof = pd.DataFrame(data=np.multiply(np.ones((len(self.ALL_USERS), 1)), arr), index=self.ALL_USERS) # Question t はカラム t-1 に対応する
         best_ntrees_mat = np.zeros([self.n_fold, 18])
 
-        logger.info(f'Start validation with {self.n_fold} folds.')
-        gkf = GroupKFold(n_splits=self.n_fold)
-        gkf_split_list = list(gkf.split(X=self.df1, groups=self.df1.index))
+        random_state_validation = self.validation_options.get('random_state')
+        logger.info(f'Start validation with {self.n_fold} folds, random_state {random_state_validation}.')
+        kf = KFold(n_splits=self.n_fold, random_state = random_state_validation)
+        kf_split_list = list(kf.split(X=self.df1))
 
         for t in self.questions:
 
-            for k, (train_index, test_index) in enumerate(gkf_split_list):
+            for k, (train_index, test_index) in enumerate(kf_split_list):
                 if k==0 or (t <= 2 and k <= 2):
                     logger.info(f'Question {t}, Fold {k}.')
                 

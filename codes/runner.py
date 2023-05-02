@@ -32,6 +32,7 @@ class Runner():
         },
         feature_options={
             'version': 2,
+            'merge': False,
             'bs': False
         },
         validation_options={
@@ -110,6 +111,10 @@ class Runner():
         else:
             self.df2 = preprocess.feature_engineer_pl(df2, grp=grp, **params)
         self.df2 = preprocess.drop_columns(self.df2)
+
+        if self.feature_options.get('merge'):
+            self.df2 = self.df2.join(df1, on='session_id', how='left')
+
         self.models['features'][grp] = self.df2.columns
         logger.info(f'df2 done: {self.df2.shape}')
 
@@ -118,6 +123,10 @@ class Runner():
             self.df3 = preprocess.feature_engineer_pl_bs(df3, grp=grp, **params)
         else:
             self.df3 = preprocess.feature_engineer_pl(df3, grp=grp, **params)
+
+        if self.feature_options.get('merge'):
+            self.df3 = self.df3.join(df2, on='session_id', how='left')
+            
         self.df3 = preprocess.drop_columns(self.df3)
         self.models['features'][grp] = self.df3.columns
         logger.info(f'df3 done: {self.df3.shape}')

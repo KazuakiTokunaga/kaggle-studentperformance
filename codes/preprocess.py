@@ -319,16 +319,16 @@ def add_random_feature(df, n=10):
     return df
 
 
-def add_columns_session(df):
+def add_columns_session(df, id=6):
 
     time_columns = [
-        # pl.col('session_id').apply(lambda x: int(str(x)[:2])).alias('year'),
-        # pl.col('session_id').apply(lambda x: int(str(x)[2:4])+1).alias('month'),
-        # pl.col('session_id').apply(lambda x: int(str(x)[4:6])).alias('day'),
+        pl.col('session_id').apply(lambda x: int(str(x)[:2])).alias('year'),
+        pl.col('session_id').apply(lambda x: int(str(x)[2:4])+1).alias('month'),
+        pl.col('session_id').apply(lambda x: int(str(x)[4:6])).alias('day'),
         pl.col('session_id').apply(lambda x: int(str(x)[6:8])).alias('hour'),
         pl.col('session_id').apply(lambda x: int(str(x)[8:10])).alias('minute'),
         pl.col('session_id').apply(lambda x: int(str(x)[10:12])).alias('second')
-    ]
+    ][:id]
 
     df = df.with_columns(*time_columns)
   

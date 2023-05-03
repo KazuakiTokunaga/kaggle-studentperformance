@@ -34,7 +34,8 @@ class Runner():
             'version': 2,
             'merge': False,
             'load_oof': False,
-            'select': True
+            'select': True,
+            'time_id': 6
         },
         validation_options={
             'n_fold': 2,
@@ -91,6 +92,7 @@ class Runner():
         self.merge_features = self.feature_options.get('merge')
         if self.merge_features:
             logger.info('Execute merge_features.')
+        self.time_id = self.feature_options.get('time_id')
 
         self.df_train = preprocess.add_columns(self.df_train)
 
@@ -108,7 +110,7 @@ class Runner():
         grp = '0-4'
         self.df1 = preprocess.feature_engineer_pl(df1_raw, grp=grp, feature_suffix='grp0-4', **params)
         self.df1 = preprocess.drop_columns(self.df1)
-        self.df1 = preprocess.add_columns_session(self.df1)
+        self.df1 = preprocess.add_columns_session(self.df1, id=self.time_id)
 
         if add_random:
             self.df1 = preprocess.add_random_feature(self.df1)
@@ -134,7 +136,7 @@ class Runner():
                 exclude_df1af = [i for i in exclude_df1af if i in self.df1.columns]
             self.df2 = self.df2.join(self.df1.drop(exclude_df1af), on='session_id', how='left')
         else:
-            self.df2 = preprocess.add_columns_session(self.df2)
+            self.df2 = preprocess.add_columns_session(self.df2, id=self.time_id)
 
         if add_random:
             self.df2 = preprocess.add_random_feature(self.df2)
@@ -158,7 +160,7 @@ class Runner():
                 exclude_df2af = [i for i in exclude_df2af if i in self.df2.columns]
             self.df3 = self.df3.join(self.df2.drop(exclude_df2af), on='session_id', how='left')
         else:
-            self.df3 = preprocess.add_columns_session(self.df3)
+            self.df3 = preprocess.add_columns_session(self.df3, id=self.time_id)
         
         if add_random:
             self.df3 = preprocess.add_random_feature(self.df3)
@@ -327,10 +329,10 @@ class Runner():
                     df = self.df1
                 elif t<=13: 
                     grp = '5-12'
-                    df = self.df1
+                    df = self.df2
                 elif t<=22: 
                     grp = '13-22'
-                    df = self.df1
+                    df = self.df3
                 
                 # TRAIN DATA
                 train_x = df.iloc[train_index]

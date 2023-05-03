@@ -109,7 +109,7 @@ def feature_engineer_pl(x, grp,
     if version >= 2:
       if not use_csv:
           session_cnt = x.select('session_id').n_unique()
-          low = int(session_cnt * 0.1) 
+          low = int(session_cnt * 0.03) 
           flr_list = x.select('fqid', 'level', 'room_fqid', 'session_id').groupby('fqid', 'level', 'room_fqid').n_unique().filter(pl.col('session_id')>=low).drop('session_id')
           flr_cs = flr_list.get_columns()
           tl_list = x.select('text_fqid', 'level', 'session_id').groupby('text_fqid', 'level').n_unique().filter(pl.col('session_id')>=low).drop('session_id')

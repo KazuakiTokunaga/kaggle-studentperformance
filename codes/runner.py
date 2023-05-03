@@ -169,6 +169,13 @@ class Runner():
         self.models['features'][grp] = self.df3.columns
         logger.info(f'df3 done: {self.df3.shape}')
 
+        with open('sup_columns1.json', 'w') as f:
+            json.dump(self.sup_columns1, f)
+        with open('sup_columns2.json', 'w') as f:
+            json.dump(self.sup_columns2, f)
+        with open('sup_columns3.json', 'w') as f:
+            json.dump(self.sup_columns3, f)
+
         del df1_raw, df2_raw, df3_raw
         gc.collect()
 

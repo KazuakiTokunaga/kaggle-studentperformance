@@ -33,7 +33,8 @@ class Runner():
         feature_options={
             'version': 2,
             'merge': False,
-            'load_oof': False
+            'load_oof': False,
+            'select': True
         },
         validation_options={
             'n_fold': 2,
@@ -84,6 +85,10 @@ class Runner():
     def engineer_features(self, return_pd=True, fillna=True, add_random=False):
         logger.info('Start engineer features.')
 
+        self.select = self.feature_option.get('select')
+        if self.select:
+            logger.info('Select Features.')
+
         self.df_train = preprocess.add_columns(self.df_train)
 
         # グループごとに分割
@@ -112,6 +117,11 @@ class Runner():
         grp = '5-12'
         self.df2 = preprocess.feature_engineer_pl(df2_raw, grp=grp, feature_suffix='grp5-12',  **params)
         self.df2 = preprocess.drop_columns(self.df2)
+
+        if self.select:
+            exclude_df2 = json.load(open(f'{self.repo_path}/config/exclude_df2.json', 'r'))
+            exclude_df2 = [i in i for exclude_df2 if i in self.df2.columns]
+            self.df2 = self.df2.drop(exclude_df2)
 
         if self.feature_options.get('merge'):
             self.df2 = self.df2.join(self.df1, on='session_id', how='left')

@@ -32,7 +32,8 @@ class Runner():
         },
         feature_options={
             'version': 2,
-            'merge': False
+            'merge': False,
+            'load_oof': False
         },
         validation_options={
             'n_fold': 2,
@@ -161,6 +162,10 @@ class Runner():
                 self.df1 = self.df1.fillna(-1)
                 self.df2 = self.df2.fillna(-1)
                 self.df3 = self.df3.fillna(-1)
+        
+        if self.feature_options.get('load_oof'):
+            self.oof = pd.read_csv(f'{self.input_path}/oof_predict_proba.csv', index_col='session_id')
+
 
     def get_trained_clf(self, t, train_x, train_y, valid_x=None, valid_y=None, adhoc_params=None):
             

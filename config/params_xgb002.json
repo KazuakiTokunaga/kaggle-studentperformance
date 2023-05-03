@@ -1,0 +1,15 @@
+{
+    "base": {
+        "booster": "gbtree",
+        "tree_method": "hist",
+        "objective": "binary:logistic",
+        "eval_metric":"logloss",
+        "learning_rate": 0.02,
+        "alpha": 8,
+        "max_depth": 4,
+        "subsample":0.8,
+        "colsample_bytree": 0.5,
+        "seed": 42
+    },
+    "n_estimators": [639, 397, 404, 495, 519, 467, 413, 265, 376, 332, 292, 290, 476, 411, 392, 380 ,233, 364]
+}

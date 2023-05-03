@@ -88,6 +88,9 @@ class Runner():
         self.select = self.feature_options.get('select')
         if self.select:
             logger.info('Select Features.')
+        self.merge_features = self.feature_options.get('merge')
+        if self.merge_features:
+            logger.info('Execute merge_features.')
 
         self.df_train = preprocess.add_columns(self.df_train)
 
@@ -123,8 +126,12 @@ class Runner():
             exclude_df2 = [i for i in exclude_df2 if i in self.df2.columns]
             self.df2 = self.df2.drop(exclude_df2)
 
-        if self.feature_options.get('merge'):
+        if self.merge_features:
             self.df2 = self.df2.join(self.df1, on='session_id', how='left')
+            if self.select:
+                exclude_df1af = json.load(open(f'{self.repo_path}/config/exclude_df1af.json', 'r'))
+                exclude_df1af = [i for i in exclude_df1af if i in self.df2.columns]
+                self.df2 = self.df2.drop(exclude_df1af)
         else:
             self.df2 = preprocess.add_columns_session(self.df2)
 
@@ -138,8 +145,17 @@ class Runner():
         self.df3 = preprocess.feature_engineer_pl(df3_raw, grp=grp, feature_suffix='grp13-22', **params)
         self.df3 = preprocess.drop_columns(self.df3)
 
-        if self.feature_options.get('merge'):
+        if self.select:
+            exclude_df3 = json.load(open(f'{self.repo_path}/config/exclude_df3.json', 'r'))
+            exclude_df3 = [i for i in exclude_df3 if i in self.df3.columns]
+            self.df3 = self.df2.drop(exclude_df3)
+
+        if self.merge_features:
             self.df3 = self.df3.join(self.df2, on='session_id', how='left')
+            if self.select:
+                exclude_df2af = json.load(open(f'{self.repo_path}/config/exclude_df2af.json', 'r'))
+                exclude_df2af = [i for i in exclude_df2af if i in self.df3.columns]
+                self.df2 = self.df3.drop(exclude_df2af)
         else:
             self.df3 = preprocess.add_columns_session(self.df3)
         

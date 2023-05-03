@@ -155,7 +155,7 @@ class Runner():
             if self.select:
                 exclude_df2af = json.load(open(f'{self.repo_path}/config/exclude_df2af.json', 'r'))
                 exclude_df2af = [i for i in exclude_df2af if i in self.df3.columns]
-                self.df2 = self.df3.drop(exclude_df2af)
+                self.df3 = self.df3.drop(exclude_df2af)
         else:
             self.df3 = preprocess.add_columns_session(self.df3)
         

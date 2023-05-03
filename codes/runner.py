@@ -148,7 +148,7 @@ class Runner():
         if self.select:
             exclude_df3 = json.load(open(f'{self.repo_path}/config/exclude_df3.json', 'r'))
             exclude_df3 = [i for i in exclude_df3 if i in self.df3.columns]
-            self.df3 = self.df2.drop(exclude_df3)
+            self.df3 = self.df3.drop(exclude_df3)
 
         if self.merge_features:
             self.df3 = self.df3.join(self.df2, on='session_id', how='left')

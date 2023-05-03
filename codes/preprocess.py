@@ -52,13 +52,19 @@ def add_columns(df):
     return df
 
 
-def drop_columns(df, thre=0.9):
+def drop_columns(df, thre=0.97):
 
-    null_rates = (df.null_count() / df.height) <= thre
+    null_rates_raw = df.null_count() / df.height
+    null_rates = (null_rates_raw <= thre)
     columns_flag = null_rates.to_numpy()[0]
     columns = np.array(df.columns)[columns_flag]
-    df = df.select(columns)
 
+    # 一時的な処理
+    null_rates = (null_rates_raw > 0.9)
+    columns_flag2 = null_rates.to_numpy()[0]
+    sup_columns = np.array(df.columns)[columns_flag & columns_flag2]
+
+    df = df.select(columns)
     drop_columns = []
     for col in df.columns:
         if df.get_column(col).n_unique() == 1:
@@ -66,7 +72,7 @@ def drop_columns(df, thre=0.9):
     
     df = df.drop(drop_columns)
 
-    return df
+    return df, sup_columns
 
 
 def feature_engineer_pl(x, grp, 

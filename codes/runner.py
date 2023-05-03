@@ -110,7 +110,7 @@ class Runner():
         # sessionごとにまとめる
         grp = '0-4'
         self.df1 = preprocess.feature_engineer_pl(df1_raw, grp=grp, feature_suffix='grp0-4', **params)
-        self.df1 = preprocess.drop_columns(self.df1)
+        self.df1, self.sup_columns1 = preprocess.drop_columns(self.df1)
         self.df1 = preprocess.add_columns_session(self.df1, id=self.time_id)
 
         if add_random:
@@ -122,7 +122,7 @@ class Runner():
 
         grp = '5-12'
         self.df2 = preprocess.feature_engineer_pl(df2_raw, grp=grp, feature_suffix='grp5-12',  **params)
-        self.df2 = preprocess.drop_columns(self.df2)
+        self.df2, self.sup_columns2 = preprocess.drop_columns(self.df2)
 
         if self.select:
             exclude_df2 = json.load(open(f'{self.repo_path}/config/exclude_df2.json', 'r'))
@@ -147,7 +147,7 @@ class Runner():
 
         grp = '13-22'
         self.df3 = preprocess.feature_engineer_pl(df3_raw, grp=grp, feature_suffix='grp13-22', **params)
-        self.df3 = preprocess.drop_columns(self.df3)
+        self.df3, self.sup_columns3 = preprocess.drop_columns(self.df3)
 
         if self.select:
             exclude_df3 = json.load(open(f'{self.repo_path}/config/exclude_df3.json', 'r'))

@@ -85,7 +85,7 @@ class Runner():
     def engineer_features(self, return_pd=True, fillna=True, add_random=False):
         logger.info('Start engineer features.')
 
-        self.select = self.feature_option.get('select')
+        self.select = self.feature_options.get('select')
         if self.select:
             logger.info('Select Features.')
 

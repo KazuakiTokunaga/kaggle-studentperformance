@@ -30,14 +30,22 @@ class Runner():
             'split_labels': True,
             'parquet': True
         },
+        feature_options={
+            'version': 2,
+            'merge': False,
+            'load_oof': False,
+            'select': True
+        },
         validation_options={
             'n_fold': 2,
-            'questions': list(range(1, 19))
+            'questions': list(range(1, 19)),
+            'random_state': 42
         },
         model_options={
             'ensemble': False,
             'model': 'xgb',
-            'param_file': 'params_xgb001_test.json'
+            'param_file': 'params_xgb001_test.json',
+            'random': True
         }):
 
         self.run_fold_name = run_fold_name
@@ -45,6 +53,7 @@ class Runner():
         self.input_path = input_path
         self.repo_path = repo_path
         self.load_options = load_options
+        self.feature_options = feature_options
         self.model_options = model_options
         self.models = {
             'features': {},
@@ -54,6 +63,7 @@ class Runner():
         self.print_model_info = True
         self.best_ntrees = None
         self.note = dict()
+        self.fold_models = dict()
         
         self.validation_options = validation_options
         self.n_fold = validation_options.get('n_fold')
@@ -72,39 +82,100 @@ class Runner():
         gc.collect()
     
 
-    def engineer_features(self, return_pd=True, fillna=True):
+    def engineer_features(self, return_pd=True, fillna=True, add_random=False):
         logger.info('Start engineer features.')
+
+        self.select = self.feature_options.get('select')
+        if self.select:
+            logger.info('Select Features.')
+        self.merge_features = self.feature_options.get('merge')
+        if self.merge_features:
+            logger.info('Execute merge_features.')
 
         self.df_train = preprocess.add_columns(self.df_train)
 
         # グループごとに分割
-        df1 = self.df_train.filter(pl.col("level_group")=='0-4')
-        df2 = self.df_train.filter(pl.col("level_group")=='5-12')
-        df3 = self.df_train.filter(pl.col("level_group")=='13-22')
+        df1_raw = self.df_train.filter(pl.col("level_group")=='0-4')
+        df2_raw = self.df_train.filter(pl.col("level_group")=='5-12')
+        df3_raw = self.df_train.filter(pl.col("level_group")=='13-22')
+
+        params = {
+            'use_extra': True,
+            'version': self.feature_options.get('version')
+        }
 
         # sessionごとにまとめる
         grp = '0-4'
-        self.df1 = preprocess.feature_engineer_pl(df1, grp=grp, use_extra=True, feature_suffix='')
+        self.df1 = preprocess.feature_engineer_pl(df1_raw, grp=grp, feature_suffix='grp0-4', **params)
         self.df1 = preprocess.drop_columns(self.df1)
+        self.df1 = preprocess.add_columns_session(self.df1)
+
+        if add_random:
+            self.df1 = preprocess.add_random_feature(self.df1)
+
         self.models['features'][grp] = self.df1.columns
         logger.info(f'df1 done: {self.df1.shape}')
         
+
         grp = '5-12'
-        df2 = preprocess.feature_engineer_pl(df2, grp=grp, use_extra=True, feature_suffix='')
-        self.df2 = preprocess.drop_columns(df2)
+        self.df2 = preprocess.feature_engineer_pl(df2_raw, grp=grp, feature_suffix='grp5-12',  **params)
+        self.df2 = preprocess.drop_columns(self.df2)
+
+        if self.select:
+            exclude_df2 = json.load(open(f'{self.repo_path}/config/exclude_df2.json', 'r'))
+            exclude_df2 = [i for i in exclude_df2 if i in self.df2.columns]
+            self.df2 = self.df2.drop(exclude_df2)
+
+        if self.merge_features:
+
+            exclude_df1af = []
+            if self.select:
+                exclude_df1af = json.load(open(f'{self.repo_path}/config/exclude_df1af.json', 'r'))
+                exclude_df1af = [i for i in exclude_df1af if i in self.df1.columns]
+            self.df2 = self.df2.join(self.df1.drop(exclude_df1af), on='session_id', how='left')
+        else:
+            self.df2 = preprocess.add_columns_session(self.df2)
+
+        if add_random:
+            self.df2 = preprocess.add_random_feature(self.df2)
+
         self.models['features'][grp] = self.df2.columns
         logger.info(f'df2 done: {self.df2.shape}')
 
         grp = '13-22'
-        df3 = preprocess.feature_engineer_pl(df3, grp=grp, use_extra=True, feature_suffix='')
-        self.df3 = preprocess.drop_columns(df3)
+        self.df3 = preprocess.feature_engineer_pl(df3_raw, grp=grp, feature_suffix='grp13-22', **params)
+        self.df3 = preprocess.drop_columns(self.df3)
+
+        if self.select:
+            exclude_df3 = json.load(open(f'{self.repo_path}/config/exclude_df3.json', 'r'))
+            exclude_df3 = [i for i in exclude_df3 if i in self.df3.columns]
+            self.df3 = self.df3.drop(exclude_df3)
+
+        if self.merge_features:
+            exclude_df2af = []
+            if self.select:
+                exclude_df2af = json.load(open(f'{self.repo_path}/config/exclude_df2af.json', 'r'))
+                exclude_df2af = [i for i in exclude_df2af if i in self.df2.columns]
+            self.df3 = self.df3.join(self.df2.drop(exclude_df2af), on='session_id', how='left')
+        else:
+            self.df3 = preprocess.add_columns_session(self.df3)
+        
+        if add_random:
+            self.df3 = preprocess.add_random_feature(self.df3)
+
         self.models['features'][grp] = self.df3.columns
         logger.info(f'df3 done: {self.df3.shape}')
+
+        del df1_raw, df2_raw, df3_raw
+        gc.collect()
 
         self.note['df1_shape'] = self.df1.shape
         self.note['df2_shape'] = self.df2.shape
         self.note['df3_shape'] = self.df3.shape
-        self.note['feature'] = ''
+        self.note['feature'] = {
+            "feature": "best scoreと基本的に同じ",
+            "prev_predict": "True"
+        }
 
         if return_pd:
             if type(self.df1) == pl.DataFrame:
@@ -118,6 +189,11 @@ class Runner():
                 self.df1 = self.df1.fillna(-1)
                 self.df2 = self.df2.fillna(-1)
                 self.df3 = self.df3.fillna(-1)
+        
+        if self.feature_options.get('load_oof'):
+            self.oof = pd.read_csv(f'{self.input_path}/oof_predict_proba.csv', index_col='session_id')
+            self.oof.columns = [int(i) for i in self.oof.columns]
+
 
     def get_trained_clf(self, t, train_x, train_y, valid_x=None, valid_y=None, adhoc_params=None):
             
@@ -137,6 +213,9 @@ class Runner():
             model_params['n_estimators'] = n_estimators_list[0]
         else:
             model_params['n_estimators'] = n_estimators_list[t-1]
+        
+        if self.model_options.get('random'):
+            model_params['random_state'] = np.random.randint(1, 100)
 
         # validation時にbest_iterationを保存している場合はそちらを優先する
         if self.best_ntrees is not None:
@@ -223,66 +302,82 @@ class Runner():
 
     def run_validation(self, 
             save_oof=True, 
-            adhoc_params=None
+            adhoc_params=None,
+            save_fold_models=False
         ):
 
         self.ALL_USERS = self.df1.index.unique()
         user_cnt = len(self.ALL_USERS)
         logger.info(f'We will train with {user_cnt} users info')
 
-        self.oof = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ALL_USERS)
+        arr = [0.728, 0.978, 0.933, 0.8, 0.548, 0.776, 0.736, 0.612, 0.734, 0.505, 0.642, 0.86 , 0.275, 0.707, 0.481, 0.733, 0.684, 0.95]
+        self.oof = pd.DataFrame(data=np.multiply(np.ones((len(self.ALL_USERS), 1)), arr), index=self.ALL_USERS) # Question t はカラム t-1 に対応する
         best_ntrees_mat = np.zeros([self.n_fold, 18])
 
-        logger.info(f'Start validation with {self.n_fold} folds.')
-        gkf = GroupKFold(n_splits=self.n_fold)
-        for i, (train_index, test_index) in enumerate(gkf.split(X=self.df1, groups=self.df1.index)):
+        random_state_validation = self.validation_options.get('random_state')
+        logger.info(f'Start validation with {self.n_fold} folds, random_state {random_state_validation}.')
+        kf = KFold(n_splits=self.n_fold, shuffle=True, random_state = random_state_validation)
+        kf_split_list = list(kf.split(X=self.df1))
 
-            # ITERATE THRU QUESTIONS 1 THRU 18
-            for t in self.questions:
-                if t <= 3:
-                    logger.info(f'Fold {i} - Q {t}')
+        for t in self.questions:
+
+            for k, (train_index, test_index) in enumerate(kf_split_list):
+                if k==0 or (t <= 2 and k <= 2):
+                    logger.info(f'Question {t}, Fold {k}.')
                 
-                # USE THIS TRAIN DATA WITH THESE QUESTIONS
                 if t<=3: 
                     grp = '0-4'
                     df = self.df1
                 elif t<=13: 
                     grp = '5-12'
-                    df = self.df2
+                    df = self.df1
                 elif t<=22: 
                     grp = '13-22'
-                    df = self.df3
-                    
+                    df = self.df1
+                
                 # TRAIN DATA
                 train_x = df.iloc[train_index]
                 train_users = train_x.index.values
+                prev_answers = self.oof.loc[train_users, [i for i in range(t-1)]].copy()
+                train_x = train_x.merge(prev_answers, left_index=True, right_index=True, how='left')
                 train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[train_users]
+
                 
                 # VALID DATA
                 valid_x = df.iloc[test_index]
                 valid_users = valid_x.index.values
+                prev_answers = self.oof.loc[valid_users, [i for i in range(t-1)]].copy()
+                valid_x = valid_x.merge(prev_answers, left_index=True, right_index=True, how='left')
                 valid_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[valid_users]
 
                 clf, ntree = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params)
-                best_ntrees_mat[i, t-1] = ntree
+                best_ntrees_mat[k, t-1] = ntree
                 
                 self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x)[:,1]
+
+                if save_fold_models:
+                    self.fold_models[f'q{t}_fold{k}'] = clf
 
         if best_ntrees_mat[0, 0] > 1:
             logger.info('Save best iterations.')
             self.best_ntrees = pd.Series(best_ntrees_mat.mean(axis=0).astype('int'))
-            pd.Series(self.best_ntrees).to_csv('best_num_trees.csv')
+            self.best_ntrees.to_csv('best_num_trees.csv')
+            self.note['best_ntrees'] = list(self.best_ntrees)
+            
 
         if save_oof:
             logger.info('Export oof_predict_proba.')
             self.oof.to_csv('oof_predict_proba.csv')
+        
+        if save_fold_models:
+            pickle.dump(self.fold_models, open(f'fold_models.pkl', 'wb'))
         
 
     def evaluate_validation(self, ):
         logger.info('Start evaluating validations.')
 
         # PUT TRUE LABELS INTO DATAFRAME WITH 18 COLUMNS
-        true = self.oof.copy()
+        true = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ALL_USERS)
         for k in range(18):
             # GET TRUE LABELS
             tmp = self.df_labels.loc[self.df_labels.q == k+1].set_index('session').loc[self.ALL_USERS]
@@ -298,7 +393,7 @@ class Runner():
         best_score = 0; best_threshold = 0
 
         logger.info('Search optimal threshold.')
-        for threshold in np.arange(0.45,0.75,0.01):
+        for threshold in np.arange(0.55,0.75,0.01):
             preds = (oof_target.values.reshape((-1))>threshold).astype('int')
             m = f1_score(true.values.reshape((-1)), preds, average='macro')   
             scores.append(m)
@@ -306,7 +401,9 @@ class Runner():
             if m>best_score:
                 best_score = m
                 best_threshold = threshold
-        self.models['optimal_threshold'] = best_threshold
+
+        self.models['optimal_threshold'] = np.round(best_threshold, 6)
+        self.note['best_threshold'] = best_threshold
         logger.info(f'optimal threshold: {best_threshold}')
         
         logger.info('When using optimal threshold...')
@@ -341,6 +438,9 @@ class Runner():
                 
             # TRAIN DATA
             train_x = df
+            prev_answers = self.oof[[i for i in range(t-1)]].copy()
+            train_x = train_x.merge(prev_answers, left_index=True, right_index=True, how='left')
+            
             train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session')
 
             clf, ntree = self.get_trained_clf(t, train_x, train_y)    
@@ -362,6 +462,7 @@ class Runner():
         data.append(self.load_options)
         data.append(self.validation_options)
         data.append(self.model_options)
+        data.append(self.feature_options)
         data.append(self.note)
 
         google_sheet = utils.WriteSheet()

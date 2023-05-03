@@ -170,11 +170,11 @@ class Runner():
         logger.info(f'df3 done: {self.df3.shape}')
 
         with open('sup_columns1.json', 'w') as f:
-            json.dump(self.sup_columns1, f)
+            json.dump(list(self.sup_columns1), f)
         with open('sup_columns2.json', 'w') as f:
-            json.dump(self.sup_columns2, f)
+            json.dump(list(self.sup_columns2), f)
         with open('sup_columns3.json', 'w') as f:
-            json.dump(self.sup_columns3, f)
+            json.dump(list(self.sup_columns3), f)
 
         del df1_raw, df2_raw, df3_raw
         gc.collect()

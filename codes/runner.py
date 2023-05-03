@@ -223,7 +223,7 @@ class Runner():
         
         if self.model_options.get('random'):
             model_params['random_state'] = np.random.randint(1, 100)
-        if self.model_options.get('random_state'):
+        elif self.model_options.get('random_state'):
             model_params['random_state'] = self.model_options.get('random_state')
 
         # validation時にbest_iterationを保存している場合はそちらを優先する

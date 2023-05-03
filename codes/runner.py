@@ -165,6 +165,7 @@ class Runner():
         
         if self.feature_options.get('load_oof'):
             self.oof = pd.read_csv(f'{self.input_path}/oof_predict_proba.csv', index_col='session_id')
+            self.oof.columns = [int(i) for i in self.oof.columns]
 
 
     def get_trained_clf(self, t, train_x, train_y, valid_x=None, valid_y=None, adhoc_params=None):

@@ -46,7 +46,8 @@ class Runner():
             'ensemble': False,
             'model': 'xgb',
             'param_file': 'params_xgb001_test.json',
-            'random': True
+            'random': True,
+            'random_state': 42
         }):
 
         self.run_fold_name = run_fold_name
@@ -215,6 +216,8 @@ class Runner():
         
         if self.model_options.get('random'):
             model_params['random_state'] = np.random.randint(1, 100)
+        if self.model_options.get('random_state'):
+            model_params['random_state'] = self.model_options.get('random_state')
 
         # validation時にbest_iterationを保存している場合はそちらを優先する
         if self.best_ntrees is not None:

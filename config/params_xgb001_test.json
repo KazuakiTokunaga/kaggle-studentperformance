@@ -9,7 +9,7 @@
         "max_depth": 4,
         "subsample":0.8,
         "colsample_bytree": 0.5,
-        "seed": 42
+        "random_state": 42
     },
     "n_estimators": [10]
 }

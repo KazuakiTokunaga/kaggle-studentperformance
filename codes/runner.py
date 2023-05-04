@@ -308,7 +308,8 @@ class Runner():
     def run_validation(self, 
             save_oof=True, 
             adhoc_params=None,
-            save_fold_models=False
+            save_fold_models=False,
+            adhoc_questions=None
         ):
 
         self.ALL_USERS = self.df1.index.unique()
@@ -324,6 +325,10 @@ class Runner():
         logger.info(f'Start validation with {self.n_fold} folds, random_state {random_state_validation}.')
         kf = KFold(n_splits=self.n_fold, shuffle=True, random_state = random_state_validation)
         kf_split_list = list(kf.split(X=self.df1))
+
+        # ハイパラ最適化のため
+        if adhoc_questions is not None:
+            self.questions = adhoc_questions
 
         for t in self.questions:
 

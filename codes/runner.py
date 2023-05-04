@@ -193,6 +193,7 @@ class Runner():
                 self.df3 = self.df3.fillna(-1)
         
         if self.feature_options.get('load_oof'):
+            logger.info('Load oof from csv.')
             self.oof = pd.read_csv(f'{self.input_path}/oof_predict_proba.csv', index_col='session_id')
             self.oof.columns = [int(i) for i in self.oof.columns]
 
@@ -315,7 +316,8 @@ class Runner():
         logger.info(f'We will train with {user_cnt} users info')
 
         arr = [0.728, 0.978, 0.933, 0.8, 0.548, 0.776, 0.736, 0.612, 0.734, 0.505, 0.642, 0.86 , 0.275, 0.707, 0.481, 0.733, 0.684, 0.95]
-        self.oof = pd.DataFrame(data=np.multiply(np.ones((len(self.ALL_USERS), 1)), arr), index=self.ALL_USERS) # Question t はカラム t-1 に対応する
+        if not self.feature_options.get('load_oof'):
+            self.oof = pd.DataFrame(data=np.multiply(np.ones((len(self.ALL_USERS), 1)), arr), index=self.ALL_USERS) # Question t はカラム t-1 に対応する
         best_ntrees_mat = np.zeros([self.n_fold, 18])
 
         random_state_validation = self.validation_options.get('random_state')

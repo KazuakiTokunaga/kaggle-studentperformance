@@ -9,7 +9,8 @@
         "max_depth": 4,
         "subsample":0.8,
         "colsample_bytree": 0.5,
-        "random_state": 42
+        "random_state": 42,
+        "early_stopping_rounds": 100
     },
-    "n_estimators": [498, 448, 378, 364, 405, 495, 456, 249, 384, 405, 356, 262, 484, 381, 392, 248 ,248, 345]
+    "n_estimators": [1200]
 }

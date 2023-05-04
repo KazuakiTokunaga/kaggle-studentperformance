@@ -110,8 +110,13 @@ class Runner():
         # sessionごとにまとめる
         grp = '0-4'
         self.df1 = preprocess.feature_engineer_pl(df1_raw, grp=grp, feature_suffix='grp0-4', **params)
-        self.df1, self.sup_columns1 = preprocess.drop_columns(self.df1)
+        self.df1 = preprocess.drop_columns(self.df1)
         self.df1 = preprocess.add_columns_session(self.df1, id=self.time_id)
+
+        if self.select:
+            exclude_df1 = json.load(open(f'{self.repo_path}/config/exclude_df1.json', 'r'))
+            exclude_df1 = [i for i in exclude_df1 if i in self.df1.columns]
+            self.df1 = self.df1.drop(exclude_df1)
 
         if add_random:
             self.df1 = preprocess.add_random_feature(self.df1)
@@ -122,7 +127,7 @@ class Runner():
 
         grp = '5-12'
         self.df2 = preprocess.feature_engineer_pl(df2_raw, grp=grp, feature_suffix='grp5-12',  **params)
-        self.df2, self.sup_columns2 = preprocess.drop_columns(self.df2)
+        self.df2 = preprocess.drop_columns(self.df2)
 
         if self.select:
             exclude_df2 = json.load(open(f'{self.repo_path}/config/exclude_df2.json', 'r'))
@@ -130,7 +135,6 @@ class Runner():
             self.df2 = self.df2.drop(exclude_df2)
 
         if self.merge_features:
-
             exclude_df1af = []
             if self.select:
                 exclude_df1af = json.load(open(f'{self.repo_path}/config/exclude_df1af.json', 'r'))
@@ -138,16 +142,15 @@ class Runner():
             self.df2 = self.df2.join(self.df1.drop(exclude_df1af), on='session_id', how='left')
         else:
             self.df2 = preprocess.add_columns_session(self.df2, id=self.time_id)
-
-        # if add_random:
-        #     self.df2 = preprocess.add_random_feature(self.df2)
+            if add_random:
+                self.df2 = preprocess.add_random_feature(self.df2)
 
         self.models['features'][grp] = self.df2.columns
         logger.info(f'df2 done: {self.df2.shape}')
 
         grp = '13-22'
         self.df3 = preprocess.feature_engineer_pl(df3_raw, grp=grp, feature_suffix='grp13-22', **params)
-        self.df3, self.sup_columns3 = preprocess.drop_columns(self.df3)
+        self.df3 = preprocess.drop_columns(self.df3)
 
         if self.select:
             exclude_df3 = json.load(open(f'{self.repo_path}/config/exclude_df3.json', 'r'))
@@ -162,19 +165,11 @@ class Runner():
             self.df3 = self.df3.join(self.df2.drop(exclude_df2af), on='session_id', how='left')
         else:
             self.df3 = preprocess.add_columns_session(self.df3, id=self.time_id)
-        
-        # if add_random:
-        #     self.df3 = preprocess.add_random_feature(self.df3)
+            if add_random:
+                self.df3 = preprocess.add_random_feature(self.df3)
 
         self.models['features'][grp] = self.df3.columns
         logger.info(f'df3 done: {self.df3.shape}')
-
-        with open('sup_columns1.json', 'w') as f:
-            json.dump(list(self.sup_columns1), f)
-        with open('sup_columns2.json', 'w') as f:
-            json.dump(list(self.sup_columns2), f)
-        with open('sup_columns3.json', 'w') as f:
-            json.dump(list(self.sup_columns3), f)
 
         del df1_raw, df2_raw, df3_raw
         gc.collect()

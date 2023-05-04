@@ -59,11 +59,6 @@ def drop_columns(df, thre=0.97):
     columns_flag = null_rates.to_numpy()[0]
     columns = np.array(df.columns)[columns_flag]
 
-    # 一時的な処理
-    null_rates = (null_rates_raw > 0.9)
-    columns_flag2 = null_rates.to_numpy()[0]
-    sup_columns = np.array(df.columns)[columns_flag & columns_flag2]
-
     df = df.select(columns)
     drop_columns = []
     for col in df.columns:
@@ -72,7 +67,7 @@ def drop_columns(df, thre=0.97):
     
     df = df.drop(drop_columns)
 
-    return df, sup_columns
+    return df
 
 
 def feature_engineer_pl(x, grp, 

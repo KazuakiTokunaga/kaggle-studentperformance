@@ -119,10 +119,10 @@ class Runner():
         self.df1 = preprocess.drop_columns(self.df1, thre=self.thre)
         self.df1 = preprocess.add_columns_session(self.df1, id=self.time_id)
 
-        if self.select:
-            exclude_df1 = json.load(open(f'{self.repo_path}/config/exclude_df1{self.exclude_suffix}.json', 'r'))
-            exclude_df1 = [i for i in exclude_df1 if i in self.df1.columns]
-            self.df1 = self.df1.drop(exclude_df1)
+        # if self.select:
+        #     exclude_df1 = json.load(open(f'{self.repo_path}/config/exclude_df1{self.exclude_suffix}.json', 'r'))
+        #     exclude_df1 = [i for i in exclude_df1 if i in self.df1.columns]
+        #     self.df1 = self.df1.drop(exclude_df1)
 
         if add_random:
             self.df1 = preprocess.add_random_feature(self.df1)

@@ -179,13 +179,14 @@ class Runner():
         self.note['df3_shape'] = self.df3.shape
         self.note['feature'] = {}
 
-        self.ALL_USERS = self.df1.index.unique()
         if return_pd:
             if type(self.df1) == pl.DataFrame:
                 logger.info('Convert polars df to pandas df.')
                 self.df1 = utils.pl_to_pd(self.df1)
                 self.df2 = utils.pl_to_pd(self.df2)
                 self.df3 = utils.pl_to_pd(self.df3)
+            
+            self.ALL_USERS = self.df1.index.unique()
         
             if fillna:
                 logger.info('Execute fillna with -1 to pandas df.')

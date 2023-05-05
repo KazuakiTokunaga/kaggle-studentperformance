@@ -316,7 +316,7 @@ class Runner():
     def run_validation(self, 
             save_oof=True, 
             adhoc_params=None,
-            save_fold_models=False,
+            save_fold_models=True,
             adhoc_questions=None
         ):
 

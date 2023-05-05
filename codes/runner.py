@@ -440,6 +440,7 @@ class Runner():
 
         # ITERATE THRU QUESTIONS 1 THRU 18
         for t in self.questions:
+            logger.info(f'Question {t}.')
             
             # USE THIS TRAIN DATA WITH THESE QUESTIONS
             if t<=3: 

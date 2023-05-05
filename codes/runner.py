@@ -35,6 +35,7 @@ class Runner():
             'merge': False,
             'load_oof': False,
             'select': True,
+            'thre': 0.97
             'time_id': 6
         },
         validation_options={
@@ -87,6 +88,8 @@ class Runner():
     def engineer_features(self, return_pd=True, fillna=True, add_random=False):
         logger.info('Start engineer features.')
 
+        self.thre = self.feature_options.get('thre')
+        logger.info(f'Threshold of null values: {self.thre}')
         self.select = self.feature_options.get('select')
         if self.select:
             logger.info('Select Features.')
@@ -104,13 +107,14 @@ class Runner():
 
         params = {
             'use_extra': True,
-            'version': self.feature_options.get('version')
+            'version': self.feature_options.get('version'),
+            'thre': 1-self.thre
         }
 
         # sessionごとにまとめる
         grp = '0-4'
         self.df1 = preprocess.feature_engineer_pl(df1_raw, grp=grp, feature_suffix='grp0-4', **params)
-        self.df1 = preprocess.drop_columns(self.df1)
+        self.df1 = preprocess.drop_columns(self.df1, thre=self.thre)
         self.df1 = preprocess.add_columns_session(self.df1, id=self.time_id)
 
         if self.select:
@@ -127,7 +131,7 @@ class Runner():
 
         grp = '5-12'
         self.df2 = preprocess.feature_engineer_pl(df2_raw, grp=grp, feature_suffix='grp5-12',  **params)
-        self.df2 = preprocess.drop_columns(self.df2)
+        self.df2 = preprocess.drop_columns(self.df2, thre=self.thre)
 
         if self.select:
             exclude_df2 = json.load(open(f'{self.repo_path}/config/exclude_df2.json', 'r'))
@@ -150,7 +154,7 @@ class Runner():
 
         grp = '13-22'
         self.df3 = preprocess.feature_engineer_pl(df3_raw, grp=grp, feature_suffix='grp13-22', **params)
-        self.df3 = preprocess.drop_columns(self.df3)
+        self.df3 = preprocess.drop_columns(self.df3, thre=self.thre)
 
         if self.select:
             exclude_df3 = json.load(open(f'{self.repo_path}/config/exclude_df3.json', 'r'))

@@ -179,6 +179,7 @@ class Runner():
         self.note['df3_shape'] = self.df3.shape
         self.note['feature'] = {}
 
+        self.ALL_USERS = self.df1.index.unique()
         if return_pd:
             if type(self.df1) == pl.DataFrame:
                 logger.info('Convert polars df to pandas df.')
@@ -312,7 +313,6 @@ class Runner():
             adhoc_questions=None
         ):
 
-        self.ALL_USERS = self.df1.index.unique()
         user_cnt = len(self.ALL_USERS)
         logger.info(f'We will train with {user_cnt} users info')
 
@@ -452,7 +452,7 @@ class Runner():
             prev_answers = self.oof[[i for i in range(t-1)]].copy()
             train_x = train_x.merge(prev_answers, left_index=True, right_index=True, how='left')
             
-            train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session')
+            train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[self.ALL_USERS]
 
             clf, ntree = self.get_trained_clf(t, train_x, train_y)    
 

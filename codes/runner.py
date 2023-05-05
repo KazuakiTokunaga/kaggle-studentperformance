@@ -35,7 +35,7 @@ class Runner():
             'merge': False,
             'load_oof': False,
             'select': True,
-            'thre': 0.97
+            'thre': 0.97,
             'time_id': 6
         },
         validation_options={

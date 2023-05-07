@@ -57,14 +57,14 @@ def drop_columns(df, thre=0.97):
     null_rates_raw = df.null_count() / df.height
     null_rates = (null_rates_raw <= thre)
     columns_flag = null_rates.to_numpy()[0]
-    columns = np.array(df.columns)[columns_flag]
+    columns = list(np.array(df.columns)[columns_flag])
 
     # aboveがつくカラムは例外
     exceptional_columns = (null_rates_raw <= 0.995)
     excep_columns_flag = null_rates.to_numpy()[0]
-    excep_columns = np.array(df.columns)[excep_columns_flag]
+    excep_columns = list(np.array(df.columns)[excep_columns_flag])
     excep_columns = [i for i in excep_columns if i not in columns and i.endswith('_above')]
-    
+
     df = df.select(columns + excep_columns)
 
     drop_columns = []

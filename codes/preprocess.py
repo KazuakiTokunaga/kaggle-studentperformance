@@ -59,7 +59,7 @@ def drop_columns(df, thre=0.97):
     columns_flag = null_rates.to_numpy()[0]
     columns = list(np.array(df.columns)[columns_flag])
 
-    # aboveがつくカラムは例外
+    # aboveがつくカラムは例外(閾値超え)
     excep_null_rates = (null_rates_raw <= 0.997)
     excep_columns_flag = excep_null_rates.to_numpy()[0]
     excep_columns = list(np.array(df.columns)[excep_columns_flag])

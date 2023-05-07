@@ -147,10 +147,10 @@ def feature_engineer_pl(x, grp,
         (pl.col('elapsed_time_max').filter((pl.col('level')>=5)&(pl.col('level')<=11)).max() - pl.col('elapsed_time_min').filter(pl.col('level')==12).min()).alias('elapsed_time_diff_max5-11_min12'),
         (pl.col('elapsed_time_max').filter((pl.col('level')>=13)&(pl.col('level')<=21)).max() - pl.col('elapsed_time_min').filter(pl.col('level')==22).min()).alias('elapsed_time_diff_max13-21_min22'),
     ]).with_columns(
-        *[pl.col(f'elapsed_time_level_diff_{n}').apply(lambda s: s if s < 0 and s.len()>0 else 0).alias(f'elapsed_fime_level_diff_fixed_{n}') for n in [i for i in LEVELS if i not in [4,13,22]]],
-        pl.col('elapsed_time_diff_max0-3_min4').apply(lambda s: s if s > 0 and s.len()>0  else 0).alias('elapsed_time_diff_fixed_max0_3_min4'),
-        pl.col('elapsed_time_diff_max5-11_min12').apply(lambda s: s if s > 0 and s.len()>0  else 0).alias('elapsed_time_diff_fixed_max5-11_min12'),
-        pl.col('elapsed_time_diff_max13-21_min22').apply(lambda s: s if s > 0 and s.len()>0  else 0).alias('elapsed_time_diff_fixed_max13-21_min22'),
+        *[pl.col(f'elapsed_time_level_diff_{n}').apply(lambda s: s if s < 0 else 0).alias(f'elapsed_fime_level_diff_fixed_{n}') for n in [i for i in LEVELS if i not in [4,13,22]]],
+        pl.col('elapsed_time_diff_max0-3_min4').apply(lambda s: s if s > 0 else 0).alias('elapsed_time_diff_fixed_max0_3_min4'),
+        pl.col('elapsed_time_diff_max5-11_min12').apply(lambda s: s if s > 0 else 0).alias('elapsed_time_diff_fixed_max5-11_min12'),
+        pl.col('elapsed_time_diff_max13-21_min22').apply(lambda s: s if s > 0 else 0).alias('elapsed_time_diff_fixed_max13-21_min22'),
     ).drop(
         *[f'elapsed_time_level_diff_{l}' for l in [i for i in range(22) if i not in [4,13,22]]],
         'elapsed_time_diff_max0-3_min4',
@@ -183,6 +183,7 @@ def feature_engineer_pl(x, grp,
         *[pl.col('elapsed_time_diff_to').filter(pl.col('level')==l).sum().alias(f'elapsed_time_diff_to_{l}_{feature_suffix2}') for l in LEVELS]
     ])
 
+    # メインの処理
     aggs = [
         pl.col("index").count().alias(f"session_number_{feature_suffix}"),
       
@@ -341,6 +342,7 @@ def feature_engineer_pl(x, grp,
             tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
             df = df.join(tmp, on="session_id", how='left')
     
+    # 特徴量を更に追加する
     if version>=2:
 
         # 集計統計量の追加
@@ -370,6 +372,7 @@ def feature_engineer_pl(x, grp,
         tmp = tmp.join(tmp2, on='session_id', how='left')
         df = df.join(tmp, on='session_id', how='left')
     
+    # 最初に作ったものを結合する
     df = df.join(df_level_diff_summary, on='session_id', how='left')
     df = df.join(df_train_above_summary, on='session_id', how='left')
         

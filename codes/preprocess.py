@@ -60,8 +60,8 @@ def drop_columns(df, thre=0.97):
     columns = list(np.array(df.columns)[columns_flag])
 
     # aboveがつくカラムは例外
-    exceptional_columns = (null_rates_raw <= 0.999)
-    excep_columns_flag = null_rates.to_numpy()[0]
+    excep_null_rates = (null_rates_raw <= 0.997)
+    excep_columns_flag = excep_null_rates.to_numpy()[0]
     excep_columns = list(np.array(df.columns)[excep_columns_flag])
     excep_columns = [i for i in excep_columns if i not in columns and i.endswith('_above')]
 

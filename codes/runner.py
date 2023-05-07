@@ -411,7 +411,7 @@ class Runner():
         best_score = 0; best_threshold = 0
 
         logger.info('Search optimal threshold.')
-        for threshold in np.arange(0.55,0.75,0.01):
+        for threshold in np.arange(0.60,0.65,0.001):
             preds = (oof_target.values.reshape((-1))>threshold).astype('int')
             m = f1_score(true.values.reshape((-1)), preds, average='macro')   
             scores.append(m)

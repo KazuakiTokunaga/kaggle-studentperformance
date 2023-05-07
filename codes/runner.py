@@ -101,6 +101,10 @@ class Runner():
         if self.merge_features:
             logger.info('Execute merge_features.')
         self.time_id = self.feature_options.get('time_id')
+        if self.feature_options.get('level_diff'):
+            logger.info('Add features based on elapsed_time level_diff.')
+        if self.feature_options.get('cut_above'):
+            logger.info('Cut data into two parts based on elapsed_time_threshold.')
 
         self.df_train = preprocess.add_columns(self.df_train)
 

@@ -79,12 +79,13 @@ def drop_columns(df, thre=0.97):
 
 def feature_engineer_pl(x, grp, 
         use_extra=True, 
-        use_time=True, 
         feature_suffix = '', 
         version=2, 
         use_csv=False, 
         csv_path='',
-        thre = 0.03
+        thre = 0.03,
+        level_diff=True,
+        cut_above=True
     ):
 
     # from https://www.kaggle.com/code/leehomhuang/catboost-baseline-with-lots-features-inference :
@@ -135,60 +136,62 @@ def feature_engineer_pl(x, grp,
 
 
     # levelごとの経過時間についての情報をまとめる
-    df_level_diff = x.groupby('session_id', 'level_group', 'level').agg([
-        pl.col('elapsed_time').max().alias('elapsed_time_max'),
-        pl.col('elapsed_time').min().alias('elapsed_time_min'),
-    ]).sort('session_id', 'level').with_columns([
-        (pl.col('elapsed_time_max') - pl.col('elapsed_time_min')).alias('elapsed_time_total'),
-        (pl.col('elapsed_time_min').shift(-1)).alias('next_min'),
-    ]).with_columns([
-        (pl.col('next_min') - pl.col('elapsed_time_max')).alias('level_diff'),
-    ])
-    df_level_diff_summary = df_level_diff.groupby('session_id').agg([
-        *[pl.col('elapsed_time_total').filter(pl.col('level')==l).max().alias(f'elapsed_time_total_level_{l}') for l in LEVELS],
-        *[pl.col('level_diff').filter(pl.col('level')==l).max().alias(f'elapsed_time_level_diff_{l}') for l in [i for i in LEVELS if i not in [4,13,22]]],
-        (pl.col('elapsed_time_max').filter((pl.col('level')>=0)&(pl.col('level')<=4)).max()).alias('elapsed_time_max0-4'),
-        (pl.col('elapsed_time_max').filter((pl.col('level')>=5)&(pl.col('level')<=12)).max()).alias('elapsed_time_max5-12'),
-        (pl.col('elapsed_time_max').filter((pl.col('level')>=13)&(pl.col('level')<=22)).max()).alias('elapsed_time_max13-22'),
-        (pl.col('elapsed_time_max').filter((pl.col('level')>=0)&(pl.col('level')<=3)).max() - pl.col('elapsed_time_min').filter(pl.col('level')==4).min()).alias('elapsed_time_diff_max0-3_min4'),
-        (pl.col('elapsed_time_max').filter((pl.col('level')>=5)&(pl.col('level')<=11)).max() - pl.col('elapsed_time_min').filter(pl.col('level')==12).min()).alias('elapsed_time_diff_max5-11_min12'),
-        (pl.col('elapsed_time_max').filter((pl.col('level')>=13)&(pl.col('level')<=21)).max() - pl.col('elapsed_time_min').filter(pl.col('level')==22).min()).alias('elapsed_time_diff_max13-21_min22'),
-    ]).with_columns(
-        *[pl.col(f'elapsed_time_level_diff_{n}').apply(lambda s: s if s < 0 else 0).alias(f'elapsed_fime_level_diff_fixed_{n}') for n in [i for i in LEVELS if i not in [4,13,22]]],
-        pl.col('elapsed_time_diff_max0-3_min4').apply(lambda s: s if s > 0 else 0).alias('elapsed_time_diff_fixed_max0_3_min4'),
-        pl.col('elapsed_time_diff_max5-11_min12').apply(lambda s: s if s > 0 else 0).alias('elapsed_time_diff_fixed_max5-11_min12'),
-        pl.col('elapsed_time_diff_max13-21_min22').apply(lambda s: s if s > 0 else 0).alias('elapsed_time_diff_fixed_max13-21_min22'),
-    ).drop(
-        *[f'elapsed_time_level_diff_{l}' for l in [i for i in range(22) if i not in [4,13,22]]],
-        'elapsed_time_diff_max0-3_min4',
-        'elapsed_time_diff_max5-11_min12',
-        'elapsed_time_diff_max13-21_min22'
-    )
+    if level_diff:
+        df_level_diff = x.groupby('session_id', 'level_group', 'level').agg([
+            pl.col('elapsed_time').max().alias('elapsed_time_max'),
+            pl.col('elapsed_time').min().alias('elapsed_time_min'),
+        ]).sort('session_id', 'level').with_columns([
+            (pl.col('elapsed_time_max') - pl.col('elapsed_time_min')).alias('elapsed_time_total'),
+            (pl.col('elapsed_time_min').shift(-1)).alias('next_min'),
+        ]).with_columns([
+            (pl.col('next_min') - pl.col('elapsed_time_max')).alias('level_diff'),
+        ])
+        df_level_diff_summary = df_level_diff.groupby('session_id').agg([
+            *[pl.col('elapsed_time_total').filter(pl.col('level')==l).max().alias(f'elapsed_time_total_level_{l}') for l in LEVELS],
+            *[pl.col('level_diff').filter(pl.col('level')==l).max().alias(f'elapsed_time_level_diff_{l}') for l in [i for i in LEVELS if i not in [4,13,22]]],
+            (pl.col('elapsed_time_max').filter((pl.col('level')>=0)&(pl.col('level')<=4)).max()).alias('elapsed_time_max0-4'),
+            (pl.col('elapsed_time_max').filter((pl.col('level')>=5)&(pl.col('level')<=12)).max()).alias('elapsed_time_max5-12'),
+            (pl.col('elapsed_time_max').filter((pl.col('level')>=13)&(pl.col('level')<=22)).max()).alias('elapsed_time_max13-22'),
+            (pl.col('elapsed_time_max').filter((pl.col('level')>=0)&(pl.col('level')<=3)).max() - pl.col('elapsed_time_min').filter(pl.col('level')==4).min()).alias('elapsed_time_diff_max0-3_min4'),
+            (pl.col('elapsed_time_max').filter((pl.col('level')>=5)&(pl.col('level')<=11)).max() - pl.col('elapsed_time_min').filter(pl.col('level')==12).min()).alias('elapsed_time_diff_max5-11_min12'),
+            (pl.col('elapsed_time_max').filter((pl.col('level')>=13)&(pl.col('level')<=21)).max() - pl.col('elapsed_time_min').filter(pl.col('level')==22).min()).alias('elapsed_time_diff_max13-21_min22'),
+        ]).with_columns(
+            *[pl.col(f'elapsed_time_level_diff_{n}').apply(lambda s: s if s < 0 else 0).alias(f'elapsed_fime_level_diff_fixed_{n}') for n in [i for i in LEVELS if i not in [4,13,22]]],
+            pl.col('elapsed_time_diff_max0-3_min4').apply(lambda s: s if s > 0 else 0).alias('elapsed_time_diff_fixed_max0_3_min4'),
+            pl.col('elapsed_time_diff_max5-11_min12').apply(lambda s: s if s > 0 else 0).alias('elapsed_time_diff_fixed_max5-11_min12'),
+            pl.col('elapsed_time_diff_max13-21_min22').apply(lambda s: s if s > 0 else 0).alias('elapsed_time_diff_fixed_max13-21_min22'),
+        ).drop(
+            *[f'elapsed_time_level_diff_{l}' for l in [i for i in range(22) if i not in [4,13,22]]],
+            'elapsed_time_diff_max0-3_min4',
+            'elapsed_time_diff_max5-11_min12',
+            'elapsed_time_diff_max13-21_min22'
+        )
 
-    # 閾値を作成して結合する
-    df_threshold = df_level_diff.groupby('session_id', 'level_group').agg([
-        (pl.col('elapsed_time_min').filter(pl.col('level').is_in([4,12,22])).max()).alias('tmp_min')
-    ]).with_columns([
-        (pl.col('tmp_min') + pl.when(pl.col('level_group')=='0-4').then(pl.lit(860552) 
-        ).when(pl.col('level_group')=='5-12').then(pl.lit(1102255)
-        ).otherwise(pl.lit(428119))).alias('max_threshold')
-    ]).drop('tmp_min')
-    x = x.join(df_threshold, on=['session_id', 'level_group'], how='left')
+    if cut_above:
+        # 閾値を作成して結合する
+        df_threshold = df_level_diff.groupby('session_id', 'level_group').agg([
+            (pl.col('elapsed_time_min').filter(pl.col('level').is_in([4,12,22])).max()).alias('tmp_min')
+        ]).with_columns([
+            (pl.col('tmp_min') + pl.when(pl.col('level_group')=='0-4').then(pl.lit(860552) 
+            ).when(pl.col('level_group')=='5-12').then(pl.lit(1102255)
+            ).otherwise(pl.lit(428119))).alias('max_threshold')
+        ]).drop('tmp_min')
+        x = x.join(df_threshold, on=['session_id', 'level_group'], how='left')
 
-    # 閾値に合わせて分割
-    df_train_above = x.filter(pl.col('elapsed_time')>pl.col('max_threshold'))
-    x = x.filter(~(pl.col('elapsed_time')>pl.col('max_threshold')))
+        # 閾値に合わせて分割
+        df_train_above = x.filter(pl.col('elapsed_time')>pl.col('max_threshold'))
+        x = x.filter(~(pl.col('elapsed_time')>pl.col('max_threshold')))
 
-    # 閾値を超えるカラムの情報
-    feature_suffix2 = feature_suffix+'_above'
-    df_train_above_summary = df_train_above.groupby('session_id').agg([
-        *[pl.col('index').filter(pl.col('room_fqid')==r).count().alias(f'index_count_{r}_{feature_suffix2}') for r in room_lists],
-        *[pl.col('index').filter(pl.col('event_name')==e).count().alias(f'index_count_{e}_{feature_suffix2}') for e in event_name_feature],
-        *[pl.col('index').filter(pl.col('level')==l).count().alias(f'index_count_{l}_{feature_suffix2}') for l in LEVELS],
-        *[pl.col('elapsed_time_diff_to').filter(pl.col('room_fqid')==r).sum().alias(f'elapsed_time_diff_to_{r}_{feature_suffix2}') for r in room_lists],
-        *[pl.col('elapsed_time_diff_to').filter(pl.col('event_name')==e).sum().alias(f'elapsed_time_diff_to_{e}_{feature_suffix2}') for e in event_name_feature],
-        *[pl.col('elapsed_time_diff_to').filter(pl.col('level')==l).sum().alias(f'elapsed_time_diff_to_{l}_{feature_suffix2}') for l in LEVELS]
-    ])
+        # 閾値を超えるカラムの情報
+        feature_suffix2 = feature_suffix+'_above'
+        df_train_above_summary = df_train_above.groupby('session_id').agg([
+            *[pl.col('index').filter(pl.col('room_fqid')==r).count().alias(f'index_count_{r}_{feature_suffix2}') for r in room_lists],
+            *[pl.col('index').filter(pl.col('event_name')==e).count().alias(f'index_count_{e}_{feature_suffix2}') for e in event_name_feature],
+            *[pl.col('index').filter(pl.col('level')==l).count().alias(f'index_count_{l}_{feature_suffix2}') for l in LEVELS],
+            *[pl.col('elapsed_time_diff_to').filter(pl.col('room_fqid')==r).sum().alias(f'elapsed_time_diff_to_{r}_{feature_suffix2}') for r in room_lists],
+            *[pl.col('elapsed_time_diff_to').filter(pl.col('event_name')==e).sum().alias(f'elapsed_time_diff_to_{e}_{feature_suffix2}') for e in event_name_feature],
+            *[pl.col('elapsed_time_diff_to').filter(pl.col('level')==l).sum().alias(f'elapsed_time_diff_to_{l}_{feature_suffix2}') for l in LEVELS]
+        ])
 
     # メインの処理
     aggs = [
@@ -379,9 +382,10 @@ def feature_engineer_pl(x, grp,
         tmp = tmp.join(tmp2, on='session_id', how='left')
         df = df.join(tmp, on='session_id', how='left')
     
-    # 最初に作ったものを結合する
-    df = df.join(df_level_diff_summary, on='session_id', how='left')
-    df = df.join(df_train_above_summary, on='session_id', how='left')
+    if level_diff:
+        df = df.join(df_level_diff_summary, on='session_id', how='left')
+    if cut_above:
+        df = df.join(df_train_above_summary, on='session_id', how='left')
         
     return df
 

@@ -37,7 +37,9 @@ class Runner():
             'select': True,
             'exclude_suffix': '_ver2',
             'thre': 0.97,
-            'time_id': 6
+            'time_id': 6,
+            'level_diff': False,
+            'cut_above': False
         },
         validation_options={
             'n_fold': 2,
@@ -110,7 +112,9 @@ class Runner():
         params = {
             'use_extra': True,
             'version': self.feature_options.get('version'),
-            'thre': 1-self.thre
+            'thre': 1-self.thre,
+            'cut_above': self.feature_options.get('cut_above'),
+            'level_diff': self.feature_options.get('level_diff'),
         }
 
         # sessionごとにまとめる

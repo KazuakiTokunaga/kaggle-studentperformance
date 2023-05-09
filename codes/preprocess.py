@@ -180,7 +180,7 @@ def feature_engineer_pl(x, grp,
 
         # 閾値に合わせて分割
         df_train_above = x.filter(pl.col('elapsed_time')>pl.col('max_threshold'))
-        x = x.filter(~(pl.col('elapsed_time')>pl.col('max_threshold')))
+        # x = x.filter(~(pl.col('elapsed_time')>pl.col('max_threshold')))
 
         # 閾値を超えるカラムの情報
         feature_suffix2 = feature_suffix+'_above'

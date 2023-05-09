@@ -37,7 +37,10 @@ class Runner():
             'select': True,
             'exclude_suffix': '_ver2',
             'thre': 0.97,
-            'time_id': 6
+            'time_id': 6,
+            'level_diff': False,
+            'cut_above': False,
+            'add_random': True
         },
         validation_options={
             'n_fold': 2,
@@ -86,11 +89,16 @@ class Runner():
         gc.collect()
     
 
-    def engineer_features(self, return_pd=True, fillna=True, add_random=False):
+    def engineer_features(self, return_pd=True, fillna=True):
         logger.info('Start engineer features.')
 
         self.thre = self.feature_options.get('thre')
         logger.info(f'Threshold of null values: {self.thre}')
+
+        self.add_random = self.feature_options.get('add_random')
+        if self.add_random:
+            logger.info('Add random features.')
+
         self.select = self.feature_options.get('select')
         self.exclude_suffix = self.feature_options.get('exclude_suffix')
         if self.select:
@@ -99,6 +107,10 @@ class Runner():
         if self.merge_features:
             logger.info('Execute merge_features.')
         self.time_id = self.feature_options.get('time_id')
+        if self.feature_options.get('level_diff'):
+            logger.info('Add features based on elapsed_time level_diff.')
+        if self.feature_options.get('cut_above'):
+            logger.info('Cut data into two parts based on elapsed_time_threshold.')
 
         self.df_train = preprocess.add_columns(self.df_train)
 
@@ -110,7 +122,9 @@ class Runner():
         params = {
             'use_extra': True,
             'version': self.feature_options.get('version'),
-            'thre': 1-self.thre
+            'thre': 1-self.thre,
+            'cut_above': self.feature_options.get('cut_above'),
+            'level_diff': self.feature_options.get('level_diff'),
         }
 
         # sessionごとにまとめる
@@ -124,7 +138,7 @@ class Runner():
         #     exclude_df1 = [i for i in exclude_df1 if i in self.df1.columns]
         #     self.df1 = self.df1.drop(exclude_df1)
 
-        if add_random:
+        if self.add_random:
             self.df1 = preprocess.add_random_feature(self.df1)
 
         self.models['features'][grp] = self.df1.columns
@@ -148,7 +162,7 @@ class Runner():
             self.df2 = self.df2.join(self.df1.drop(exclude_df1af), on='session_id', how='left')
         else:
             self.df2 = preprocess.add_columns_session(self.df2, id=self.time_id)
-            if add_random:
+            if self.add_random:
                 self.df2 = preprocess.add_random_feature(self.df2)
 
         self.models['features'][grp] = self.df2.columns
@@ -171,7 +185,7 @@ class Runner():
             self.df3 = self.df3.join(self.df2.drop(exclude_df2af), on='session_id', how='left')
         else:
             self.df3 = preprocess.add_columns_session(self.df3, id=self.time_id)
-            if add_random:
+            if self.add_random:
                 self.df3 = preprocess.add_random_feature(self.df3)
 
         self.models['features'][grp] = self.df3.columns

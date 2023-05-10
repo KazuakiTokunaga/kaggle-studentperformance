@@ -180,7 +180,6 @@ def feature_engineer_pl(x, grp,
 
         # 閾値に合わせて分割
         df_train_above = x.filter(pl.col('elapsed_time')>pl.col('max_threshold'))
-        # x = x.filter(~(pl.col('elapsed_time')>pl.col('max_threshold')))
 
         # 閾値を超えるカラムの情報
         feature_suffix2 = feature_suffix+'_above'
@@ -384,7 +383,7 @@ def feature_engineer_pl(x, grp,
     
     if level_diff:
         df = df.join(df_level_diff_summary, on='session_id', how='left')
-    if cut_above:
+    if cut_above and grp != '13-22':
         df = df.join(df_train_above_summary, on='session_id', how='left')
         
     return df

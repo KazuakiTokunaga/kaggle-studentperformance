@@ -133,10 +133,10 @@ class Runner():
         self.df1 = preprocess.drop_columns(self.df1, thre=self.thre)
         self.df1 = preprocess.add_columns_session(self.df1, id=self.time_id)
 
-        # if self.select:
-        #     exclude_df1 = json.load(open(f'{self.repo_path}/config/exclude_df1{self.exclude_suffix}.json', 'r'))
-        #     exclude_df1 = [i for i in exclude_df1 if i in self.df1.columns]
-        #     self.df1 = self.df1.drop(exclude_df1)
+        if self.select:
+            exclude_df1 = json.load(open(f'{self.repo_path}/config/exclude_df1{self.exclude_suffix}.json', 'r'))
+            exclude_df1 = [i for i in exclude_df1 if i in self.df1.columns]
+            self.df1 = self.df1.drop(exclude_df1)
 
         if self.add_random:
             self.df1 = preprocess.add_random_feature(self.df1)
@@ -156,9 +156,9 @@ class Runner():
 
         if self.merge_features:
             exclude_df1af = []
-            if self.select:
-                exclude_df1af = json.load(open(f'{self.repo_path}/config/exclude_df1af{self.exclude_suffix}.json', 'r'))
-                exclude_df1af = [i for i in exclude_df1af if i in self.df1.columns]
+            # if self.select:
+            #     exclude_df1af = json.load(open(f'{self.repo_path}/config/exclude_df1af{self.exclude_suffix}.json', 'r'))
+            #     exclude_df1af = [i for i in exclude_df1af if i in self.df1.columns]
             self.df2 = self.df2.join(self.df1.drop(exclude_df1af), on='session_id', how='left')
         else:
             self.df2 = preprocess.add_columns_session(self.df2, id=self.time_id)
@@ -179,9 +179,9 @@ class Runner():
 
         if self.merge_features:
             exclude_df2af = []
-            if self.select:
-                exclude_df2af = json.load(open(f'{self.repo_path}/config/exclude_df2af{self.exclude_suffix}.json', 'r'))
-                exclude_df2af = [i for i in exclude_df2af if i in self.df2.columns]
+            # if self.select:
+            #     exclude_df2af = json.load(open(f'{self.repo_path}/config/exclude_df2af{self.exclude_suffix}.json', 'r'))
+            #     exclude_df2af = [i for i in exclude_df2af if i in self.df2.columns]
             self.df3 = self.df3.join(self.df2.drop(exclude_df2af), on='session_id', how='left')
         else:
             self.df3 = preprocess.add_columns_session(self.df3, id=self.time_id)

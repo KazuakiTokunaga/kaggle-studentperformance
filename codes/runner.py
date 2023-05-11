@@ -41,7 +41,9 @@ class Runner():
             'level_diff': False,
             'cut_above': False,
             'room_click': False,
-            'add_random': True
+            'use_csv': False,
+            'csv_path': '',
+            'add_random': False
         },
         validation_options={
             'n_fold': 2,
@@ -114,6 +116,8 @@ class Runner():
             logger.info('Cut data into two parts based on elapsed_time_threshold.')
         if self.feature_options.get('room_click'):
             logger.info('Add features based on navigate_click in each room.')
+        if self.feature_options.get('use_csv'):
+            logger.info(f'Get master file from {self.feature_options.get("csv_path")}')
 
         self.df_train = preprocess.add_columns(self.df_train)
 
@@ -128,7 +132,9 @@ class Runner():
             'thre': 1-self.thre,
             'cut_above': self.feature_options.get('cut_above'),
             'level_diff': self.feature_options.get('level_diff'),
-            'room_click': self.feature_options.get('room_click')
+            'room_click': self.feature_options.get('room_click'),
+            'use_csv': self.feature_options('use_csv')
+            'csv_path': self.feature_options.get('csv_path')
         }
 
         # sessionごとにまとめる

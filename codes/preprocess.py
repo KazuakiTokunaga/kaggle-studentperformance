@@ -85,7 +85,8 @@ def feature_engineer_pl(x, grp,
         csv_path='',
         thre = 0.03,
         level_diff=True,
-        cut_above=True
+        cut_above=True,
+        room_click=True
     ):
 
     # from https://www.kaggle.com/code/leehomhuang/catboost-baseline-with-lots-features-inference :
@@ -385,6 +386,35 @@ def feature_engineer_pl(x, grp,
         df = df.join(df_level_diff_summary, on='session_id', how='left')
     if cut_above and grp != '13-22':
         df = df.join(df_train_above_summary, on='session_id', how='left')
+    
+    if room_click:
+        df_navigate = x.filter((pl.col('event_name')=='navigate_click')&(pl.col('fqid')=='fqid_None'))
+        df_navigate = df_navigate.with_columns([
+            (pl.col('room_coor_x') // 200).alias('room_x'),
+            (pl.col('room_coor_y') // 200).alias('room_y')
+        ])
+
+        if not use_csv:
+            df_navigate_grp = df_navigate.filter(pl.col('level_group')=='0-4')    
+            df_navigate_summary = df_navigate_grp.select('room_fqid', 'room_x', 'room_y', 'session_id').groupby('room_fqid', 'room_x', 'room_y').n_unique()
+            df_navigate_category = df_navigate_summary.with_columns([
+                pl.when(pl.col('session_id')<=400).then(pl.lit(1))
+                .when(pl.col('session_id')<=1500).then(pl.lit(2))
+                .when(pl.col('session_id')<=4000).then(pl.lit(3))
+                .when(pl.col('session_id')>=10000).then(pl.lit(5))
+                .otherwise(pl.lit(4)).alias('room_xy_category'),
+                pl.lit(grp).alias('level_group')
+            ])
+            df_navigate_master = df_navigate_category.drop('session_id')
+        else:
+            df_navigate_master = pl.read_csv(f'{csv_path}/df_navigate_master.csv')
+        
+        df_navigate_joined = df_navigate.join(df_navigate_master, on=['room_fqid', 'room_x', 'room_y', 'level_group'], how='left')
+        df_tmp = df_navigate_joined.groupby('session_id').agg([
+            *[pl.col('index').filter((pl.col('room_xy_category')==i)&(pl.col('room_fqid')==r)).count().alias(f"navigate_index_count{r}_{i}") for r in room_lists for i in range(1, 6)]
+        ])
+
+        df = df.join(df_tmp, on='session_id', how='left')
         
     return df
 

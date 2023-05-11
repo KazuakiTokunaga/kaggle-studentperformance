@@ -40,6 +40,7 @@ class Runner():
             'time_id': 6,
             'level_diff': False,
             'cut_above': False,
+            'room_click': False,
             'add_random': True
         },
         validation_options={
@@ -111,6 +112,8 @@ class Runner():
             logger.info('Add features based on elapsed_time level_diff.')
         if self.feature_options.get('cut_above'):
             logger.info('Cut data into two parts based on elapsed_time_threshold.')
+        if self.feature_options.get('room_click'):
+            logger.info('Add features based on navigate_click in each room.')
 
         self.df_train = preprocess.add_columns(self.df_train)
 
@@ -125,6 +128,7 @@ class Runner():
             'thre': 1-self.thre,
             'cut_above': self.feature_options.get('cut_above'),
             'level_diff': self.feature_options.get('level_diff'),
+            'room_click': self.feature_options.get('room_click')
         }
 
         # sessionごとにまとめる

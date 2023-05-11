@@ -133,7 +133,7 @@ class Runner():
             'cut_above': self.feature_options.get('cut_above'),
             'level_diff': self.feature_options.get('level_diff'),
             'room_click': self.feature_options.get('room_click'),
-            'use_csv': self.feature_options('use_csv')
+            'use_csv': self.feature_options('use_csv'),
             'csv_path': self.feature_options.get('csv_path')
         }
 

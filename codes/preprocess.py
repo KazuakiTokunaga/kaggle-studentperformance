@@ -410,6 +410,7 @@ def feature_engineer_pl(x, grp,
             df_navigate_master = pl.read_csv(f'{csv_path}/df_navigate_master.csv')
         
         df_navigate_joined = df_navigate.join(df_navigate_master, on=['room_fqid', 'room_x', 'room_y', 'level_group'], how='left')
+        df_navigate_joined = df_navigate_joined.fill_null(1)
         df_tmp = df_navigate_joined.groupby('session_id').agg([
             *[pl.col('index').filter((pl.col('room_xy_category')==i)&(pl.col('room_fqid')==r)).count().alias(f"navigate_index_count{r}_{i}_{feature_suffix}") for r in room_lists for i in range(1, 6)]
         ])

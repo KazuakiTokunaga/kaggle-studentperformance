@@ -446,3 +446,16 @@ def add_columns_session(df, id=6):
     df = df.with_columns(*time_columns)
   
     return df
+
+
+def load_master(file_path='/kaggle/input/student-performance-models'):
+
+    df_navigate_master = pl.read_csv(f'{file_path}/df_navigate_master.csv')
+    flr_list = pl.read_csv(f'{file_path}/flr_list.csv')
+    flr_cs = flr_list.get_columns()
+
+    tl_list = pl.read_csv(f'{file_path}/tl_list.csv')
+    tl_cs = tl_list.get_columns()
+
+    return df_navigate_master, flr_list, tl_list
+

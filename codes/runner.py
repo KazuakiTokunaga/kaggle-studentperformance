@@ -42,7 +42,6 @@ class Runner():
             'cut_above': False,
             'room_click': False,
             'use_csv': False,
-            'csv_path': '',
             'add_random': False
         },
         validation_options={
@@ -116,8 +115,6 @@ class Runner():
             logger.info('Cut data into two parts based on elapsed_time_threshold.')
         if self.feature_options.get('room_click'):
             logger.info('Add features based on navigate_click in each room.')
-        if self.feature_options.get('use_csv'):
-            logger.info(f'Get master file from {self.feature_options.get("csv_path")}')
 
         self.df_train = preprocess.add_columns(self.df_train)
 
@@ -133,8 +130,7 @@ class Runner():
             'cut_above': self.feature_options.get('cut_above'),
             'level_diff': self.feature_options.get('level_diff'),
             'room_click': self.feature_options.get('room_click'),
-            'use_csv': self.feature_options.get('use_csv'),
-            'csv_path': self.feature_options.get('csv_path')
+            'use_csv': self.feature_options.get('use_csv')
         }
 
         # sessionごとにまとめる
@@ -166,9 +162,6 @@ class Runner():
 
         if self.merge_features:
             exclude_df1af = []
-            # if self.select:
-            #     exclude_df1af = json.load(open(f'{self.repo_path}/config/exclude_df1af{self.exclude_suffix}.json', 'r'))
-            #     exclude_df1af = [i for i in exclude_df1af if i in self.df1.columns]
             self.df2 = self.df2.join(self.df1.drop(exclude_df1af), on='session_id', how='left')
         else:
             self.df2 = preprocess.add_columns_session(self.df2, id=self.time_id)
@@ -189,9 +182,6 @@ class Runner():
 
         if self.merge_features:
             exclude_df2af = []
-            # if self.select:
-            #     exclude_df2af = json.load(open(f'{self.repo_path}/config/exclude_df2af{self.exclude_suffix}.json', 'r'))
-            #     exclude_df2af = [i for i in exclude_df2af if i in self.df2.columns]
             self.df3 = self.df3.join(self.df2.drop(exclude_df2af), on='session_id', how='left')
         else:
             self.df3 = preprocess.add_columns_session(self.df3, id=self.time_id)

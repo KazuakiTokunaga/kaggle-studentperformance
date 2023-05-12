@@ -81,12 +81,14 @@ def feature_engineer_pl(x, grp,
         use_extra=True, 
         feature_suffix = '', 
         version=2, 
-        use_csv=False, 
-        csv_path='',
         thre = 0.03,
         level_diff=True,
         cut_above=True,
-        room_click=True
+        room_click=True,
+        use_csv=False, 
+        flr_list = None,
+        tl_list = None,
+        df_navigate_master = None
     ):
 
     # from https://www.kaggle.com/code/leehomhuang/catboost-baseline-with-lots-features-inference :
@@ -129,10 +131,7 @@ def feature_engineer_pl(x, grp,
     
       # submissionの場合はこちら
       else:
-          flr_list = pl.read_csv(f'{csv_path}/flr_list.csv')
           flr_cs = flr_list.get_columns()
-
-          tl_list = pl.read_csv(f'{csv_path}/tl_list.csv')
           tl_cs = tl_list.get_columns()
 
 
@@ -406,8 +405,7 @@ def feature_engineer_pl(x, grp,
                 pl.lit(grp).alias('level_group')
             ])
             df_navigate_master = df_navigate_category.drop('session_id')
-        else:
-            df_navigate_master = pl.read_csv(f'{csv_path}/df_navigate_master.csv')
+            
         
         df_navigate_joined = df_navigate.join(df_navigate_master, on=['room_fqid', 'room_x', 'room_y', 'level_group'], how='left')
         df_navigate_joined = df_navigate_joined.fill_null(1)

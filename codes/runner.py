@@ -112,7 +112,7 @@ class Runner():
         if self.feature_options.get('level_diff'):
             logger.info('Add features based on elapsed_time level_diff.')
         if self.feature_options.get('cut_above'):
-            logger.info('Cut data into two parts based on elapsed_time_threshold.')
+            logger.info('Extract big elapsed_time data to create additional features.')
         if self.feature_options.get('room_click'):
             logger.info('Add features based on navigate_click in each room.')
 

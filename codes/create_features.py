@@ -45,17 +45,16 @@ def create_room_umap_model(df):
 
             df_room = df_navigate_grp.filter(pl.col('room_fqid')==r)
             df_dummies = df_room.select('session_id', 'room_x', 'room_y').to_dummies(columns = ['room_x', 'room_y'])
-            df_room_summary = df_dummies.groupby('session_id').sum().to_pandas().set_index('session_id').clip(0, 3)
+            df_room_summary = df_dummies.groupby('session_id').sum().drop('session_id')
             room_umap_model['features'][grp][r] = list(df_room_summary.columns)
             
+            arr_room_summary = df_room_summary.to_numpy().clip(min=0, max=3)
             sc = StandardScaler()
-            sc.fit(df_room_summary.to_numpy())
+            sc.fit(arr_room_summary)
             room_umap_model['sc'][grp][r] = sc
 
-            df_room_std= pd.DataFrame(data=sc.transform(df_room_summary.to_numpy()), columns=df_room_summary.columns, index=df_room_summary.index)
             um = umap.UMAP(random_state=2)
-            um.fit(df_room_summary.to_numpy())
+            um.fit(sc.transform(arr_room_summary))
             room_umap_model['umap'][grp][r] = um
     
-
     pickle.dump(room_umap_model, open(f'room_umap_model.pkl', 'wb'))

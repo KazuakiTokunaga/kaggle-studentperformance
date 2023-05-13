@@ -438,17 +438,19 @@ def feature_engineer_pl(x, grp,
         for r in rooms:
             df_room = df_navigate.filter(pl.col('room_fqid')==r)
             df_dummies = df_room.select('session_id', 'room_x', 'room_y').to_dummies(columns = ['room_x', 'room_y'])
-            df_room_summary = df_dummies.groupby('session_id').sum().to_pandas().set_index('session_id').clip(0, 3)
-            
+
+            df_room_summary = df_dummies.groupby('session_id').sum()
+            df_room_value = df_room_summary.drop('session_id')
+            df_session_id = df_room_summary.select('session_id')
+
             features = room_umap_model['features'][grp][r]
-            df_room_summary = df_room_summary[features]
+            df_room_value = df_room_value.select(features)
 
             sc = room_umap_model['sc'][grp][r]
-            df_room_std= pd.DataFrame(data=sc.transform(df_room_summary.to_numpy()), columns=df_room_summary.columns, index=df_room_summary.index)
-
             um = room_umap_model['umap'][grp][r]
-            ar_room_umap = um.transform(df_room_summary.to_numpy())
-            df_room_umap = pd.DataFrame(data=ar_room_umap, index=df_room_summary.index, columns=[f'umap_{r}_1_{feature_suffix}', f'umap_{r}_2_{feature_suffix}'])
+            ar_room_umap_value = um.transform(sc.transform(df_room_value.to_numpy().clip(min=0, max=3))) + 100 # 後に欠損値を-1で補完するため
+            df_room_umap_value = pl.DataFrame(data=ar_room_umap_value, schema=[f'umap_{r}_1_{feature_suffix}', f'umap_{r}_2_{feature_suffix}'])
+            df_room_umap = pl.concat([df_session_id, df_room_umap_value], how='horizontal')
 
             df = df.join(df_room_umap, on='session_id', how='left')        
 

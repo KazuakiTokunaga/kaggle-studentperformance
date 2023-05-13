@@ -41,6 +41,7 @@ class Runner():
             'level_diff': False,
             'cut_above': False,
             'room_click': False,
+            'room_umap': False,
             'use_csv': False,
             'add_random': False
         },
@@ -115,6 +116,8 @@ class Runner():
             logger.info('Extract big elapsed_time data to create additional features.')
         if self.feature_options.get('room_click'):
             logger.info('Add features based on navigate_click in each room.')
+        if self.feature_options.get('room_umap'):
+            logger.info('Add features based on navigate_click with umap.')
 
         self.df_train = preprocess.add_columns(self.df_train)
 
@@ -130,7 +133,8 @@ class Runner():
             'cut_above': self.feature_options.get('cut_above'),
             'level_diff': self.feature_options.get('level_diff'),
             'room_click': self.feature_options.get('room_click'),
-            'use_csv': self.feature_options.get('use_csv')
+            'room_umap': self.feature_options.get('room_umap'),
+            'use_csv': self.feature_options.get('use_csv'),
         }
 
         # sessionごとにまとめる

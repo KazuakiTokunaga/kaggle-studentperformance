@@ -453,8 +453,8 @@ def feature_engineer_pl(x, grp,
             df_room_exist = df_room_value.select(exist_features)
 
             # 存在しないカラムのデータを作る
-            nonexist_features = [c for c in features if c not in exist_features]
-            df_room_nonexist = pl.DataFrame(np.zeros((df_room_value.height, len(nonexist_features))), columns = nonexist_features)
+            nonexist_features = [c for c in features if not (c in exist_features)]
+            df_room_nonexist = pl.DataFrame(np.zeros((df_room_value.height, len(nonexist_features))), schema = nonexist_features)
             
             print('df_room_nonexist', len(nonexist_features), df_room_nonexist.shape)
 

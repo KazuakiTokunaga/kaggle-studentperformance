@@ -422,12 +422,12 @@ def feature_engineer_pl(x, grp,
     
     if room_umap:
 
-        if grp=='0-4':
-            rooms = []
-        elif grp=='5-12':
-            rooms = []
+        if grp == '0-4':
+            rooms = ['tunic.kohlcenter.halloffame', 'tunic.historicalsociety.stacks', 'tunic.historicalsociety.basement', 'tunic.historicalsociety.collection', 'tunic.historicalsociety.entry', 'tunic.historicalsociety.closet']
+        elif grp == '5-12':
+            rooms = ['tunic.historicalsociety.frontdesk', 'tunic.capitol_0.hall', 'tunic.capitol_1.hall', 'tunic.library.microfiche', 'tunic.historicalsociety.closet_dirty', 'tunic.historicalsociety.basement', 'tunic.historicalsociety.collection', 'tunic.library.frontdesk', 'tunic.historicalsociety.stacks', 'tunic.drycleaner.frontdesk', 'tunic.historicalsociety.entry', 'tunic.humanecology.frontdesk', 'tunic.kohlcenter.halloffame']
         else:
-            rooms = []
+            rooms = ['tunic.historicalsociety.stacks', 'tunic.flaghouse.entry', 'tunic.kohlcenter.halloffame', 'tunic.capitol_2.hall', 'tunic.historicalsociety.closet_dirty', 'tunic.historicalsociety.basement', 'tunic.capitol_1.hall', 'tunic.historicalsociety.entry', 'tunic.historicalsociety.frontdesk', 'tunic.library.frontdesk', 'tunic.historicalsociety.collection_flag', 'tunic.humanecology.frontdesk', 'tunic.wildlife.center', 'tunic.library.microfiche', 'tunic.historicalsociety.cage']
 
         df_navigate = x.filter((pl.col('event_name')=='navigate_click')&(pl.col('fqid')=='fqid_None'))
         df_navigate = df_navigate.with_columns([

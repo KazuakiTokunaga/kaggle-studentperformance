@@ -42,6 +42,7 @@ class Runner():
             'cut_above': False,
             'room_click': False,
             'room_umap': False,
+            'room_umap_model': None,
             'use_csv': False,
             'add_random': False
         },
@@ -134,6 +135,7 @@ class Runner():
             'level_diff': self.feature_options.get('level_diff'),
             'room_click': self.feature_options.get('room_click'),
             'room_umap': self.feature_options.get('room_umap'),
+            'room_umap_model': self.feature_options.get('room_umap_model'),
             'use_csv': self.feature_options.get('use_csv'),
         }
 

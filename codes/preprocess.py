@@ -458,11 +458,11 @@ def feature_engineer_pl(x, grp,
             tmp = pl.concat([df_room_exist, df_room_nonexist], how='horizontal')
             df_room_value = tmp.select(features)
 
-            print('room :', r)
-            print('features count', len(features))
-            print('exist_features: ', len(exist_features))
-            print('nonexist_features: ', len(nonexist_features))
-            print('df_room_value shape', df_room_value.shape)
+            # print('room :', r)
+            # print('features count', len(features))
+            # print('exist_features: ', len(exist_features))
+            # print('nonexist_features: ', len(nonexist_features))
+            # print('df_room_value shape', df_room_value.shape)
 
             if df_room_value.height > 0:
                 sc = room_umap_model['sc'][grp][r]

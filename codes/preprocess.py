@@ -449,16 +449,16 @@ def feature_engineer_pl(x, grp,
             
             # 存在するカラム
             exist_features = [c for c in features if c in df_room_value.columns]
-            df_room_value = df_room_value.select(exist_features)
+            df_room_exist = df_room_value.select(exist_features)
 
             # 存在しないカラムのデータを作る
             nonexist_features = [c for c in features if c not in df_room_value.columns]
-            df_room_value_sup = pl.DataFrame(np.zeros((df_room_value.height, len(nonexist_features))), columns = nonexist_features)
+            df_room_nonexist = pl.DataFrame(np.zeros((df_room_value.height, len(nonexist_features))), columns = nonexist_features)
             
-            print('df_room_value_sup', df_room_value_sup.shape)
+            print('df_room_nonexist', df_room_nonexist.shape)
 
             # 両者をマージして、カラムを並び替える
-            tmp = pl.concat([df_room_value, df_room_value_sup], how='horizontal')
+            tmp = pl.concat([df_room_exist, df_room_nonexist], how='horizontal')
             df_room_value = tmp.select(features)
             print('df_room_value after', df_room_value.shape)
 

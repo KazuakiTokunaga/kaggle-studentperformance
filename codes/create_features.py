@@ -25,6 +25,7 @@ def create_room_umap_model(df):
     grps = ['0-4', '5-12', '13-22']
     
     for grp in grps:
+        print('grp :', grp)
 
         df_navigate_grp = df_navigate.filter(pl.col('level_group')==grp)
         
@@ -40,6 +41,7 @@ def create_room_umap_model(df):
             rooms = ['tunic.historicalsociety.stacks', 'tunic.flaghouse.entry', 'tunic.kohlcenter.halloffame', 'tunic.capitol_2.hall', 'tunic.historicalsociety.closet_dirty', 'tunic.historicalsociety.basement', 'tunic.capitol_1.hall', 'tunic.historicalsociety.entry', 'tunic.historicalsociety.frontdesk', 'tunic.library.frontdesk', 'tunic.historicalsociety.collection_flag', 'tunic.humanecology.frontdesk', 'tunic.wildlife.center', 'tunic.library.microfiche', 'tunic.historicalsociety.cage']
         
         for r in rooms:
+            print('rooms :', r)
 
             df_room = df_navigate_grp.filter(pl.col('room_fqid')==r)
             df_dummies = df_room.select('session_id', 'room_x', 'room_y').to_dummies(columns = ['room_x', 'room_y'])

@@ -432,8 +432,8 @@ def feature_engineer_pl(x, grp,
 
         df_navigate = x.filter((pl.col('event_name')=='navigate_click')&(pl.col('fqid')=='fqid_None'))
         df_navigate = df_navigate.with_columns([
-            (pl.col('room_coor_x') // 30).alias('room_x'),
-            (pl.col('room_coor_y') // 30).alias('room_y')
+            (pl.col('room_coor_x') // 30).cast(pl.Int64).alias('room_x'),
+            (pl.col('room_coor_y') // 30).cast(pl.Int64).alias('room_y')
         ])
 
         for r in rooms:

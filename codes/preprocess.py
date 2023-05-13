@@ -456,7 +456,7 @@ def feature_engineer_pl(x, grp,
             nonexist_features = [c for c in features if c not in df_room_value.columns]
             df_room_nonexist = pl.DataFrame(np.zeros((df_room_value.height, len(nonexist_features))), columns = nonexist_features)
             
-            print('df_room_nonexist', len(noexist_features), df_room_nonexist.shape)
+            print('df_room_nonexist', len(nonexist_features), df_room_nonexist.shape)
 
             # 両者をマージして、カラムを並び替える
             tmp = pl.concat([df_room_exist, df_room_nonexist], how='horizontal')

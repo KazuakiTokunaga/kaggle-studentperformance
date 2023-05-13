@@ -443,6 +443,8 @@ def feature_engineer_pl(x, grp,
             df_room_summary = df_dummies.groupby('session_id').sum()
             df_room_value = df_room_summary.drop('session_id')
             df_session_id = df_room_summary.select('session_id')
+            print('df_room_value:', df_room_value.shape)
+            print('df_room_value_columns:', df_room_value.columns)
 
             features = room_umap_model['features'][grp][r]
             print('features list', features)

@@ -423,8 +423,7 @@ def feature_engineer_pl(x, grp,
     if room_umap:
 
         if grp == '0-4':
-            # rooms = ['tunic.kohlcenter.halloffame', 'tunic.historicalsociety.stacks', 'tunic.historicalsociety.basement', 'tunic.historicalsociety.collection', 'tunic.historicalsociety.entry', 'tunic.historicalsociety.closet']
-            rooms = ['tunic.kohlcenter.halloffame', 'tunic.historicalsociety.stacks']
+            rooms = ['tunic.kohlcenter.halloffame', 'tunic.historicalsociety.stacks', 'tunic.historicalsociety.basement', 'tunic.historicalsociety.collection', 'tunic.historicalsociety.entry', 'tunic.historicalsociety.closet']
         elif grp == '5-12':
             rooms = ['tunic.historicalsociety.frontdesk', 'tunic.capitol_0.hall', 'tunic.capitol_1.hall', 'tunic.library.microfiche', 'tunic.historicalsociety.closet_dirty', 'tunic.historicalsociety.basement', 'tunic.historicalsociety.collection', 'tunic.library.frontdesk', 'tunic.historicalsociety.stacks', 'tunic.drycleaner.frontdesk', 'tunic.historicalsociety.entry', 'tunic.humanecology.frontdesk', 'tunic.kohlcenter.halloffame']
         else:
@@ -443,11 +442,9 @@ def feature_engineer_pl(x, grp,
             df_room_summary = df_dummies.groupby('session_id').sum()
             df_room_value = df_room_summary.drop('session_id')
             df_session_id = df_room_summary.select('session_id')
-            print('df_room_value:', df_room_value.shape)
-            print('df_room_value_columns:', df_room_value.columns)
 
             features = room_umap_model['features'][grp][r]
-            print('features list', features)
+
             
             # 存在するカラム
             exist_features = [c for c in features if c in df_room_value.columns]
@@ -456,14 +453,16 @@ def feature_engineer_pl(x, grp,
             # 存在しないカラムのデータを作る
             nonexist_features = [c for c in features if not (c in exist_features)]
             df_room_nonexist = pl.DataFrame(np.zeros((df_room_value.height, len(nonexist_features))), schema = nonexist_features)
-            
-            print('exist_features: ', exist_features)
-            print('nonexist_features: ', nonexist_features)
 
             # 両者をマージして、カラムを並び替える
             tmp = pl.concat([df_room_exist, df_room_nonexist], how='horizontal')
             df_room_value = tmp.select(features)
-            print('df_room_value after', df_room_value.shape)
+
+            print('room :', r)
+            print('features count', len(features))
+            print('exist_features: ', len(exist_features))
+            print('nonexist_features: ', len(nonexist_features))
+            print('df_room_value shape', df_room_value.shape)
 
             if df_room_value.height > 0:
                 sc = room_umap_model['sc'][grp][r]

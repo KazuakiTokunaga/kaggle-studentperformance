@@ -452,13 +452,18 @@ def feature_engineer_pl(x, grp,
             tmp = pl.concat([df_room_value, df_room_value_sup], how='horizontal')
             df_room_value = tmp.select(features)
 
-            sc = room_umap_model['sc'][grp][r]
-            um = room_umap_model['umap'][grp][r]
-            ar_room_umap_value = um.transform(sc.transform(df_room_value.to_numpy().clip(min=0, max=3))) + 100 # 後に欠損値を-1で補完するため
-            df_room_umap_value = pl.DataFrame(data=ar_room_umap_value, schema=[f'umap_{r}_1_{feature_suffix}', f'umap_{r}_2_{feature_suffix}'])
-            df_room_umap = pl.concat([df_session_id, df_room_umap_value], how='horizontal')
-
-            df = df.join(df_room_umap, on='session_id', how='left')        
+            if df_room_value.height > 0:
+                sc = room_umap_model['sc'][grp][r]
+                um = room_umap_model['umap'][grp][r]
+                ar_room_umap_value = um.transform(sc.transform(df_room_value.to_numpy().clip(min=0, max=3))) + 100 # 後に欠損値を-1で補完するため
+                df_room_umap_value = pl.DataFrame(data=ar_room_umap_value, schema=[f'umap_{r}_1_{feature_suffix}', f'umap_{r}_2_{feature_suffix}'])
+                df_room_umap = pl.concat([df_session_id, df_room_umap_value], how='horizontal')
+                df = df.join(df_room_umap, on='session_id', how='left')         
+            else:
+                df = df.with_columns([
+                    pl.lit(-1).alias(f'umap_{r}_1_{feature_suffix}'),
+                    pl.lit(-1).alias(f'umap_{r}_2_{feature_suffix}')
+                ])
 
         
     return df

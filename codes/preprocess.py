@@ -443,6 +443,8 @@ def feature_engineer_pl(x, grp,
             df_room_value = df_room_summary.drop('session_id')
             df_session_id = df_room_summary.select('session_id')
 
+            print('df_room_value before', df_room_value.shape)
+
             features = room_umap_model['features'][grp][r]
             
             # 存在するカラム
@@ -456,6 +458,7 @@ def feature_engineer_pl(x, grp,
             # 両者をマージして、カラムを並び替える
             tmp = pl.concat([df_room_value, df_room_value_sup], how='horizontal')
             df_room_value = tmp.select(features)
+            print('df_room_value after', df_room_value.shape)
 
             if df_room_value.height > 0:
                 sc = room_umap_model['sc'][grp][r]

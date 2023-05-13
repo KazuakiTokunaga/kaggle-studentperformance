@@ -17,7 +17,7 @@ def create_room_umap_model(df):
 
     
     room_umap_model = {
-        'sc': dict()
+        'sc': dict(),
         'umap': dict(),
         'features': dict()
     }

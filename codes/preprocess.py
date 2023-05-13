@@ -423,7 +423,8 @@ def feature_engineer_pl(x, grp,
     if room_umap:
 
         if grp == '0-4':
-            rooms = ['tunic.kohlcenter.halloffame', 'tunic.historicalsociety.stacks', 'tunic.historicalsociety.basement', 'tunic.historicalsociety.collection', 'tunic.historicalsociety.entry', 'tunic.historicalsociety.closet']
+            # rooms = ['tunic.kohlcenter.halloffame', 'tunic.historicalsociety.stacks', 'tunic.historicalsociety.basement', 'tunic.historicalsociety.collection', 'tunic.historicalsociety.entry', 'tunic.historicalsociety.closet']
+            rooms = ['tunic.kohlcenter.halloffame', 'tunic.historicalsociety.stacks']
         elif grp == '5-12':
             rooms = ['tunic.historicalsociety.frontdesk', 'tunic.capitol_0.hall', 'tunic.capitol_1.hall', 'tunic.library.microfiche', 'tunic.historicalsociety.closet_dirty', 'tunic.historicalsociety.basement', 'tunic.historicalsociety.collection', 'tunic.library.frontdesk', 'tunic.historicalsociety.stacks', 'tunic.drycleaner.frontdesk', 'tunic.historicalsociety.entry', 'tunic.humanecology.frontdesk', 'tunic.kohlcenter.halloffame']
         else:

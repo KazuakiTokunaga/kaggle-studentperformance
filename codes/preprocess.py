@@ -446,6 +446,7 @@ def feature_engineer_pl(x, grp,
             print('df_room_value before', df_room_value.shape)
 
             features = room_umap_model['features'][grp][r]
+            print('len_features: ', len(features))
             
             # 存在するカラム
             exist_features = [c for c in features if c in df_room_value.columns]

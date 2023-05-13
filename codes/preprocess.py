@@ -3,6 +3,9 @@ import pandas as pd
 import polars as pl
 import logging
 
+from sklearn.preprocessing import StandardScaler
+import umap
+
 
 def split_df_labels(df_labels):
 
@@ -88,7 +91,9 @@ def feature_engineer_pl(x, grp,
         use_csv=False, 
         flr_list = None,
         tl_list = None,
-        df_navigate_master = None
+        df_navigate_master = None,
+        room_umap = False,
+        room_umap_model = None
     ):
 
     # from https://www.kaggle.com/code/leehomhuang/catboost-baseline-with-lots-features-inference :
@@ -414,6 +419,39 @@ def feature_engineer_pl(x, grp,
         ])
 
         df = df.join(df_tmp, on='session_id', how='left')
+    
+    if room_umap:
+
+        if grp=='0-4':
+            rooms = []
+        elif grp=='5-12':
+            rooms = []
+        else:
+            rooms = []
+
+        df_navigate = x.filter((pl.col('event_name')=='navigate_click')&(pl.col('fqid')=='fqid_None'))
+        df_navigate = df_navigate.with_columns([
+            (pl.col('room_coor_x') // 30).alias('room_x'),
+            (pl.col('room_coor_y') // 30).alias('room_y')
+        ])
+
+        for r in rooms:
+            df_room = df_navigate.filter(pl.col('room_fqid')==r)
+            df_dummies = df_room.select('session_id', 'room_x', 'room_y').to_dummies(columns = ['room_x', 'room_y'])
+            df_room_summary = df_dummies.groupby('session_id').sum().to_pandas().set_index('session_id').clip(0, 3)
+            
+            features = room_umap_model['features'][grp][r]
+            df_room_summary = df_room_summary[features]
+
+            sc = room_umap_model['sc'][grp][r]
+            df_room_std= pd.DataFrame(data=sc.transform(df_room_summary.to_numpy()), columns=df_room_summary.columns, index=df_room_summary.index)
+
+            um = room_umap_model['umap'][grp][r]
+            ar_room_umap = um.transform(df_room_summary.to_numpy())
+            df_room_umap = pd.DataFrame(data=ar_room_umap, index=df_room_summary.index, columns=[f'umap_{r}_1_{feature_suffix}', f'umap_{r}_2_{feature_suffix}'])
+
+            df = df.join(df_room_umap, on='session_id', how='left')        
+
         
     return df
 

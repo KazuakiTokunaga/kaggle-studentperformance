@@ -444,10 +444,8 @@ def feature_engineer_pl(x, grp,
             df_room_value = df_room_summary.drop('session_id')
             df_session_id = df_room_summary.select('session_id')
 
-            print('df_room_value before', df_room_value.shape)
-
             features = room_umap_model['features'][grp][r]
-            print('len_features: ', len(features))
+            print('features list', features)
             
             # 存在するカラム
             exist_features = [c for c in features if c in df_room_value.columns]
@@ -457,7 +455,8 @@ def feature_engineer_pl(x, grp,
             nonexist_features = [c for c in features if not (c in exist_features)]
             df_room_nonexist = pl.DataFrame(np.zeros((df_room_value.height, len(nonexist_features))), schema = nonexist_features)
             
-            print('df_room_nonexist', len(nonexist_features), df_room_nonexist.shape)
+            print('exist_features: ', exist_features)
+            print('nonexist_features: ', nonexist_features)
 
             # 両者をマージして、カラムを並び替える
             tmp = pl.concat([df_room_exist, df_room_nonexist], how='horizontal')

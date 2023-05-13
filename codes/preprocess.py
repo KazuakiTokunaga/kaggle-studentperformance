@@ -444,6 +444,7 @@ def feature_engineer_pl(x, grp,
             df_session_id = df_room_summary.select('session_id')
 
             features = room_umap_model['features'][grp][r]
+            features = [c for c in features if c in df_room_value.columns]
             df_room_value = df_room_value.select(features)
 
             sc = room_umap_model['sc'][grp][r]

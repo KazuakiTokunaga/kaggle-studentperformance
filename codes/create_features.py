@@ -45,6 +45,15 @@ def create_room_umap_model(df):
 
             df_room = df_navigate_grp.filter(pl.col('room_fqid')==r)
             df_dummies = df_room.select('session_id', 'room_x', 'room_y').to_dummies(columns = ['room_x', 'room_y'])
+            
+            x_columns = [i for i in df_dummies.columns if i.startswith('room_x')]
+            y_columns = [i for i in df_dummies.columns if i.startswith('room_y')]
+            df_dummies = df_dummies.with_columns([
+                *[(pl.col(xc) * pl.col(yc)).alias(f'{xc}_{yc}') for xc in x_columns for yc in y_columns]
+            ]).drop(x_columns+y_columns)
+
+            print('\t shape: ', df_dummies.shape)
+
             df_room_summary = df_dummies.groupby('session_id').sum().drop('session_id')
             room_umap_model['features'][grp][r] = list(df_room_summary.columns)
             

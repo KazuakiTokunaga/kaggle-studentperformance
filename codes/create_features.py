@@ -10,8 +10,8 @@ def create_room_umap_model(df):
 
     df_navigate = df.filter((pl.col('event_name')=='navigate_click')&(pl.col('fqid')=='fqid_None'))
     df_navigate = df_navigate.with_columns([
-        (pl.col('room_coor_x') // 100).cast(pl.Int64).alias('room_x'),
-        (pl.col('room_coor_y') // 100).cast(pl.Int64).alias('room_y')
+        (pl.col('room_coor_x') // 150).cast(pl.Int64).alias('room_x'),
+        (pl.col('room_coor_y') // 150).cast(pl.Int64).alias('room_y')
     ])
     print('df_navigate_shape:', df_navigate.shape)
 
@@ -54,7 +54,7 @@ def create_room_umap_model(df):
 
             df_room_summary = df_dummies.groupby('session_id').sum().drop('session_id')
             print('\t shape: ', df_dummies.shape)
-            
+
             room_umap_model['features'][grp][r] = list(df_room_summary.columns)
             
             arr_room_summary = df_room_summary.to_numpy().clip(min=0, max=3)

@@ -503,9 +503,9 @@ class Runner():
         data.append(self.model_options)
 
         if self.feature_options.get('room_umap_model'):
-            feature_options.pop('room_umap_model')
+            self.feature_options.pop('room_umap_model')
         data.append(self.feature_options)
-        
+
         data.append(self.note)
 
         google_sheet = utils.WriteSheet()

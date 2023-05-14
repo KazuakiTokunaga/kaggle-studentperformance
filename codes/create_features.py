@@ -53,7 +53,7 @@ def create_room_umap_model(df):
             ]).drop(x_columns+y_columns)
 
             df_room_summary = df_dummies.groupby('session_id').sum().drop('session_id')
-            print('\t shape: ', df_dummies.shape)
+            print('\t shape: ', df_room_summary.shape)
 
             room_umap_model['features'][grp][r] = list(df_room_summary.columns)
             

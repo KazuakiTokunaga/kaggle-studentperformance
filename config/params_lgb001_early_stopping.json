@@ -2,14 +2,10 @@
     "base": {
         "objective": "binary",
         "learning_rate": 0.02,
-        "num_leaves": 31,
         "max_depth": 5,
-        "min_child_samples": 20,
         "subsample": 0.8,
         "colsample_bytree": 0.5,
-        "reg_alpha": 0,
-        "reg_lambda": 0,
-        "early_stopping_rounds": 30
+        "early_stopping_rounds": 60
     },
     "n_estimators": [1000]
 }

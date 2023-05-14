@@ -431,13 +431,19 @@ def feature_engineer_pl(x, grp,
 
         df_navigate = x.filter((pl.col('event_name')=='navigate_click')&(pl.col('fqid')=='fqid_None'))
         df_navigate = df_navigate.with_columns([
-            (pl.col('room_coor_x') // 30).cast(pl.Int64).alias('room_x'),
-            (pl.col('room_coor_y') // 30).cast(pl.Int64).alias('room_y')
+            (pl.col('room_coor_x') // 100).cast(pl.Int64).alias('room_x'),
+            (pl.col('room_coor_y') // 100).cast(pl.Int64).alias('room_y')
         ])
 
         for r in rooms:
             df_room = df_navigate.filter(pl.col('room_fqid')==r)
             df_dummies = df_room.select('session_id', 'room_x', 'room_y').to_dummies(columns = ['room_x', 'room_y'])
+    
+            x_columns = [i for i in df_dummies.columns if i.startswith('room_x')]
+            y_columns = [i for i in df_dummies.columns if i.startswith('room_y')]
+            df_dummies = df_dummies.with_columns([
+                *[(pl.col(xc) * pl.col(yc)).alias(f'{xc}_{yc}') for xc in x_columns for yc in y_columns]
+            ]).drop(x_columns+y_columns)
 
             df_room_summary = df_dummies.groupby('session_id').sum()
             df_room_value = df_room_summary.drop('session_id')
@@ -445,7 +451,6 @@ def feature_engineer_pl(x, grp,
 
             features = room_umap_model['features'][grp][r]
 
-            
             # 存在するカラム
             exist_features = [c for c in features if c in df_room_value.columns]
             df_room_exist = df_room_value.select(exist_features)

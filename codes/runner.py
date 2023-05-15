@@ -250,7 +250,7 @@ class Runner():
             filepath = f'{repo_path}/config/{folder_name}/q{t}.json'
             
             if os.path.isfile(filepath):
-               with open(filepath) as f:
+                with open(filepath) as f:
                     params = json.load(f)
                 model_params = params['base']
 

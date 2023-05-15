@@ -246,7 +246,7 @@ class Runner():
             if self.print_model_info:
                 logger.info('Use customized paramter for each question.')
 
-            folder_name = self.model_options.get('each_folder_name'):
+            folder_name = self.model_options.get('each_folder_name')
             filepath = f'{repo_path}/config/{folder_name}/q{t}.json'
             
             if os.path.isfile(filepath):

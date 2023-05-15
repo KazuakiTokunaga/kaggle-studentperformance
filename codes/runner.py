@@ -3,6 +3,7 @@ import pandas as pd
 import polars as pl
 import gc
 import json
+import os
 import datetime
 import pickle
 
@@ -240,13 +241,26 @@ class Runner():
     
         model_params = params['base']
 
+        # Qごとにパラメタを変更する場合
+        if self.model_options.get('each_params'):
+            if self.print_model_info:
+                logger.info('Use customized paramter for each question.')
+
+            folder_name = self.model_options.get('each_folder_name'):
+            filepath = f'{repo_path}/config/{folder_name}/q{t}.json'
+            
+            if os.path.isfile(filepath):
+               with open(filepath) as f:
+                    params = json.load(f)
+                model_params = params['base']
+
         # Qごとにn_estimatorsを変えるかどうか
         n_estimators_list = params['n_estimators']
         if len(n_estimators_list)==1:
             model_params['n_estimators'] = n_estimators_list[0]
         else:
             model_params['n_estimators'] = n_estimators_list[t-1]
-        
+
         if self.model_options.get('random'):
             model_params['random_state'] = np.random.randint(1, 100)
         elif self.model_options.get('random_state'):

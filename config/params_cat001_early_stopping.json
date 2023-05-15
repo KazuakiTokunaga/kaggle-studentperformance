@@ -4,7 +4,6 @@
         "depth": 5,
         "learning_rate": 0.02,
         "loss_function": "Logloss",
-        "random_seed": 222222,
         "metric_period": 1,
         "subsample": 0.8,
         "colsample_bylevel": 0.4,

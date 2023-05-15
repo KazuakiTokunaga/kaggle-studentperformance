@@ -55,6 +55,8 @@ class Runner():
             'ensemble': False,
             'model': 'xgb',
             'param_file': 'params_xgb001_test.json',
+            'each_params': False,
+            'each_folder_name': None, 
             'random': True,
             'random_state': 42
         }):

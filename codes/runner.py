@@ -74,7 +74,6 @@ class Runner():
             'models': {},
             'optimal_threshold': 0.620
         }
-        self.print_model_info = True
         self.best_ntrees = None
         self.note = dict()
         self.fold_models = dict()
@@ -229,7 +228,7 @@ class Runner():
             self.oof.columns = [int(i) for i in self.oof.columns]
 
 
-    def get_trained_clf(self, t, train_x, train_y, valid_x=None, valid_y=None, adhoc_params=None):
+    def get_trained_clf(self, t, train_x, train_y, valid_x=None, valid_y=None, adhoc_params=None, print_model_info=False):
             
         validation = valid_x is not None
         ntree = None
@@ -243,13 +242,14 @@ class Runner():
 
         # Qごとにパラメタを変更する場合
         if self.model_options.get('each_params'):
-            if self.print_model_info:
-                logger.info('Use customized paramter for each question.')
-
             folder_name = self.model_options.get('each_folder_name')
             filepath = f'{self.repo_path}/config/{folder_name}/q{t}.json'
             
             if os.path.isfile(filepath):
+
+                if print_model_info:
+                    logger.info('Use customized paramter for this question.')
+
                 with open(filepath) as f:
                     params = json.load(f)
                 model_params = params['base']
@@ -276,12 +276,12 @@ class Runner():
             for key, value in adhoc_params.items():
                 model_params[key] = value
 
-        if self.print_model_info:
+        if print_model_info:
             logger.info(f'Use {model_kind} with params {model_params}.')
 
         # early_stoppingを用いる場合
         if validation and model_params.get('early_stopping_rounds'):
-            if self.print_model_info:
+            if print_model_info:
                 logger.info(f'Use early_stopping_rounds.')
 
             eval_set = [(valid_x, valid_y['correct'])]
@@ -343,8 +343,6 @@ class Runner():
             
             else:
                 raise Exception('Wrong Model kind.')
-        
-        self.print_model_info = False
 
         return clf, ntree
 
@@ -376,6 +374,8 @@ class Runner():
         for t in self.questions:
 
             for k, (train_index, test_index) in enumerate(kf_split_list):
+                print_model_info = False if k else True
+
                 if k==0 or (t <= 2 and k <= 2):
                     logger.info(f'Question {t}, Fold {k}.')
                 
@@ -404,7 +404,7 @@ class Runner():
                 valid_x = valid_x.merge(prev_answers, left_index=True, right_index=True, how='left')
                 valid_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[valid_users]
 
-                clf, ntree = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params)
+                clf, ntree = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params, print_model_info=print_model_info)
                 best_ntrees_mat[k, t-1] = ntree
                 
                 self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x)[:,1]
@@ -498,7 +498,7 @@ class Runner():
             
             train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[self.ALL_USERS]
 
-            clf, ntree = self.get_trained_clf(t, train_x, train_y)    
+            clf, ntree = self.get_trained_clf(t, train_x, train_y, print_model_info=True)
 
             # SAVE MODEL.
             self.models['models'][f'{grp}_{t}'] = clf

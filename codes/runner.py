@@ -247,7 +247,7 @@ class Runner():
                 logger.info('Use customized paramter for each question.')
 
             folder_name = self.model_options.get('each_folder_name')
-            filepath = f'{repo_path}/config/{folder_name}/q{t}.json'
+            filepath = f'{self.repo_path}/config/{folder_name}/q{t}.json'
             
             if os.path.isfile(filepath):
                 with open(filepath) as f:

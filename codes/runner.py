@@ -35,8 +35,9 @@ class Runner():
             'version': 2,
             'merge': False,
             'load_oof': False,
+            'oof_file_name': '',
             'select': True,
-            'exclude_suffix': '_ver2',
+            'exclude_suffix': '',
             'thre': 0.97,
             'time_id': 6,
             'level_diff': False,
@@ -223,8 +224,10 @@ class Runner():
                 self.df3 = self.df3.fillna(-1)
         
         if self.feature_options.get('load_oof'):
-            logger.info('Load oof from csv.')
-            self.oof = pd.read_csv(f'{self.input_path}/oof_predict_proba.csv', index_col='session_id')
+            self.file_name = self.feature_options.get('oof_file_name')
+            logger.info(f'Load oof from csv.: {self.file_name}')
+            
+            self.oof = pd.read_csv(f'{self.input_path}/{self.file_name}.csv', index_col='session_id')
             self.oof.columns = [int(i) for i in self.oof.columns]
 
 

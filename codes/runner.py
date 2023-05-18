@@ -237,7 +237,8 @@ class Runner():
             valid_x=None, 
             valid_y=None, 
             adhoc_params=None, 
-            print_model_info=False
+            print_model_info=False,
+            first = False
         ):
             
         validation = valid_x is not None
@@ -278,7 +279,7 @@ class Runner():
 
         # validation時にbest_iterationを保存している場合はそちらを優先する
         if self.best_ntrees is not None:
-            n = self.best_ntrees[t-1]
+            n = self.best_base_ntrees[t-1] if first else self.best_ntrees[t-1]
             logger.info(f'Q{t}: n_estimators {n}')
             model_params['n_estimators'] = n
 
@@ -697,10 +698,10 @@ class Runner():
             # TRAIN DATA
             train_x = df
             train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[self.ALL_USERS]
-            clf, ntree = self.get_trained_clf(t, train_x, train_y, print_model_info=True)
+            clf, ntree = self.get_trained_clf(t, train_x, train_y, print_model_info=True, first=True)
 
             # SAVE MODEL.
-            self.models['models'][f'{grp}_{t}_base'] = clf
+            self.models['models'][f'{grp}_{t}_first'] = clf
 
         logger.info(f'Saved trained model.')
 

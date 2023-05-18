@@ -465,7 +465,7 @@ class Runner():
 
                 target_prev.pop(t-1) # 自分自身を除外
                 if k==0:
-                    logger.info('Join other answers :', target_prev)
+                    logger.info(f'Join other answers : {target_prev}')
 
                 # TRAIN DATA
                 train_x = df.iloc[train_index]
@@ -601,7 +601,7 @@ class Runner():
 
             target_prev.pop(t-1) # 自分自身を除外
             if k==0:
-                logger.info('Join other answers :', target_prev)
+                logger.info(f'Join other answers : {target_prev}')
                 
             # TRAIN DATA
             train_x = df

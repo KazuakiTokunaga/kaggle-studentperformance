@@ -409,7 +409,7 @@ class Runner():
 
         if best_base_ntrees_mat[0, 0] > 1:
             logger.info('Save best base iterations.')
-            self.best_base_ntrees = pd.Series(best_ntrees_mat.mean(axis=0).astype('int'))
+            self.best_base_ntrees = pd.Series(best_base_ntrees_mat.mean(axis=0).astype('int'))
             self.best_base_ntrees.to_csv('best_num_base_trees.csv')
             self.note['best_base_ntrees'] = list(self.best_base_ntrees)
 
@@ -550,7 +550,7 @@ class Runner():
 
 
     def train_all_clf_base(self, save_model=True):
-        logger.info(f'Train clf using all train data.')
+        logger.info(f'Train clf base using all train data.')
 
         # ITERATE THRU QUESTIONS 1 THRU 18
         for t in self.questions:
@@ -579,7 +579,7 @@ class Runner():
 
 
     def train_all_clf(self, save_model=True):
-        logger.info(f'Train clf using all train data.')
+        logger.info(f'Train clf using all train data with other questions.')
 
         # ITERATE THRU QUESTIONS 1 THRU 18
         for t in self.questions:
@@ -600,8 +600,7 @@ class Runner():
                 target_prev = [i for i in range(18)]
 
             target_prev.pop(t-1) # 自分自身を除外
-            if k==0:
-                logger.info(f'Join other answers : {target_prev}')
+            logger.info(f'Join other answers : {target_prev}')
                 
             # TRAIN DATA
             train_x = df

@@ -549,7 +549,7 @@ class Runner():
             self.scores.append(m)
 
 
-    def train_all_clf(self, save_model=True):
+    def train_all_clf_base(self, save_model=True):
         logger.info(f'Train clf using all train data.')
 
         # ITERATE THRU QUESTIONS 1 THRU 18
@@ -569,21 +569,53 @@ class Runner():
                 
             # TRAIN DATA
             train_x = df
-            prev_answers = self.oof[[i for i in range(t-1)]].copy()
+            train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[self.ALL_USERS]
+            clf, ntree = self.get_trained_clf(t, train_x, train_y, print_model_info=True)
+
+            # SAVE MODEL.
+            self.models['models'][f'{grp}_{t}_base'] = clf
+
+        logger.info(f'Saved trained model.')
+
+
+    def train_all_clf(self, save_model=True):
+        logger.info(f'Train clf using all train data.')
+
+        # ITERATE THRU QUESTIONS 1 THRU 18
+        for t in self.questions:
+            logger.info(f'Question {t}.')
+            
+            # USE THIS TRAIN DATA WITH THESE QUESTIONS
+            if t<=3: 
+                grp = '0-4'
+                df = self.df1
+                target_prev = [i for i in range(3)]
+            elif t<=13: 
+                grp = '5-12'
+                df = self.df2
+                target_prev = [i for i in range(13)]
+            elif t<=22: 
+                grp = '13-22'
+                df = self.df3
+                target_prev = [i for i in range(18)]
+
+            target_prev.pop(t-1) # 自分自身を除外
+            if k==0:
+                logger.info('Join other answers :', target_prev)
+                
+            # TRAIN DATA
+            train_x = df
+            prev_answers = self.oof[[target_prev].copy()
             train_x = train_x.merge(prev_answers, left_index=True, right_index=True, how='left')
             
             train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[self.ALL_USERS]
-
             clf, ntree = self.get_trained_clf(t, train_x, train_y, print_model_info=True)
 
             # SAVE MODEL.
             self.models['models'][f'{grp}_{t}'] = clf
 
-        logger.info(f'Saved trained model.')
-
         pickle.dump(self.models, open(f'models.pkl', 'wb'))
         logger.info('Export trained model.')
-
 
     def write_sheet(self, ):
         logger.info('Write scores to google sheet.')

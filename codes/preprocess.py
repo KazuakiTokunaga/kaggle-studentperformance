@@ -4,7 +4,6 @@ import polars as pl
 import logging
 
 from sklearn.preprocessing import StandardScaler
-import umap
 
 
 def split_df_labels(df_labels):
@@ -92,8 +91,6 @@ def feature_engineer_pl(x, grp,
         flr_list = None,
         tl_list = None,
         df_navigate_master = None,
-        room_umap = False,
-        room_umap_model = None
     ):
 
     # from https://www.kaggle.com/code/leehomhuang/catboost-baseline-with-lots-features-inference :
@@ -416,69 +413,6 @@ def feature_engineer_pl(x, grp,
         ])
 
         df = df.join(df_tmp, on='session_id', how='left')
-    
-    if room_umap:
-
-        if grp == '0-4':
-            rooms = ['tunic.kohlcenter.halloffame', 'tunic.historicalsociety.stacks', 'tunic.historicalsociety.basement', 'tunic.historicalsociety.collection', 'tunic.historicalsociety.entry', 'tunic.historicalsociety.closet']
-        elif grp == '5-12':
-            rooms = ['tunic.historicalsociety.frontdesk', 'tunic.capitol_0.hall', 'tunic.capitol_1.hall', 'tunic.library.microfiche', 'tunic.historicalsociety.closet_dirty', 'tunic.historicalsociety.basement', 'tunic.historicalsociety.collection', 'tunic.library.frontdesk', 'tunic.historicalsociety.stacks', 'tunic.drycleaner.frontdesk', 'tunic.historicalsociety.entry', 'tunic.humanecology.frontdesk', 'tunic.kohlcenter.halloffame']
-        else:
-            rooms = ['tunic.historicalsociety.stacks', 'tunic.flaghouse.entry', 'tunic.kohlcenter.halloffame', 'tunic.capitol_2.hall', 'tunic.historicalsociety.closet_dirty', 'tunic.historicalsociety.basement', 'tunic.capitol_1.hall', 'tunic.historicalsociety.entry', 'tunic.historicalsociety.frontdesk', 'tunic.library.frontdesk', 'tunic.historicalsociety.collection_flag', 'tunic.humanecology.frontdesk', 'tunic.wildlife.center', 'tunic.library.microfiche', 'tunic.historicalsociety.cage']
-
-        df_navigate = x.filter((pl.col('event_name')=='navigate_click')&(pl.col('fqid')=='fqid_None'))
-        df_navigate = df_navigate.with_columns([
-            (pl.col('room_coor_x') // 180).cast(pl.Int64).alias('room_x'),
-            (pl.col('room_coor_y') // 180).cast(pl.Int64).alias('room_y')
-        ])
-
-        for r in rooms:
-            df_room = df_navigate.filter(pl.col('room_fqid')==r)
-            df_dummies = df_room.select('session_id', 'room_x', 'room_y').to_dummies(columns = ['room_x', 'room_y'])
-    
-            x_columns = [i for i in df_dummies.columns if i.startswith('room_x')]
-            y_columns = [i for i in df_dummies.columns if i.startswith('room_y')]
-            df_dummies = df_dummies.with_columns([
-                *[(pl.col(xc) * pl.col(yc)).alias(f'{xc}_{yc}') for xc in x_columns for yc in y_columns]
-            ]).drop(x_columns+y_columns)
-
-            df_room_summary = df_dummies.groupby('session_id').sum()
-            df_room_value = df_room_summary.drop('session_id')
-            df_session_id = df_room_summary.select('session_id')
-
-            features = room_umap_model['features'][grp][r]
-
-            # 存在するカラム
-            exist_features = [c for c in features if c in df_room_value.columns]
-            df_room_exist = df_room_value.select(exist_features)
-
-            # 存在しないカラムのデータを作る
-            nonexist_features = [c for c in features if not (c in exist_features)]
-            df_room_nonexist = pl.DataFrame(np.zeros((df_room_value.height, len(nonexist_features))), schema = nonexist_features)
-
-            # 両者をマージして、カラムを並び替える
-            tmp = pl.concat([df_room_exist, df_room_nonexist], how='horizontal')
-            df_room_value = tmp.select(features)
-
-            # print('room :', r)
-            # print('features count', len(features))
-            # print('exist_features: ', len(exist_features))
-            # print('nonexist_features: ', len(nonexist_features))
-            # print('df_room_value shape', df_room_value.shape)
-
-            if df_room_value.height > 0:
-                sc = room_umap_model['sc'][grp][r]
-                um = room_umap_model['umap'][grp][r]
-                ar_room_umap_value = um.transform(sc.transform(df_room_value.to_numpy().clip(min=0, max=3))) + 100 # 後に欠損値を-1で補完するため
-                df_room_umap_value = pl.DataFrame(data=ar_room_umap_value, schema=[f'umap_{r}_1_{feature_suffix}', f'umap_{r}_2_{feature_suffix}'])
-                df_room_umap = pl.concat([df_session_id, df_room_umap_value], how='horizontal')
-                df = df.join(df_room_umap, on='session_id', how='left')         
-            else:
-                df = df.with_columns([
-                    pl.lit(-1).alias(f'umap_{r}_1_{feature_suffix}'),
-                    pl.lit(-1).alias(f'umap_{r}_2_{feature_suffix}')
-                ])
-
         
     return df
 

@@ -43,8 +43,6 @@ class Runner():
             'level_diff': False,
             'cut_above': False,
             'room_click': False,
-            'room_umap': False,
-            'room_umap_model': None,
             'use_csv': False,
             'add_random': False
         },
@@ -120,8 +118,6 @@ class Runner():
             logger.info('Extract big elapsed_time data to create additional features.')
         if self.feature_options.get('room_click'):
             logger.info('Add features based on navigate_click in each room.')
-        if self.feature_options.get('room_umap'):
-            logger.info('Add features based on navigate_click with umap.')
 
         self.df_train = preprocess.add_columns(self.df_train)
 
@@ -137,8 +133,6 @@ class Runner():
             'cut_above': self.feature_options.get('cut_above'),
             'level_diff': self.feature_options.get('level_diff'),
             'room_click': self.feature_options.get('room_click'),
-            'room_umap': self.feature_options.get('room_umap'),
-            'room_umap_model': self.feature_options.get('room_umap_model'),
             'use_csv': self.feature_options.get('use_csv'),
         }
 
@@ -520,9 +514,6 @@ class Runner():
         data.append(self.load_options)
         data.append(self.validation_options)
         data.append(self.model_options)
-
-        if self.feature_options.get('room_umap_model'):
-            self.feature_options.pop('room_umap_model')
         data.append(self.feature_options)
 
         data.append(self.note)

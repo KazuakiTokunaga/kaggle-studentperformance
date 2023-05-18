@@ -3,6 +3,8 @@ import pandas as pd
 import polars as pl
 import logging
 
+from sklearn.preprocessing import StandardScaler
+
 
 def split_df_labels(df_labels):
 
@@ -81,11 +83,14 @@ def feature_engineer_pl(x, grp,
         use_extra=True, 
         feature_suffix = '', 
         version=2, 
-        use_csv=False, 
-        csv_path='',
         thre = 0.03,
         level_diff=True,
-        cut_above=True
+        cut_above=True,
+        room_click=True,
+        use_csv=False, 
+        flr_list = None,
+        tl_list = None,
+        df_navigate_master = None,
     ):
 
     # from https://www.kaggle.com/code/leehomhuang/catboost-baseline-with-lots-features-inference :
@@ -109,32 +114,6 @@ def feature_engineer_pl(x, grp,
     text_lists = ['tunic.historicalsociety.cage.confrontation', 'tunic.wildlife.center.crane_ranger.crane', 'tunic.historicalsociety.frontdesk.archivist.newspaper', 'tunic.historicalsociety.entry.groupconvo', 'tunic.wildlife.center.wells.nodeer', 'tunic.historicalsociety.frontdesk.archivist.have_glass', 'tunic.drycleaner.frontdesk.worker.hub', 'tunic.historicalsociety.closet_dirty.gramps.news', 'tunic.humanecology.frontdesk.worker.intro', 'tunic.historicalsociety.frontdesk.archivist_glasses.confrontation', 'tunic.historicalsociety.basement.seescratches', 'tunic.historicalsociety.collection.cs', 'tunic.flaghouse.entry.flag_girl.hello', 'tunic.historicalsociety.collection.gramps.found', 'tunic.historicalsociety.basement.ch3start', 'tunic.historicalsociety.entry.groupconvo_flag', 'tunic.library.frontdesk.worker.hello', 'tunic.library.frontdesk.worker.wells', 'tunic.historicalsociety.collection_flag.gramps.flag', 'tunic.historicalsociety.basement.savedteddy', 'tunic.library.frontdesk.worker.nelson', 'tunic.wildlife.center.expert.removed_cup', 'tunic.library.frontdesk.worker.flag', 'tunic.historicalsociety.frontdesk.archivist.hello', 'tunic.historicalsociety.closet.gramps.intro_0_cs_0', 'tunic.historicalsociety.entry.boss.flag', 'tunic.flaghouse.entry.flag_girl.symbol', 'tunic.historicalsociety.closet_dirty.trigger_scarf', 'tunic.drycleaner.frontdesk.worker.done', 'tunic.historicalsociety.closet_dirty.what_happened', 'tunic.wildlife.center.wells.animals', 'tunic.historicalsociety.closet.teddy.intro_0_cs_0', 'tunic.historicalsociety.cage.glasses.afterteddy', 'tunic.historicalsociety.cage.teddy.trapped', 'tunic.historicalsociety.cage.unlockdoor', 'tunic.historicalsociety.stacks.journals.pic_2.bingo', 'tunic.historicalsociety.entry.wells.flag', 'tunic.humanecology.frontdesk.worker.badger', 'tunic.historicalsociety.stacks.journals_flag.pic_0.bingo', 'tunic.historicalsociety.closet.intro', 'tunic.historicalsociety.closet.retirement_letter.hub', 'tunic.historicalsociety.entry.directory.closeup.archivist', 'tunic.historicalsociety.collection.tunic.slip', 'tunic.kohlcenter.halloffame.plaque.face.date', 'tunic.historicalsociety.closet_dirty.trigger_coffee', 'tunic.drycleaner.frontdesk.logbook.page.bingo', 'tunic.library.microfiche.reader.paper2.bingo', 'tunic.kohlcenter.halloffame.togrampa', 'tunic.capitol_2.hall.boss.haveyougotit', 'tunic.wildlife.center.wells.nodeer_recap', 'tunic.historicalsociety.cage.glasses.beforeteddy', 'tunic.historicalsociety.closet_dirty.gramps.helpclean', 'tunic.wildlife.center.expert.recap', 'tunic.historicalsociety.frontdesk.archivist.have_glass_recap', 'tunic.historicalsociety.stacks.journals_flag.pic_1.bingo', 'tunic.historicalsociety.cage.lockeddoor', 'tunic.historicalsociety.stacks.journals_flag.pic_2.bingo', 'tunic.historicalsociety.collection.gramps.lost', 'tunic.historicalsociety.closet.notebook', 'tunic.historicalsociety.frontdesk.magnify', 'tunic.humanecology.frontdesk.businesscards.card_bingo.bingo', 'tunic.wildlife.center.remove_cup', 'tunic.library.frontdesk.wellsbadge.hub', 'tunic.wildlife.center.tracks.hub.deer', 'tunic.historicalsociety.frontdesk.key', 'tunic.library.microfiche.reader_flag.paper2.bingo', 'tunic.flaghouse.entry.colorbook', 'tunic.wildlife.center.coffee', 'tunic.capitol_1.hall.boss.haveyougotit', 'tunic.historicalsociety.basement.janitor', 'tunic.historicalsociety.collection_flag.gramps.recap', 'tunic.wildlife.center.wells.animals2', 'tunic.flaghouse.entry.flag_girl.symbol_recap', 'tunic.historicalsociety.closet_dirty.photo', 'tunic.historicalsociety.stacks.outtolunch', 'tunic.library.frontdesk.worker.wells_recap', 'tunic.historicalsociety.frontdesk.archivist_glasses.confrontation_recap', 'tunic.capitol_0.hall.boss.talktogramps', 'tunic.historicalsociety.closet.photo', 'tunic.historicalsociety.collection.tunic', 'tunic.historicalsociety.closet.teddy.intro_0_cs_5', 'tunic.historicalsociety.closet_dirty.gramps.archivist', 'tunic.historicalsociety.closet_dirty.door_block_talk', 'tunic.historicalsociety.entry.boss.flag_recap', 'tunic.historicalsociety.frontdesk.archivist.need_glass_0', 'tunic.historicalsociety.entry.wells.talktogramps', 'tunic.historicalsociety.frontdesk.block_magnify', 'tunic.historicalsociety.frontdesk.archivist.foundtheodora', 'tunic.historicalsociety.closet_dirty.gramps.nothing', 'tunic.historicalsociety.closet_dirty.door_block_clean', 'tunic.capitol_1.hall.boss.writeitup', 'tunic.library.frontdesk.worker.nelson_recap', 'tunic.library.frontdesk.worker.hello_short', 'tunic.historicalsociety.stacks.block', 'tunic.historicalsociety.frontdesk.archivist.need_glass_1', 'tunic.historicalsociety.entry.boss.talktogramps', 'tunic.historicalsociety.frontdesk.archivist.newspaper_recap', 'tunic.historicalsociety.entry.wells.flag_recap', 'tunic.drycleaner.frontdesk.worker.done2', 'tunic.library.frontdesk.worker.flag_recap', 'tunic.humanecology.frontdesk.block_0', 'tunic.library.frontdesk.worker.preflag', 'tunic.historicalsociety.basement.gramps.seeyalater', 'tunic.flaghouse.entry.flag_girl.hello_recap', 'tunic.historicalsociety.closet.doorblock', 'tunic.drycleaner.frontdesk.worker.takealook', 'tunic.historicalsociety.basement.gramps.whatdo', 'tunic.library.frontdesk.worker.droppedbadge', 'tunic.historicalsociety.entry.block_tomap2', 'tunic.library.frontdesk.block_nelson', 'tunic.library.microfiche.block_0', 'tunic.historicalsociety.entry.block_tocollection', 'tunic.historicalsociety.entry.block_tomap1', 'tunic.historicalsociety.collection.gramps.look_0', 'tunic.library.frontdesk.block_badge', 'tunic.historicalsociety.cage.need_glasses', 'tunic.library.frontdesk.block_badge_2', 'tunic.kohlcenter.halloffame.block_0', 'tunic.capitol_0.hall.chap1_finale_c', 'tunic.capitol_1.hall.chap2_finale_c', 'tunic.capitol_2.hall.chap4_finale_c', 'tunic.wildlife.center.fox.concern', 'tunic.drycleaner.frontdesk.block_0', 'tunic.historicalsociety.entry.gramps.hub', 'tunic.humanecology.frontdesk.block_1', 'tunic.drycleaner.frontdesk.block_1']
     room_lists = ['tunic.historicalsociety.entry', 'tunic.wildlife.center', 'tunic.historicalsociety.cage', 'tunic.library.frontdesk', 'tunic.historicalsociety.frontdesk', 'tunic.historicalsociety.stacks', 'tunic.historicalsociety.closet_dirty', 'tunic.humanecology.frontdesk', 'tunic.historicalsociety.basement', 'tunic.kohlcenter.halloffame', 'tunic.library.microfiche', 'tunic.drycleaner.frontdesk', 'tunic.historicalsociety.collection', 'tunic.historicalsociety.closet', 'tunic.flaghouse.entry', 'tunic.historicalsociety.collection_flag', 'tunic.capitol_1.hall', 'tunic.capitol_0.hall', 'tunic.capitol_2.hall']
 
-
-    #　fqid, level, roomと、text, levelで、ある程度レコードが存在する組み合わせをみつける
-    if version >= 2:
-      if not use_csv:
-          session_cnt = x.select('session_id').n_unique()
-          low = int(session_cnt * thre) 
-          
-          flr_list = x.select('fqid', 'level', 'room_fqid', 'session_id').groupby('fqid', 'level', 'room_fqid').n_unique().filter(pl.col('session_id')>=low).drop('session_id')
-          single_fqid = flr_list.groupby('fqid').count().rename({'count': 'fqid_count'}).filter(pl.col('fqid_count')==1).get_column('fqid').to_list()
-          flr_list = flr_list.filter(~pl.col('fqid').is_in(single_fqid))
-          flr_cs = flr_list.get_columns()
-          
-          tl_list = x.select('text_fqid', 'level', 'session_id').groupby('text_fqid', 'level').n_unique().filter(pl.col('session_id')>=low).drop('session_id')
-          single_text = tl_list.groupby('text_fqid').count().rename({'count': 'text_count'}).filter(pl.col('text_count')==1).get_column('text_fqid').to_list()
-          tl_list = tl_list.filter(~pl.col('text_fqid').is_in(single_text))
-          tl_cs = tl_list.get_columns()
-    
-      # submissionの場合はこちら
-      else:
-          flr_list = pl.read_csv(f'{csv_path}/flr_list.csv')
-          flr_cs = flr_list.get_columns()
-
-          tl_list = pl.read_csv(f'{csv_path}/tl_list.csv')
-          tl_cs = tl_list.get_columns()
-
-
     # levelごとの経過時間についての情報をまとめる
     if level_diff:
         df_level_diff = x.groupby('session_id', 'level_group', 'level').agg([
@@ -156,10 +135,10 @@ def feature_engineer_pl(x, grp,
             (pl.col('elapsed_time_max').filter((pl.col('level')>=5)&(pl.col('level')<=11)).max() - pl.col('elapsed_time_min').filter(pl.col('level')==12).min()).alias('elapsed_time_diff_max5-11_min12'),
             (pl.col('elapsed_time_max').filter((pl.col('level')>=13)&(pl.col('level')<=21)).max() - pl.col('elapsed_time_min').filter(pl.col('level')==22).min()).alias('elapsed_time_diff_max13-21_min22'),
         ]).with_columns(
-            *[pl.col(f'elapsed_time_level_diff_{n}').apply(lambda s: s if s < 0 else 0, return_dtype='i64').alias(f'elapsed_fime_level_diff_fixed_{n}') for n in [i for i in LEVELS if i not in [4,13,22]]],
-            pl.col('elapsed_time_diff_max0-3_min4').apply(lambda s: s if s > 0 else 0, return_dtype='i64').alias('elapsed_time_diff_fixed_max0_3_min4'),
-            pl.col('elapsed_time_diff_max5-11_min12').apply(lambda s: s if s > 0 else 0, return_dtype='i64').alias('elapsed_time_diff_fixed_max5-11_min12'),
-            pl.col('elapsed_time_diff_max13-21_min22').apply(lambda s: s if s > 0 else 0, return_dtype='i64').alias('elapsed_time_diff_fixed_max13-21_min22'),
+            *[pl.col(f'elapsed_time_level_diff_{n}').apply(lambda s: s if s < 0 else 0, return_dtype=pl.Int64).alias(f'elapsed_fime_level_diff_fixed_{n}') for n in [i for i in LEVELS if i not in [4,13,22]]],
+            pl.col('elapsed_time_diff_max0-3_min4').apply(lambda s: s if s > 0 else 0, return_dtype=pl.Int64).alias('elapsed_time_diff_fixed_max0_3_min4'),
+            pl.col('elapsed_time_diff_max5-11_min12').apply(lambda s: s if s > 0 else 0, return_dtype=pl.Int64).alias('elapsed_time_diff_fixed_max5-11_min12'),
+            pl.col('elapsed_time_diff_max13-21_min22').apply(lambda s: s if s > 0 else 0, return_dtype=pl.Int64).alias('elapsed_time_diff_fixed_max13-21_min22'),
         ).drop(
             *[f'elapsed_time_level_diff_{l}' for l in [i for i in range(22) if i not in [4,13,22]]],
             'elapsed_time_diff_max0-3_min4',
@@ -180,7 +159,6 @@ def feature_engineer_pl(x, grp,
 
         # 閾値に合わせて分割
         df_train_above = x.filter(pl.col('elapsed_time')>pl.col('max_threshold'))
-        x = x.filter(~(pl.col('elapsed_time')>pl.col('max_threshold')))
 
         # 閾値を超えるカラムの情報
         feature_suffix2 = feature_suffix+'_above'
@@ -355,6 +333,26 @@ def feature_engineer_pl(x, grp,
     # 特徴量を更に追加する
     if version>=2:
 
+        #　fqid, level, roomと、text, levelで、ある程度レコードが存在する組み合わせをみつける
+        if not use_csv:
+            session_cnt = x.select('session_id').n_unique()
+            low = int(session_cnt * thre) 
+            
+            flr_list = x.select('fqid', 'level', 'room_fqid', 'session_id').groupby('fqid', 'level', 'room_fqid').n_unique().filter(pl.col('session_id')>=low).drop('session_id')
+            single_fqid = flr_list.groupby('fqid').count().rename({'count': 'fqid_count'}).filter(pl.col('fqid_count')==1).get_column('fqid').to_list()
+            flr_list = flr_list.filter(~pl.col('fqid').is_in(single_fqid))
+            flr_cs = flr_list.get_columns()
+            
+            tl_list = x.select('text_fqid', 'level', 'session_id').groupby('text_fqid', 'level').n_unique().filter(pl.col('session_id')>=low).drop('session_id')
+            single_text = tl_list.groupby('text_fqid').count().rename({'count': 'text_count'}).filter(pl.col('text_count')==1).get_column('text_fqid').to_list()
+            tl_list = tl_list.filter(~pl.col('text_fqid').is_in(single_text))
+            tl_cs = tl_list.get_columns()
+        
+        # submissionの場合はこちら
+        else:
+            flr_cs = flr_list.get_columns()
+            tl_cs = tl_list.get_columns()
+
         # 集計統計量の追加
         aggs = [
             
@@ -384,8 +382,37 @@ def feature_engineer_pl(x, grp,
     
     if level_diff:
         df = df.join(df_level_diff_summary, on='session_id', how='left')
-    if cut_above:
+    if cut_above and grp != '13-22':
         df = df.join(df_train_above_summary, on='session_id', how='left')
+    
+    if room_click:
+        df_navigate = x.filter((pl.col('event_name')=='navigate_click')&(pl.col('fqid')=='fqid_None'))
+        df_navigate = df_navigate.with_columns([
+            (pl.col('room_coor_x') // 200).alias('room_x'),
+            (pl.col('room_coor_y') // 200).alias('room_y')
+        ])
+
+        if not use_csv:
+            df_navigate_grp = df_navigate.filter(pl.col('level_group')==grp) 
+            df_navigate_summary = df_navigate_grp.select('room_fqid', 'room_x', 'room_y', 'session_id').groupby('room_fqid', 'room_x', 'room_y').n_unique()
+            df_navigate_category = df_navigate_summary.with_columns([
+                pl.when(pl.col('session_id')<=400).then(pl.lit(1))
+                .when(pl.col('session_id')<=1500).then(pl.lit(2))
+                .when(pl.col('session_id')<=4000).then(pl.lit(3))
+                .when(pl.col('session_id')>=10000).then(pl.lit(5))
+                .otherwise(pl.lit(4)).alias('room_xy_category'),
+                pl.lit(grp).alias('level_group')
+            ])
+            df_navigate_master = df_navigate_category.drop('session_id')
+            
+        
+        df_navigate_joined = df_navigate.join(df_navigate_master, on=['room_fqid', 'room_x', 'room_y', 'level_group'], how='left')
+        df_navigate_joined = df_navigate_joined.fill_null(1)
+        df_tmp = df_navigate_joined.groupby('session_id').agg([
+            *[pl.col('index').filter((pl.col('room_xy_category')==i)&(pl.col('room_fqid')==r)).count().alias(f"navigate_index_count{r}_{i}_{feature_suffix}") for r in room_lists for i in range(1, 6)]
+        ])
+
+        df = df.join(df_tmp, on='session_id', how='left')
         
     return df
 
@@ -416,3 +443,16 @@ def add_columns_session(df, id=6):
     df = df.with_columns(*time_columns)
   
     return df
+
+
+def load_master(file_path='/kaggle/input/student-performance-models'):
+
+    df_navigate_master = pl.read_csv(f'{file_path}/df_navigate_master.csv')
+    flr_list = pl.read_csv(f'{file_path}/flr_list.csv')
+    flr_cs = flr_list.get_columns()
+
+    tl_list = pl.read_csv(f'{file_path}/tl_list.csv')
+    tl_cs = tl_list.get_columns()
+
+    return df_navigate_master, flr_list, tl_list
+

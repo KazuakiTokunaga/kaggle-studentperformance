@@ -226,8 +226,19 @@ class Runner():
             self.base_oof = pd.read_csv(f'{self.input_path}/{self.file_name}.csv', index_col='session_id')
             self.base_oof.columns = [int(i) for i in self.oof.columns]
 
+            self.oof = pd.read_csv(f'{self.input_path}/{self.file_name}.csv', index_col='session_id')
+            self.oof.columns = [int(i) for i in self.oof.columns]
 
-    def get_trained_clf(self, t, train_x, train_y, valid_x=None, valid_y=None, adhoc_params=None, print_model_info=False):
+
+    def get_trained_clf(self, 
+            t, 
+            train_x, 
+            train_y, 
+            valid_x=None, 
+            valid_y=None, 
+            adhoc_params=None, 
+            print_model_info=False
+        ):
             
         validation = valid_x is not None
         ntree = None
@@ -346,7 +357,7 @@ class Runner():
         return clf, ntree
 
 
-    def run_base_validation(self, 
+    def run_validation_first(self, 
             save_oof=True, 
             adhoc_params=None,
             save_fold_models=True,
@@ -423,7 +434,7 @@ class Runner():
         logger.info('Done first stage.')
 
 
-    def run_validation(self, 
+    def run_validation_second(self, 
             save_oof=True, 
             adhoc_params=None,
             save_fold_models=True,
@@ -549,7 +560,7 @@ class Runner():
             self.scores.append(m)
 
 
-    def train_all_clf_base(self, save_model=True):
+    def train_all_clf_first(self, save_model=True):
         logger.info(f'Train clf base using all train data.')
 
         # ITERATE THRU QUESTIONS 1 THRU 18
@@ -578,7 +589,7 @@ class Runner():
         logger.info(f'Saved trained model.')
 
 
-    def train_all_clf(self, save_model=True):
+    def train_all_clf_second(self, save_model=True):
         logger.info(f'Train clf using all train data with other questions.')
 
         # ITERATE THRU QUESTIONS 1 THRU 18
@@ -604,7 +615,7 @@ class Runner():
                 
             # TRAIN DATA
             train_x = df
-            prev_answers = self.oof[self.ALL_USERS, target_prev].copy()
+            prev_answers = self.oof.loc[self.ALL_USERS, target_prev].copy()
             train_x = train_x.merge(prev_answers, left_index=True, right_index=True, how='left')
             
             train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[self.ALL_USERS]

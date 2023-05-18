@@ -506,7 +506,7 @@ class Runner():
             self.note['best_base_ntrees'] = list(self.best_base_ntrees)
 
         if save_oof:
-            logger.info('Export oof_predict_proba.')
+            logger.info('Export oof_base_redict_proba.')
             self.base_oof.to_csv('oof_base_predict_proba.csv')
         
         if save_fold_models:

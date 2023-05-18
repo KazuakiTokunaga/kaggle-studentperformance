@@ -605,7 +605,7 @@ class Runner():
                 
             # TRAIN DATA
             train_x = df
-            prev_answers = self.oof[[target_prev].copy()
+            prev_answers = self.oof[self.ALL_USERS, target_prev].copy()
             train_x = train_x.merge(prev_answers, left_index=True, right_index=True, how='left')
             
             train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[self.ALL_USERS]

@@ -251,7 +251,7 @@ class Runner():
         model_kind = self.model_options.get('model')
 
         if self.model_options.get('second_param_file') and second:
-            param_file = self.model_option.get('second_param_file'):
+            param_file = self.model_option.get('second_param_file')
         else:
             param_file = self.model_options.get('param_file')
 

@@ -57,6 +57,8 @@ class Runner():
             'param_file': 'params_xgb001_test.json',
             'each_params': False,
             'each_folder_name': None, 
+            'best_base_ntrees': [],
+            'best_ntrees': [],
             'random': True,
             'random_state': 42
         }):
@@ -73,7 +75,8 @@ class Runner():
             'models': {},
             'optimal_threshold': 0.620
         }
-        self.best_ntrees = None
+        self.best_ntrees = model_options.get('best_ntrees')
+        self.best_base_ntrees = model_options.get('best_base_ntrees')
         self.note = dict()
         self.fold_models_base = dict()
         self.fold_models = dict()
@@ -278,7 +281,7 @@ class Runner():
             model_params['random_state'] = self.model_options.get('random_state')
 
         # validation時にbest_iterationを保存している場合はそちらを優先する
-        if self.best_ntrees is not None:
+        if len(self.best_ntrees) > 0:
             n = self.best_base_ntrees[t-1] if first else self.best_ntrees[t-1]
             logger.info(f'Q{t}: n_estimators {n}')
             model_params['n_estimators'] = n
@@ -425,9 +428,10 @@ class Runner():
 
         if best_ntrees_mat[0, 0] > 1:
             logger.info('Save best iterations.')
-            self.best_ntrees = pd.Series(best_ntrees_mat.mean(axis=0).astype('int'))
-            self.best_ntrees.to_csv('best_num_trees.csv')
-            self.note['best_ntrees'] = list(self.best_ntrees)
+            best_ntrees = pd.Series(best_ntrees_mat.mean(axis=0).astype('int'))
+            best_ntrees.to_csv('best_num_trees.csv')
+            self.best_ntrees = list(best_ntrees)
+            self.note['best_ntrees'] = self.best_ntrees
             
 
         if save_oof:
@@ -501,9 +505,10 @@ class Runner():
 
         if best_base_ntrees_mat[0, 0] > 1:
             logger.info('Save best base iterations.')
-            self.best_base_ntrees = pd.Series(best_base_ntrees_mat.mean(axis=0).astype('int'))
-            self.best_base_ntrees.to_csv('best_num_base_trees.csv')
-            self.note['best_base_ntrees'] = list(self.best_base_ntrees)
+            best_base_ntrees = pd.Series(best_base_ntrees_mat.mean(axis=0).astype('int'))
+            best_base_ntrees.to_csv('best_num_base_trees.csv')
+            self.best_base_ntrees = list(best_base_ntrees)
+            self.note['best_base_ntrees'] = self.best_base_ntrees
 
         if save_oof:
             logger.info('Export oof_base_redict_proba.')

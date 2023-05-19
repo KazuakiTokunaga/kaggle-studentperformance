@@ -227,7 +227,7 @@ class Runner():
             logger.info(f'Load oof from csv.: {self.file_name}')
             
             self.base_oof = pd.read_csv(f'{self.input_path}/{self.file_name}.csv', index_col='session_id')
-            self.base_oof.columns = [int(i) for i in self.oof.columns]
+            self.base_oof.columns = [int(i) for i in self.base_oof.columns]
 
             self.oof = pd.read_csv(f'{self.input_path}/{self.file_name}.csv', index_col='session_id')
             self.oof.columns = [int(i) for i in self.oof.columns]

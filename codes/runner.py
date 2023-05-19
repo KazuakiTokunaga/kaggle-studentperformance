@@ -59,6 +59,7 @@ class Runner():
             'each_folder_name': None, 
             'best_base_ntrees': [],
             'best_ntrees': [],
+            'second_param_file': '',
             'random': True,
             'random_state': 42
         }):
@@ -241,13 +242,18 @@ class Runner():
             valid_y=None, 
             adhoc_params=None, 
             print_model_info=False,
-            first = False
+            use_best_base_tree = False,
+            second = False
         ):
             
         validation = valid_x is not None
         ntree = None
         model_kind = self.model_options.get('model')
-        param_file = self.model_options.get('param_file')
+
+        if self.model_options.get('second_param_file') and second:
+            param_file = self.model_option.get('second_param_file'):
+        else:
+            param_file = self.model_options.get('param_file')
 
         with open(f'{self.repo_path}/config/{param_file}') as f:
             params = json.load(f)
@@ -578,7 +584,7 @@ class Runner():
                 valid_x = valid_x.merge(prev_answers, left_index=True, right_index=True, how='left')
                 valid_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[valid_users]
 
-                clf, ntree = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params, print_model_info=print_model_info)
+                clf, ntree = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params, print_model_info=print_model_info, second=True)
                 best_ntrees_mat[k, t-1] = ntree
                 
                 self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x)[:,1]
@@ -703,7 +709,7 @@ class Runner():
             # TRAIN DATA
             train_x = df
             train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[self.ALL_USERS]
-            clf, ntree = self.get_trained_clf(t, train_x, train_y, print_model_info=True, first=True)
+            clf, ntree = self.get_trained_clf(t, train_x, train_y, print_model_info=True, use_best_base_tree=True)
 
             # SAVE MODEL.
             self.models['models'][f'{grp}_{t}_first'] = clf
@@ -741,7 +747,7 @@ class Runner():
             train_x = train_x.merge(prev_answers, left_index=True, right_index=True, how='left')
             
             train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[self.ALL_USERS]
-            clf, ntree = self.get_trained_clf(t, train_x, train_y, print_model_info=True)
+            clf, ntree = self.get_trained_clf(t, train_x, train_y, print_model_info=True, second=True)
 
             # SAVE MODEL.
             self.models['models'][f'{grp}_{t}'] = clf

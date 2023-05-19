@@ -1,0 +1,12 @@
+{
+    "base": {
+        "objective": "binary",
+        "learning_rate": 0.02,
+        "max_depth": 8,
+        "reg_alpha": 10,
+        "subsample": 0.8,
+        "colsample_bytree": 0.5,
+        "early_stopping_rounds": 90
+    },
+    "n_estimators": [1000]
+}

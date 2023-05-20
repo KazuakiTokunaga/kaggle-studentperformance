@@ -60,6 +60,7 @@ class Runner():
             'best_base_ntrees': [],
             'best_ntrees': [],
             'second_param_file': '',
+            'exclude_self': True,
             'random': True,
             'random_state': 42
         }):
@@ -251,7 +252,7 @@ class Runner():
         model_kind = self.model_options.get('model')
 
         if self.model_options.get('second_param_file') and second:
-            param_file = self.model_option.get('second_param_file')
+            param_file = self.model_options.get('second_param_file')
         else:
             param_file = self.model_options.get('param_file')
 
@@ -566,7 +567,9 @@ class Runner():
                     df = self.df3
                     target_prev = [i for i in range(18)]
 
-                target_prev.pop(t-1) # 自分自身を除外
+                if self.model_options.get('exclude_self'):
+                    target_prev.pop(t-1) # 自分自身を除外
+
                 if k==0:
                     logger.info(f'Join other answers : {target_prev}')
 
@@ -738,7 +741,8 @@ class Runner():
                 df = self.df3
                 target_prev = [i for i in range(18)]
 
-            target_prev.pop(t-1) # 自分自身を除外
+            if self.model_options.get('exclude_self'):
+                target_prev.pop(t-1) # 自分自身を除外
             logger.info(f'Join other answers : {target_prev}')
                 
             # TRAIN DATA

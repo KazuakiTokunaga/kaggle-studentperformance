@@ -6,7 +6,7 @@
         "reg_alpha": 10,
         "subsample": 0.8,
         "colsample_bytree": 0.5,
-        "early_stopping_rounds": 90
+        "early_stopping_rounds": 120
     },
-    "n_estimators": [1000]
+    "n_estimators": [1500]
 }

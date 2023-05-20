@@ -288,7 +288,7 @@ class Runner():
 
         # validation時にbest_iterationを保存している場合はそちらを優先する
         if len(self.best_ntrees) > 0:
-            n = self.best_base_ntrees[t-1] if first else self.best_ntrees[t-1]
+            n = self.best_base_ntrees[t-1] if use_best_base_tree else self.best_ntrees[t-1]
             logger.info(f'Q{t}: n_estimators {n}')
             model_params['n_estimators'] = n
 

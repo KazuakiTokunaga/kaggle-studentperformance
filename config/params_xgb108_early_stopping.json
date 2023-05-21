@@ -7,7 +7,7 @@
         "learning_rate": 0.02,
         "max_depth": 3,
         "min_child_weight": 0.5,
-        "alpha": 2,
+        "alpha": 8,
         "subsample":0.7,
         "colsample_bytree": 0.7,
         "random_state": 42,

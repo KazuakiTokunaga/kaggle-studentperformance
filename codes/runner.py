@@ -100,7 +100,7 @@ class Runner():
         gc.collect()
     
 
-    def engineer_features(self, return_pd=True, fillna=True):
+    def engineer_features(self, return_pd=True, fillna=True, save_model_params=False):
         logger.info('Start engineer features.')
 
         self.thre = self.feature_options.get('thre')
@@ -207,11 +207,11 @@ class Runner():
         self.note['df2_shape'] = self.df2.shape
         self.note['df3_shape'] = self.df3.shape
 
-        # save model params
-        param_file = self.model_options.get('param_file')
-        with open(f'{self.repo_path}/config/{param_file}') as f:
-            params = json.load(f)
-        self.note['model_params'] = params
+        if save_model_params:
+            param_file = self.model_options.get('param_file')
+            with open(f'{self.repo_path}/config/{param_file}') as f:
+                params = json.load(f)
+            self.note['model_params'] = params
 
         if return_pd:
             if type(self.df1) == pl.DataFrame:

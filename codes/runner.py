@@ -87,6 +87,11 @@ class Runner():
         self.n_fold = validation_options.get('n_fold')
         self.questions = validation_options.get('questions')
 
+        param_file = self.model_options.get('param_file')
+        with open(f'{self.repo_path}/config/{param_file}') as f:
+            params = json.load(f)
+        self.note['model_params'] = params        
+
 
     def load_dataset(self, ):
         dataloader = loader.DataLoader(input_path=self.input_path, options=self.load_options)

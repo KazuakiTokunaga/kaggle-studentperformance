@@ -85,12 +85,7 @@ class Runner():
         
         self.validation_options = validation_options
         self.n_fold = validation_options.get('n_fold')
-        self.questions = validation_options.get('questions')
-
-        param_file = self.model_options.get('param_file')
-        with open(f'{self.repo_path}/config/{param_file}') as f:
-            params = json.load(f)
-        self.note['model_params'] = params        
+        self.questions = validation_options.get('questions')      
 
 
     def load_dataset(self, ):
@@ -211,7 +206,12 @@ class Runner():
         self.note['df1_shape'] = self.df1.shape
         self.note['df2_shape'] = self.df2.shape
         self.note['df3_shape'] = self.df3.shape
-        self.note['feature'] = {}
+
+        # save model params
+        param_file = self.model_options.get('param_file')
+        with open(f'{self.repo_path}/config/{param_file}') as f:
+            params = json.load(f)
+        self.note['model_params'] = params
 
         if return_pd:
             if type(self.df1) == pl.DataFrame:

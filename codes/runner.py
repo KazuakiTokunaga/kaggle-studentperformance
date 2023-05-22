@@ -699,7 +699,7 @@ class Runner():
 
             # SAVE MODEL.
             if self.model_kind == 'xgb':
-                save_xgb_config(self, clf, t):
+                save_xgb_config(self, clf, t)
 
             self.models['models'][f'{grp}_{t}'] = self.get_xgb_config(clf)
 

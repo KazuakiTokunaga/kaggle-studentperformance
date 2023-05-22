@@ -92,7 +92,7 @@ class Runner():
 
     def load_dataset(self, ):
         
-        dataloader = loader.DataLoader(input_path=self.input_path, logger=self.log_path, options=self.load_options)
+        dataloader = loader.DataLoader(input_path=self.input_path, log_path=self.log_path, options=self.load_options)
         self.df_train, self.df_test, self.df_labels, self.df_submission = dataloader.load()
 
 

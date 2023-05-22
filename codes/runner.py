@@ -695,7 +695,7 @@ class Runner():
             if self.model_kind == 'xgb':
                 clf.save_model(f'{self.output_path}xgb_q{t}.json')
 
-            self.models['models'][f'{grp}_{t}'] = self.get_xgb_config(clf)
+            self.models['models'][f'{grp}_{t}'] = clf
 
         self.logger.info(f'Saved trained model.')
 

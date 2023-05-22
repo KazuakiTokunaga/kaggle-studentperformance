@@ -776,7 +776,9 @@ class Runner():
 
         data.append(self.note)
 
-        google_sheet = utils.WriteSheet()
+        google_sheet = utils.WriteSheet(
+            json_key = f'{self.input_path}/ktokunaga-4094cf694f5c.json'
+        )
         google_sheet.write(data, sheet_name='cv_scores')
 
 

@@ -80,6 +80,7 @@ class Runner():
             'models': {},
             'optimal_threshold': 0.620
         }
+        self.model_kind = self.model_options.get('model')
         self.best_ntrees = model_options.get('best_ntrees')
         self.best_base_ntrees = model_options.get('best_base_ntrees')
         self.note = dict()
@@ -375,6 +376,16 @@ class Runner():
                 raise Exception('Wrong Model kind.')
 
         return clf, ntree
+
+
+    def get_xgb_config(self, clf):
+
+        clf.save_model('tmp.json')
+        with open('tmp.json') as f:
+            model_config = json.load(f)
+
+        return model_config
+
 
 
     def run_validation(self, 
@@ -692,7 +703,10 @@ class Runner():
             clf, ntree = self.get_trained_clf(t, train_x, train_y, print_model_info=True)
 
             # SAVE MODEL.
-            self.models['models'][f'{grp}_{t}'] = clf
+            if self.model_kind != 'xgb':
+                self.models['models'][f'{grp}_{t}'] = clf
+            else:
+                self.models['models'][f'{grp}_{t}'] = self.get_xgb_config(clf)
 
         self.logger.info(f'Saved trained model.')
 

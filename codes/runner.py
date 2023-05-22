@@ -377,12 +377,6 @@ class Runner():
 
         return clf, ntree
 
-
-    def save_xgb_config(self, clf, t):
-
-        clf.save_model(f'{self.output_path}xgb_q{t}.json')
-
-
     def run_validation(self, 
             save_oof=True, 
             adhoc_params=None,
@@ -699,7 +693,7 @@ class Runner():
 
             # SAVE MODEL.
             if self.model_kind == 'xgb':
-                save_xgb_config(self, clf, t)
+                clf.save_model(f'{self.output_path}xgb_q{t}.json')
 
             self.models['models'][f'{grp}_{t}'] = self.get_xgb_config(clf)
 

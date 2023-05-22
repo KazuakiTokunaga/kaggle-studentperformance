@@ -5,7 +5,7 @@ import logging
 
 from codes import utils, preprocess
 
-logger = utils.Logger()
+logger = utils.Logger("/kaggle/test20230522")
 
 class DataLoader():
 

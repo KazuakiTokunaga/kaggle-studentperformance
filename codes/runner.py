@@ -9,7 +9,7 @@ import pickle
 
 import xgboost as xgb
 import lightgbm as lgb
-from catboost import CatBoostClassifier, Pool
+# from catboost import CatBoostClassifier, Pool
 from sklearn.model_selection import KFold, GroupKFold
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import f1_score

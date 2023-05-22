@@ -16,8 +16,6 @@ from sklearn.metrics import f1_score
 
 from codes import utils, loader, preprocess
 
-logger = utils.Logger("/kaggle/test20230522")
-
 
 class Runner():
 
@@ -26,6 +24,7 @@ class Runner():
         repo_commit_hash = None,
         input_path='/kaggle/input/student-performance-my',
         repo_path='/kaggle/working/kaggle_studentperformance',
+        output_path='',
         load_options={
             'sampling': 1000,
             'split_labels': True,
@@ -65,6 +64,7 @@ class Runner():
             'random_state': 42
         }):
 
+        self.logger = utils.Logger(output_path)
         self.run_fold_name = run_fold_name
         self.repo_commit_hash = repo_commit_hash
         self.input_path = input_path
@@ -89,41 +89,42 @@ class Runner():
 
 
     def load_dataset(self, ):
-        dataloader = loader.DataLoader(input_path=self.input_path, options=self.load_options)
+        
+        dataloader = loader.DataLoader(input_path=self.input_path, logger=self.logger, options=self.load_options)
         self.df_train, self.df_test, self.df_labels, self.df_submission = dataloader.load()
 
 
     def delete_df_train(self, ):
-        logger.info('Delete df_train and run a full collection.')
+        self.logger.info('Delete df_train and run a full collection.')
 
         del self.df_train
         gc.collect()
     
 
     def engineer_features(self, return_pd=True, fillna=True, save_model_params=False):
-        logger.info('Start engineer features.')
+        self.logger.info('Start engineer features.')
 
         self.thre = self.feature_options.get('thre')
-        logger.info(f'Threshold of null values: {self.thre}')
+        self.logger.info(f'Threshold of null values: {self.thre}')
 
         self.add_random = self.feature_options.get('add_random')
         if self.add_random:
-            logger.info('Add random features.')
+            self.logger.info('Add random features.')
 
         self.select = self.feature_options.get('select')
         self.exclude_suffix = self.feature_options.get('exclude_suffix')
         if self.select:
-            logger.info(f'Select Features with suffix {self.exclude_suffix}.')
+            self.logger.info(f'Select Features with suffix {self.exclude_suffix}.')
         self.merge_features = self.feature_options.get('merge')
         if self.merge_features:
-            logger.info('Execute merge_features.')
+            self.logger.info('Execute merge_features.')
         self.time_id = self.feature_options.get('time_id')
         if self.feature_options.get('level_diff'):
-            logger.info('Add features based on elapsed_time level_diff.')
+            self.logger.info('Add features based on elapsed_time level_diff.')
         if self.feature_options.get('cut_above'):
-            logger.info('Extract big elapsed_time data to create additional features.')
+            self.logger.info('Extract big elapsed_time data to create additional features.')
         if self.feature_options.get('room_click'):
-            logger.info('Add features based on navigate_click in each room.')
+            self.logger.info('Add features based on navigate_click in each room.')
 
         self.df_train = preprocess.add_columns(self.df_train)
 
@@ -157,7 +158,7 @@ class Runner():
             self.df1 = preprocess.add_random_feature(self.df1)
 
         self.models['features'][grp] = self.df1.columns
-        logger.info(f'df1 done: {self.df1.shape}')
+        self.logger.info(f'df1 done: {self.df1.shape}')
         
 
         grp = '5-12'
@@ -178,7 +179,7 @@ class Runner():
                 self.df2 = preprocess.add_random_feature(self.df2)
 
         self.models['features'][grp] = self.df2.columns
-        logger.info(f'df2 done: {self.df2.shape}')
+        self.logger.info(f'df2 done: {self.df2.shape}')
 
         grp = '13-22'
         self.df3 = preprocess.feature_engineer_pl(df3_raw, grp=grp, feature_suffix='grp13-22', **params)
@@ -198,7 +199,7 @@ class Runner():
                 self.df3 = preprocess.add_random_feature(self.df3)
 
         self.models['features'][grp] = self.df3.columns
-        logger.info(f'df3 done: {self.df3.shape}')
+        self.logger.info(f'df3 done: {self.df3.shape}')
 
         del df1_raw, df2_raw, df3_raw
         gc.collect()
@@ -215,7 +216,7 @@ class Runner():
 
         if return_pd:
             if type(self.df1) == pl.DataFrame:
-                logger.info('Convert polars df to pandas df.')
+                self.logger.info('Convert polars df to pandas df.')
                 self.df1 = utils.pl_to_pd(self.df1)
                 self.df2 = utils.pl_to_pd(self.df2)
                 self.df3 = utils.pl_to_pd(self.df3)
@@ -223,7 +224,7 @@ class Runner():
             self.ALL_USERS = self.df1.index.unique()
         
             if fillna:
-                logger.info('Execute fillna with -1 to pandas df.')
+                self.logger.info('Execute fillna with -1 to pandas df.')
                 self.df1 = self.df1.fillna(-1)
                 self.df2 = self.df2.fillna(-1)
                 self.df3 = self.df3.fillna(-1)
@@ -231,7 +232,7 @@ class Runner():
 
         if self.feature_options.get('load_oof'):
             self.file_name = self.feature_options.get('oof_file_name')
-            logger.info(f'Load oof from csv.: {self.file_name}')
+            self.logger.info(f'Load oof from csv.: {self.file_name}')
             
             self.base_oof = pd.read_csv(f'{self.input_path}/{self.file_name}.csv', index_col='session_id')
             self.base_oof.columns = [int(i) for i in self.base_oof.columns]
@@ -274,7 +275,7 @@ class Runner():
             if os.path.isfile(filepath):
 
                 if print_model_info:
-                    logger.info('Use customized paramter for this question.')
+                    self.logger.info('Use customized paramter for this question.')
 
                 with open(filepath) as f:
                     params = json.load(f)
@@ -295,7 +296,7 @@ class Runner():
         # validation時にbest_iterationを保存している場合はそちらを優先する
         if len(self.best_ntrees) > 0:
             n = self.best_base_ntrees[t-1] if use_best_base_tree else self.best_ntrees[t-1]
-            logger.info(f'Q{t}: n_estimators {n}')
+            self.logger.info(f'Q{t}: n_estimators {n}')
             model_params['n_estimators'] = n
 
         if adhoc_params:
@@ -303,12 +304,12 @@ class Runner():
                 model_params[key] = value
 
         if print_model_info:
-            logger.info(f'Use {model_kind} with params {model_params}.')
+            self.logger.info(f'Use {model_kind} with params {model_params}.')
 
         # early_stoppingを用いる場合
         if validation and model_params.get('early_stopping_rounds'):
             if print_model_info:
-                logger.info(f'Use early_stopping_rounds.')
+                self.logger.info(f'Use early_stopping_rounds.')
 
             eval_set = [(valid_x, valid_y['correct'])]
             
@@ -381,7 +382,7 @@ class Runner():
         ):
 
         user_cnt = len(self.ALL_USERS)
-        logger.info(f'We will train with {user_cnt} users info')
+        self.logger.info(f'We will train with {user_cnt} users info')
 
         arr = [0.728, 0.978, 0.933, 0.8, 0.548, 0.776, 0.736, 0.612, 0.734, 0.505, 0.642, 0.86 , 0.275, 0.707, 0.481, 0.733, 0.684, 0.95]
         if not self.feature_options.get('load_oof'):
@@ -389,7 +390,7 @@ class Runner():
         best_ntrees_mat = np.zeros([self.n_fold, 18])
 
         random_state_validation = self.validation_options.get('random_state')
-        logger.info(f'Start validation with {self.n_fold} folds, random_state {random_state_validation}.')
+        self.logger.info(f'Start validation with {self.n_fold} folds, random_state {random_state_validation}.')
         kf = KFold(n_splits=self.n_fold, shuffle=True, random_state = random_state_validation)
         kf_split_list = list(kf.split(X=self.df1))
 
@@ -403,7 +404,7 @@ class Runner():
                 print_model_info = False if k else True
 
                 if k==0 or (t <= 2 and k <= 2):
-                    logger.info(f'Question {t}, Fold {k}.')
+                    self.logger.info(f'Question {t}, Fold {k}.')
                 
                 if t<=3: 
                     grp = '0-4'
@@ -439,7 +440,7 @@ class Runner():
                     self.fold_models[f'q{t}_fold{k}'] = clf
 
         if best_ntrees_mat[0, 0] > 1:
-            logger.info('Save best iterations.')
+            self.logger.info('Save best iterations.')
             best_ntrees = pd.Series(best_ntrees_mat.mean(axis=0).astype('int'))
             best_ntrees.to_csv('best_num_trees.csv')
             self.best_ntrees = list(best_ntrees)
@@ -447,7 +448,7 @@ class Runner():
             
 
         if save_oof:
-            logger.info('Export oof_predict_proba.')
+            self.logger.info('Export oof_predict_proba.')
             self.oof.to_csv('oof_predict_proba.csv')
         
         if save_fold_models:
@@ -462,7 +463,7 @@ class Runner():
         ):
 
         user_cnt = len(self.ALL_USERS)
-        logger.info(f'We will train with {user_cnt} users info: First Stage.')
+        self.logger.info(f'We will train with {user_cnt} users info: First Stage.')
 
         arr = [0.728, 0.978, 0.933, 0.8, 0.548, 0.776, 0.736, 0.612, 0.734, 0.505, 0.642, 0.86 , 0.275, 0.707, 0.481, 0.733, 0.684, 0.95]
         self.base_oof = pd.DataFrame(data=np.multiply(np.ones((len(self.ALL_USERS), 1)), arr), index=self.ALL_USERS) # Question t はカラム t-1 に対応する
@@ -471,7 +472,7 @@ class Runner():
         best_ntrees_mat = np.zeros([self.n_fold, 18])
 
         random_state_validation = self.validation_options.get('random_state')
-        logger.info(f'Start validation with {self.n_fold} folds, random_state {random_state_validation}.')
+        self.logger.info(f'Start validation with {self.n_fold} folds, random_state {random_state_validation}.')
         kf = KFold(n_splits=self.n_fold, shuffle=True, random_state = random_state_validation)
         kf_split_list = list(kf.split(X=self.df1))
 
@@ -485,7 +486,7 @@ class Runner():
                 print_model_info = False if k else True
 
                 if k==0 or (t <= 2 and k <= 2):
-                    logger.info(f'Question {t}, Fold {k}.')
+                    self.logger.info(f'Question {t}, Fold {k}.')
                 
                 if t<=3: 
                     grp = '0-4'
@@ -516,20 +517,20 @@ class Runner():
                     self.fold_models_base[f'q{t}_fold{k}_base'] = clf
 
         if best_base_ntrees_mat[0, 0] > 1:
-            logger.info('Save best base iterations.')
+            self.logger.info('Save best base iterations.')
             best_base_ntrees = pd.Series(best_base_ntrees_mat.mean(axis=0).astype('int'))
             best_base_ntrees.to_csv('best_num_base_trees.csv')
             self.best_base_ntrees = list(best_base_ntrees)
             self.note['best_base_ntrees'] = self.best_base_ntrees
 
         if save_oof:
-            logger.info('Export oof_base_redict_proba.')
+            self.logger.info('Export oof_base_redict_proba.')
             self.base_oof.to_csv('oof_base_predict_proba.csv')
         
         if save_fold_models:
             pickle.dump(self.fold_models_base, open(f'fold_models_base.pkl', 'wb'))
 
-        logger.info('Done first stage.')
+        self.logger.info('Done first stage.')
 
 
     def run_validation_second(self, 
@@ -540,14 +541,14 @@ class Runner():
         ):
 
         user_cnt = len(self.ALL_USERS)
-        logger.info(f'We will train with {user_cnt} users info.')
+        self.logger.info(f'We will train with {user_cnt} users info.')
 
         arr = [0.728, 0.978, 0.933, 0.8, 0.548, 0.776, 0.736, 0.612, 0.734, 0.505, 0.642, 0.86 , 0.275, 0.707, 0.481, 0.733, 0.684, 0.95]
         self.oof = pd.DataFrame(data=np.multiply(np.ones((len(self.ALL_USERS), 1)), arr), index=self.ALL_USERS) # Question t はカラム t-1 に対応する
         best_ntrees_mat = np.zeros([self.n_fold, 18])
 
         random_state_validation = self.validation_options.get('random_state')
-        logger.info(f'Start validation with {self.n_fold} folds, random_state {random_state_validation}.')
+        self.logger.info(f'Start validation with {self.n_fold} folds, random_state {random_state_validation}.')
         kf = KFold(n_splits=self.n_fold, shuffle=True, random_state = random_state_validation)
         kf_split_list = list(kf.split(X=self.df1))
 
@@ -557,7 +558,7 @@ class Runner():
                 print_model_info = False if k else True
 
                 if k==0 or (t <= 2 and k <= 2):
-                    logger.info(f'Question {t}, Fold {k}.')
+                    self.logger.info(f'Question {t}, Fold {k}.')
                 
                 if t<=3: 
                     grp = '0-4'
@@ -576,7 +577,7 @@ class Runner():
                     target_prev.pop(t-1) # 自分自身を除外
 
                 if k==0:
-                    logger.info(f'Join other answers : {target_prev}')
+                    self.logger.info(f'Join other answers : {target_prev}')
 
                 # TRAIN DATA
                 train_x = df.iloc[train_index]
@@ -601,13 +602,13 @@ class Runner():
                     self.fold_models[f'q{t}_fold{k}'] = clf
 
         if best_ntrees_mat[0, 0] > 1:
-            logger.info('Save best iterations.')
+            self.logger.info('Save best iterations.')
             self.best_ntrees = pd.Series(best_ntrees_mat.mean(axis=0).astype('int'))
             self.best_ntrees.to_csv('best_num_trees.csv')
             self.note['best_ntrees'] = list(self.best_ntrees)
             
         if save_oof:
-            logger.info('Export oof_predict_proba.')
+            self.logger.info('Export oof_predict_proba.')
             self.oof.to_csv('oof_predict_proba.csv')
         
         if save_fold_models:
@@ -615,7 +616,7 @@ class Runner():
 
 
     def evaluate_validation(self, ):
-        logger.info('Start evaluating validations.')
+        self.logger.info('Start evaluating validations.')
 
         # PUT TRUE LABELS INTO DATAFRAME WITH 18 COLUMNS
         true = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ALL_USERS)
@@ -633,7 +634,7 @@ class Runner():
         scores = []; thresholds = []
         best_score = 0; best_threshold = 0
 
-        logger.info('Search optimal threshold.')
+        self.logger.info('Search optimal threshold.')
         for threshold in np.arange(0.60,0.65,0.001):
             preds = (oof_target.values.reshape((-1))>threshold).astype('int')
             m = f1_score(true.values.reshape((-1)), preds, average='macro')   
@@ -645,27 +646,27 @@ class Runner():
 
         self.models['optimal_threshold'] = np.round(best_threshold, 6)
         self.note['best_threshold'] = best_threshold
-        logger.info(f'optimal threshold: {best_threshold}')
+        self.logger.info(f'optimal threshold: {best_threshold}')
         
-        logger.info('When using optimal threshold...')
+        self.logger.info('When using optimal threshold...')
         self.scores = []
         
         m = f1_score(true.values.reshape((-1)), (oof_target.values.reshape((-1))>best_threshold).astype('int'), average='macro')
-        logger.info(f'Overall F1 = {m}')
+        self.logger.info(f'Overall F1 = {m}')
         self.scores.append(m)
 
         for k in question_idx:
             m = f1_score(true[k].values, (oof_target[k].values>best_threshold).astype('int'), average='macro')
-            logger.info(f'Q{k}: F1 = {m}')
+            self.logger.info(f'Q{k}: F1 = {m}')
             self.scores.append(m)
 
 
     def train_all_clf(self, save_model=True):
-        logger.info(f'Train clf using all train data.')
+        self.logger.info(f'Train clf using all train data.')
 
         # ITERATE THRU QUESTIONS 1 THRU 18
         for t in self.questions:
-            logger.info(f'Question {t}.')
+            self.logger.info(f'Question {t}.')
             
             # USE THIS TRAIN DATA WITH THESE QUESTIONS
             if t<=3: 
@@ -690,18 +691,18 @@ class Runner():
             # SAVE MODEL.
             self.models['models'][f'{grp}_{t}'] = clf
 
-        logger.info(f'Saved trained model.')
+        self.logger.info(f'Saved trained model.')
 
         pickle.dump(self.models, open(f'models.pkl', 'wb'))
-        logger.info('Export trained model.')
+        self.logger.info('Export trained model.')
 
 
     def train_all_clf_first(self, save_model=True):
-        logger.info(f'Train clf base using all train data.')
+        self.logger.info(f'Train clf base using all train data.')
 
         # ITERATE THRU QUESTIONS 1 THRU 18
         for t in self.questions:
-            logger.info(f'Question {t}.')
+            self.logger.info(f'Question {t}.')
             
             # USE THIS TRAIN DATA WITH THESE QUESTIONS
             if t<=3: 
@@ -722,15 +723,15 @@ class Runner():
             # SAVE MODEL.
             self.models['models'][f'{grp}_{t}_first'] = clf
 
-        logger.info(f'Saved trained model.')
+        self.logger.info(f'Saved trained model.')
 
 
     def train_all_clf_second(self, save_model=True):
-        logger.info(f'Train clf using all train data with other questions.')
+        self.logger.info(f'Train clf using all train data with other questions.')
 
         # ITERATE THRU QUESTIONS 1 THRU 18
         for t in self.questions:
-            logger.info(f'Question {t}.')
+            self.logger.info(f'Question {t}.')
             
             # USE THIS TRAIN DATA WITH THESE QUESTIONS
             if t<=3: 
@@ -748,7 +749,7 @@ class Runner():
 
             if self.model_options.get('exclude_self'):
                 target_prev.pop(t-1) # 自分自身を除外
-            logger.info(f'Join other answers : {target_prev}')
+            self.logger.info(f'Join other answers : {target_prev}')
                 
             # TRAIN DATA
             train_x = df
@@ -762,10 +763,10 @@ class Runner():
             self.models['models'][f'{grp}_{t}'] = clf
 
         pickle.dump(self.models, open(f'models.pkl', 'wb'))
-        logger.info('Export trained model.')
+        self.logger.info('Export trained model.')
 
     def write_sheet(self, ):
-        logger.info('Write scores to google sheet.')
+        self.logger.info('Write scores to google sheet.')
 
         nowstr_jst = str(datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S'))
         data = [nowstr_jst, self.run_fold_name, self.repo_commit_hash] + self.scores

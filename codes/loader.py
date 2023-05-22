@@ -5,11 +5,11 @@ import logging
 
 from codes import utils, preprocess
 
-logger = utils.Logger("/kaggle/test20230522")
+
 
 class DataLoader():
 
-    def __init__(self, input_path='../input', options={
+    def __init__(self, input_path='../input', logger=utils.Logger(), options={
         'sampling': 5000,
         'split_labels': True,
         'parquet': True
@@ -20,7 +20,7 @@ class DataLoader():
     
     def load(self, ):
 
-        logger.info(f'read_csv from {self.input_path}')
+        self.logger.info(f'read_csv from {self.input_path}')
         df_test = pd.read_csv(f'{self.input_path}/test.csv')
         df_submission = pd.read_csv(f'{self.input_path}/sample_submission.csv')
 
@@ -36,7 +36,7 @@ class DataLoader():
 
         if self.options.get('sampling'):
             n_sample = self.options.get('sampling')
-            logger.info(f'Sampling data to {n_sample} sessions.')
+            self.logger.info(f'Sampling data to {n_sample} sessions.')
 
             sample_session = df_train.get_column('session_id').unique().sample(n_sample).to_list()
             df_train = df_train.filter(pl.col('session_id').is_in(sample_session))

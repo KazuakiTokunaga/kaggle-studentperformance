@@ -25,7 +25,7 @@ class Runner():
         input_path='/kaggle/input/student-performance-my',
         repo_path='/kaggle/working/kaggle_studentperformance',
         output_path='',
-        log_path=None,
+        log_path='',
         load_options={
             'sampling': 1000,
             'split_labels': True,

@@ -64,7 +64,8 @@ class Runner():
             'random_state': 42
         }):
 
-        self.logger = utils.Logger(output_path)
+        self.log_path = log_path
+        self.logger = utils.Logger(log_path)
         self.run_fold_name = run_fold_name
         self.repo_commit_hash = repo_commit_hash
         self.input_path = input_path
@@ -90,7 +91,7 @@ class Runner():
 
     def load_dataset(self, ):
         
-        dataloader = loader.DataLoader(input_path=self.input_path, logger=self.logger, options=self.load_options)
+        dataloader = loader.DataLoader(input_path=self.input_path, logger=self.log_path, options=self.load_options)
         self.df_train, self.df_test, self.df_labels, self.df_submission = dataloader.load()
 
 

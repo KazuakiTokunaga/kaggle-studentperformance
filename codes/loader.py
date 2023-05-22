@@ -5,16 +5,15 @@ import logging
 
 from codes import utils, preprocess
 
-
-
 class DataLoader():
 
-    def __init__(self, input_path='../input', logger=utils.Logger(), options={
+    def __init__(self, input_path='../input', log_path=, options={
         'sampling': 5000,
         'split_labels': True,
         'parquet': True
     }):
 
+        self.logger = utils.Logger(log_path)
         self.input_path = input_path
         self.options = options
     

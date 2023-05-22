@@ -16,7 +16,7 @@ from sklearn.metrics import f1_score
 
 from codes import utils, loader, preprocess
 
-logger = utils.Logger()
+logger = utils.Logger("/kaggle/test20230522")
 
 
 class Runner():

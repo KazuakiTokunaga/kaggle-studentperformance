@@ -66,6 +66,7 @@ class Runner():
         }):
 
         self.log_path = log_path
+        self.output_path = output_path
         self.logger = utils.Logger(log_path)
         self.run_fold_name = run_fold_name
         self.repo_commit_hash = repo_commit_hash
@@ -444,17 +445,17 @@ class Runner():
         if best_ntrees_mat[0, 0] > 1:
             self.logger.info('Save best iterations.')
             best_ntrees = pd.Series(best_ntrees_mat.mean(axis=0).astype('int'))
-            best_ntrees.to_csv('best_num_trees.csv')
+            best_ntrees.to_csv(f'{self.output_path}best_num_trees.csv')
             self.best_ntrees = list(best_ntrees)
             self.note['best_ntrees'] = self.best_ntrees
             
 
         if save_oof:
             self.logger.info('Export oof_predict_proba.')
-            self.oof.to_csv('oof_predict_proba.csv')
+            self.oof.to_csv(f'{self.output_path}oof_predict_proba.csv')
         
         if save_fold_models:
-            pickle.dump(self.fold_models, open(f'fold_models.pkl', 'wb'))
+            pickle.dump(self.fold_models, open(f'{self.output_path}fold_models.pkl', 'wb'))
 
 
     def run_validation_first(self, 
@@ -521,16 +522,16 @@ class Runner():
         if best_base_ntrees_mat[0, 0] > 1:
             self.logger.info('Save best base iterations.')
             best_base_ntrees = pd.Series(best_base_ntrees_mat.mean(axis=0).astype('int'))
-            best_base_ntrees.to_csv('best_num_base_trees.csv')
+            best_base_ntrees.to_csv(f'{self.output_path}best_num_base_trees.csv')
             self.best_base_ntrees = list(best_base_ntrees)
             self.note['best_base_ntrees'] = self.best_base_ntrees
 
         if save_oof:
             self.logger.info('Export oof_base_redict_proba.')
-            self.base_oof.to_csv('oof_base_predict_proba.csv')
+            self.base_oof.to_csv(f'{self.output_path}oof_base_predict_proba.csv')
         
         if save_fold_models:
-            pickle.dump(self.fold_models_base, open(f'fold_models_base.pkl', 'wb'))
+            pickle.dump(self.fold_models_base, open(f'{self.output_path}fold_models_base.pkl', 'wb'))
 
         self.logger.info('Done first stage.')
 
@@ -606,15 +607,15 @@ class Runner():
         if best_ntrees_mat[0, 0] > 1:
             self.logger.info('Save best iterations.')
             self.best_ntrees = pd.Series(best_ntrees_mat.mean(axis=0).astype('int'))
-            self.best_ntrees.to_csv('best_num_trees.csv')
+            self.best_ntrees.to_csv(f'{self.output_path}best_num_trees.csv')
             self.note['best_ntrees'] = list(self.best_ntrees)
             
         if save_oof:
             self.logger.info('Export oof_predict_proba.')
-            self.oof.to_csv('oof_predict_proba.csv')
+            self.oof.to_csv(f'{self.output_path}oof_predict_proba.csv')
         
         if save_fold_models:
-            pickle.dump(self.fold_models, open(f'fold_models.pkl', 'wb'))
+            pickle.dump(self.fold_models, open(f'{self.output_path}fold_models.pkl', 'wb'))
 
 
     def evaluate_validation(self, ):
@@ -695,7 +696,7 @@ class Runner():
 
         self.logger.info(f'Saved trained model.')
 
-        pickle.dump(self.models, open(f'models.pkl', 'wb'))
+        pickle.dump(self.models, open(f'{self.output_path}models.pkl', 'wb'))
         self.logger.info('Export trained model.')
 
 
@@ -764,7 +765,7 @@ class Runner():
             # SAVE MODEL.
             self.models['models'][f'{grp}_{t}'] = clf
 
-        pickle.dump(self.models, open(f'models.pkl', 'wb'))
+        pickle.dump(self.models, open(f'{self.output_path}models.pkl', 'wb'))
         self.logger.info('Export trained model.')
 
     def write_sheet(self, ):

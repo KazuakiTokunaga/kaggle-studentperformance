@@ -7,7 +7,7 @@ from codes import utils, preprocess
 
 class DataLoader():
 
-    def __init__(self, input_path='../input', log_path=, options={
+    def __init__(self, input_path='../input', log_path='', options={
         'sampling': 5000,
         'split_labels': True,
         'parquet': True

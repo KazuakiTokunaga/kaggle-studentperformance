@@ -24,6 +24,7 @@ class DataLoader():
         df_submission = pd.read_csv(f'{self.input_path}/sample_submission.csv')
 
         if self.options.get('low_mem'):
+            self.logger.info(f'Use low_memory parquet.')
             df_train = pl.read_parquet(f'{self.input_path}/train_low_mem.parquet').drop(["fullscreen", "hq", "music"])    
         else:
             df_train = pl.read_parquet(f'{self.input_path}/train.parquet').drop(["fullscreen", "hq", "music"])

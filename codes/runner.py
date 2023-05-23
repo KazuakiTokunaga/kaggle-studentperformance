@@ -29,7 +29,7 @@ class Runner():
         load_options={
             'sampling': 1000,
             'split_labels': True,
-            'parquet': True
+            'low_mem': False
         },
         feature_options={
             'version': 2,
@@ -292,6 +292,10 @@ class Runner():
             model_params['n_estimators'] = n_estimators_list[0]
         else:
             model_params['n_estimators'] = n_estimators_list[t-1]
+
+        if self.model_options.get('use_gpu') and model_kind == 'xgb':
+            self.logger.info('Use GPU.')
+            model_params['tree_method'] = 'gpu_hist'
 
         if self.model_options.get('random'):
             model_params['random_state'] = np.random.randint(1, 100)

@@ -10,7 +10,7 @@ class DataLoader():
     def __init__(self, input_path='../input', log_path=None, options={
         'sampling': 5000,
         'split_labels': True,
-        'parquet': True
+        'low_mem': False
     }):
 
         self.logger = utils.Logger(log_path)
@@ -23,12 +23,11 @@ class DataLoader():
         df_test = pd.read_csv(f'{self.input_path}/test.csv')
         df_submission = pd.read_csv(f'{self.input_path}/sample_submission.csv')
 
-        if self.options.get('parquet'):
-            df_train = pl.read_parquet(f'{self.input_path}/train.parquet').drop(["fullscreen", "hq", "music"])
-            df_labels = pd.read_parquet(f'{self.input_path}/train_labels.parquet')
+        if self.options.get('low_mem'):
+            df_train = pl.read_parquet(f'{self.input_path}/train_low_mem.parquet').drop(["fullscreen", "hq", "music"])    
         else:
-            df_train = pl.read_csv(f'{self.input_path}/train.csv').drop(["fullscreen", "hq", "music"])
-            df_labels = pd.read_csv(f'{self.input_path}/train_labels.csv')
+            df_train = pl.read_parquet(f'{self.input_path}/train.parquet').drop(["fullscreen", "hq", "music"])
+        df_labels = pd.read_parquet(f'{self.input_path}/train_labels.parquet')
 
         if self.options.get('split_labels'):
             df_labels = preprocess.split_df_labels(df_labels)

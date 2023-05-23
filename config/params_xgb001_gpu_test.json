@@ -1,7 +1,7 @@
 {
     "base": {
         "booster": "gbtree",
-        "tree_method": "hist",
+        "tree_method": "gpu_hist",
         "objective": "binary:logistic",
         "eval_metric":"logloss",
         "learning_rate": 0.02,

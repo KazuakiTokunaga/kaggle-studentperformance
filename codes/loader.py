@@ -26,6 +26,7 @@ class DataLoader():
         if self.options.get('low_mem'):
             self.logger.info(f'Use low_memory parquet.')
             df_train = pl.read_parquet(f'{self.input_path}/train_low_mem.parquet').drop(["fullscreen", "hq", "music"])    
+            df_train = df_train.with_columns(train['text'].cast(pl.Utf8))
         else:
             df_train = pl.read_parquet(f'{self.input_path}/train.parquet').drop(["fullscreen", "hq", "music"])
         df_labels = pd.read_parquet(f'{self.input_path}/train_labels.parquet')

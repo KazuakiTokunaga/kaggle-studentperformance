@@ -693,7 +693,7 @@ class Runner():
 
             # SAVE MODEL.
             if self.model_kind == 'xgb':
-                clf.save_model(f'{self.output_path}/models/xgb_q{t}.json')
+                clf.save_model(f'{self.output_path}models/xgb_q{t}.json')
 
             self.models['models'][f'{grp}_{t}'] = clf
 

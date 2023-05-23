@@ -55,6 +55,7 @@ class Runner():
             'ensemble': False,
             'model': 'xgb',
             'param_file': 'params_xgb001_test.json',
+            'use_gpu': False,
             'each_params': False,
             'each_folder_name': None, 
             'best_base_ntrees': [],

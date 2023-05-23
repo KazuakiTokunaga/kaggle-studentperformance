@@ -339,11 +339,13 @@ def feature_engineer_pl(x, grp,
             low = int(session_cnt * thre) 
             
             flr_list = x.select('fqid', 'level', 'room_fqid', 'session_id').groupby('fqid', 'level', 'room_fqid').n_unique().filter(pl.col('session_id')>=low).drop('session_id')
-            single_fqid = flr_list.groupby('fqid').count().rename({'count': 'fqid_count'}).filter(pl.col('fqid_count')==1).get_column('fqid').cast(pl.Utf8).to_list()
+            flr_list = flr_list.with_columns(flr_list['fqid'].cast(pl.Utf8))
+            single_fqid = flr_list.groupby('fqid').count().rename({'count': 'fqid_count'}).filter(pl.col('fqid_count')==1).get_column('fqid').to_list()
             flr_list = flr_list.filter(~pl.col('fqid').is_in(single_fqid))
             flr_cs = flr_list.get_columns()
             
             tl_list = x.select('text_fqid', 'level', 'session_id').groupby('text_fqid', 'level').n_unique().filter(pl.col('session_id')>=low).drop('session_id')
+            tl_list = tl_list.with_columns(flr_list['text_fqid'].cast(pl.Utf8))
             single_text = tl_list.groupby('text_fqid').count().rename({'count': 'text_count'}).filter(pl.col('text_count')==1).get_column('text_fqid').cast(pl.Utf8).to_list()
             tl_list = tl_list.filter(~pl.col('text_fqid').is_in(single_text))
             tl_cs = tl_list.get_columns()

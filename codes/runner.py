@@ -169,8 +169,7 @@ class Runner():
 
         grp = '5-12'
         self.df2 = preprocess.feature_engineer_pl(
-            self.df_train.filter(pl.col("level_group")=='5-12'),
-            df2_raw, 
+            self.df_train.filter(pl.col("level_group")=='5-12'), 
             grp=grp, 
             feature_suffix='grp5-12',  
             **params
@@ -216,9 +215,6 @@ class Runner():
 
         self.models['features'][grp] = self.df3.columns
         self.logger.info(f'df3 done: {self.df3.shape}')
-
-        del df1_raw, df2_raw, df3_raw
-        gc.collect()
 
         self.note['df1_shape'] = self.df1.shape
         self.note['df2_shape'] = self.df2.shape

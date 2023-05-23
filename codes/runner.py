@@ -44,7 +44,8 @@ class Runner():
             'cut_above': False,
             'room_click': False,
             'use_csv': False,
-            'add_random': False
+            'add_random': False,
+            'eliminate_old_log': False
         },
         validation_options={
             'n_fold': 2,
@@ -133,11 +134,6 @@ class Runner():
 
         self.df_train = preprocess.add_columns(self.df_train)
 
-        # グループごとに分割
-        df1_raw = self.df_train.filter(pl.col("level_group")=='0-4')
-        df2_raw = self.df_train.filter(pl.col("level_group")=='5-12')
-        df3_raw = self.df_train.filter(pl.col("level_group")=='13-22')
-
         params = {
             'use_extra': True,
             'version': self.feature_options.get('version'),
@@ -150,7 +146,12 @@ class Runner():
 
         # sessionごとにまとめる
         grp = '0-4'
-        self.df1 = preprocess.feature_engineer_pl(df1_raw, grp=grp, feature_suffix='grp0-4', **params)
+        self.df1 = preprocess.feature_engineer_pl(
+            self.df_train.filter(pl.col("level_group")=='0-4'),
+             grp=grp, 
+             feature_suffix='grp0-4', 
+             **params
+        )
         self.df1 = preprocess.drop_columns(self.df1, thre=self.thre)
         self.df1 = preprocess.add_columns_session(self.df1, id=self.time_id)
 
@@ -167,7 +168,13 @@ class Runner():
         
 
         grp = '5-12'
-        self.df2 = preprocess.feature_engineer_pl(df2_raw, grp=grp, feature_suffix='grp5-12',  **params)
+        self.df2 = preprocess.feature_engineer_pl(
+            self.df_train.filter(pl.col("level_group")=='5-12'),
+            df2_raw, 
+            grp=grp, 
+            feature_suffix='grp5-12',  
+            **params
+        )
         self.df2 = preprocess.drop_columns(self.df2, thre=self.thre)
 
         if self.select:
@@ -187,7 +194,11 @@ class Runner():
         self.logger.info(f'df2 done: {self.df2.shape}')
 
         grp = '13-22'
-        self.df3 = preprocess.feature_engineer_pl(df3_raw, grp=grp, feature_suffix='grp13-22', **params)
+        self.df3 = preprocess.feature_engineer_pl(
+            self.df_train.filter(pl.col("level_group")=='13-22'),
+            grp=grp,
+            feature_suffix='grp13-22',
+            **params)
         self.df3 = preprocess.drop_columns(self.df3, thre=self.thre)
 
         if self.select:

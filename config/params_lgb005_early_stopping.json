@@ -4,7 +4,7 @@
         "learning_rate": 0.02,
         "max_depth": 8,
         "reg_alpha": 30,
-        "num_leaves": 31,
+        "num_leaves": 16,
         "subsample": 0.8,
         "colsample_bytree": 0.5,
         "early_stopping_rounds": 120

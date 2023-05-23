@@ -300,7 +300,8 @@ class Runner():
             model_params['n_estimators'] = n_estimators_list[t-1]
 
         if self.model_options.get('use_gpu') and model_kind == 'xgb':
-            self.logger.info('Use GPU.')
+            if print_model_info:
+                self.logger.info('Use GPU.')
             model_params['tree_method'] = 'gpu_hist'
 
         if self.model_options.get('random'):

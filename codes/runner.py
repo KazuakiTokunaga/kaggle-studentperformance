@@ -44,8 +44,7 @@ class Runner():
             'cut_above': False,
             'room_click': False,
             'use_csv': False,
-            'add_random': False,
-            'eliminate_old_log': False
+            'add_random': False
         },
         validation_options={
             'n_fold': 2,

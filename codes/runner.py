@@ -458,6 +458,96 @@ class Runner():
             pickle.dump(self.fold_models, open(f'{self.output_path}fold_models.pkl', 'wb'))
 
 
+    def run_validation_with_addition(self, 
+            save_oof=True, 
+            adhoc_params=None,
+            save_fold_models=True,
+            adhoc_questions=None
+        ):
+
+        self.USERS2 = self.df2.index.unique()
+        self.USERS3 = self.df3.index.unique()
+
+        user_cnt = len(self.ALL_USERS)
+        self.logger.info(f'We will train with {user_cnt} users info')
+
+        arr = [0.728, 0.978, 0.933, 0.8, 0.548, 0.776, 0.736, 0.612, 0.734, 0.505, 0.642, 0.86 , 0.275, 0.707, 0.481, 0.733, 0.684, 0.95]
+        if not self.feature_options.get('load_oof'):
+            self.oof = pd.DataFrame(data=np.multiply(np.ones((len(self.ALL_USERS), 1)), arr), index=self.ALL_USERS) # Question t はカラム t-1 に対応する
+        best_ntrees_mat = np.zeros([self.n_fold, 18])
+
+        random_state_validation = self.validation_options.get('random_state')
+        self.logger.info(f'Start validation with {self.n_fold} folds, random_state {random_state_validation}.')
+        kf = KFold(n_splits=self.n_fold, shuffle=True, random_state = random_state_validation)
+        
+        kf_split_list1 = list(kf.split(X=self.df1))
+        kf_split_list2 = list(kf.split(X=self.df2))
+        kf_split_list3 = list(kf.split(X=self.df3))
+
+        # ハイパラ最適化のため
+        if adhoc_questions is not None:
+            self.questions = adhoc_questions
+
+        for t in self.questions:
+    
+                if t<=3: 
+                    grp = '0-4'
+                    df = self.df1
+                    kf_split_list = kf_split_list1
+                elif t<=13: 
+                    grp = '5-12'
+                    df = self.df2
+                    kf_split_list = kf_split_list2
+                elif t<=22: 
+                    grp = '13-22'
+                    df = self.df3
+                    kf_split_list = kf_split_list3
+
+            for k, (train_index, test_index) in enumerate(kf_split_list):
+                print_model_info = False if k else True
+
+                if k==0 or (t <= 2 and k <= 2):
+                    self.logger.info(f'Question {t}, Fold {k}.')
+                
+                # TRAIN DATA
+                train_x = df.iloc[train_index]
+                train_users = train_x.index.values
+                prev_answers = self.oof.loc[train_users, [i for i in range(t-1)]].copy()
+                train_x = train_x.merge(prev_answers, left_index=True, right_index=True, how='left')
+                train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[train_users]
+
+                
+                # VALID DATA
+                valid_x = df.iloc[test_index]
+                valid_users = valid_x.index.values
+                prev_answers = self.oof.loc[valid_users, [i for i in range(t-1)]].copy()
+                valid_x = valid_x.merge(prev_answers, left_index=True, right_index=True, how='left')
+                valid_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[valid_users]
+
+                clf, ntree = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params, print_model_info=print_model_info)
+                best_ntrees_mat[k, t-1] = ntree
+                
+                self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x)[:,1]
+
+                if save_fold_models:
+                    self.fold_models[f'q{t}_fold{k}'] = clf
+
+        if best_ntrees_mat[0, 0] > 1:
+            self.logger.info('Save best iterations.')
+            best_ntrees = pd.Series(best_ntrees_mat.mean(axis=0).astype('int'))
+            best_ntrees.to_csv(f'{self.output_path}best_num_trees.csv')
+            self.best_ntrees = list(best_ntrees)
+            self.note['best_ntrees'] = self.best_ntrees
+            
+
+        if save_oof:
+            self.logger.info('Export oof_predict_proba.')
+            self.oof.to_csv(f'{self.output_path}oof_predict_proba.csv')
+        
+        if save_fold_models:
+            pickle.dump(self.fold_models, open(f'{self.output_path}fold_models.pkl', 'wb'))
+
+
     def evaluate_validation(self, ):
         self.logger.info('Start evaluating validations.')
 

@@ -490,18 +490,18 @@ class Runner():
 
         for t in self.questions:
     
-                if t<=3: 
-                    grp = '0-4'
-                    df = self.df1
-                    kf_split_list = kf_split_list1
-                elif t<=13: 
-                    grp = '5-12'
-                    df = self.df2
-                    kf_split_list = kf_split_list2
-                elif t<=22: 
-                    grp = '13-22'
-                    df = self.df3
-                    kf_split_list = kf_split_list3
+            if t<=3: 
+                grp = '0-4'
+                df = self.df1
+                kf_split_list = kf_split_list1
+            elif t<=13: 
+                grp = '5-12'
+                df = self.df2
+                kf_split_list = kf_split_list2
+            elif t<=22: 
+                grp = '13-22'
+                df = self.df3
+                kf_split_list = kf_split_list3
 
             for k, (train_index, test_index) in enumerate(kf_split_list):
                 print_model_info = False if k else True

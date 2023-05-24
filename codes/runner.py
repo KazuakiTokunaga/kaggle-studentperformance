@@ -58,10 +58,7 @@ class Runner():
             'use_gpu': False,
             'each_params': False,
             'each_folder_name': None, 
-            'best_base_ntrees': [],
             'best_ntrees': [],
-            'second_param_file': '',
-            'exclude_self': True,
             'random': True,
             'random_state': 42
         }):
@@ -83,7 +80,6 @@ class Runner():
         }
         self.model_kind = self.model_options.get('model')
         self.best_ntrees = model_options.get('best_ntrees')
-        self.best_base_ntrees = model_options.get('best_base_ntrees')
         self.note = dict()
         self.fold_models_base = dict()
         self.fold_models = dict()
@@ -245,9 +241,6 @@ class Runner():
             self.file_name = self.feature_options.get('oof_file_name')
             self.logger.info(f'Load oof from csv.: {self.file_name}')
             
-            self.base_oof = pd.read_csv(f'{self.input_path}/{self.file_name}.csv', index_col='session_id')
-            self.base_oof.columns = [int(i) for i in self.base_oof.columns]
-
             self.oof = pd.read_csv(f'{self.input_path}/{self.file_name}.csv', index_col='session_id')
             self.oof.columns = [int(i) for i in self.oof.columns]
 
@@ -260,18 +253,13 @@ class Runner():
             valid_y=None, 
             adhoc_params=None, 
             print_model_info=False,
-            use_best_base_tree = False,
             second = False
         ):
             
         validation = valid_x is not None
         ntree = None
         model_kind = self.model_options.get('model')
-
-        if self.model_options.get('second_param_file') and second:
-            param_file = self.model_options.get('second_param_file')
-        else:
-            param_file = self.model_options.get('param_file')
+        param_file = self.model_options.get('param_file')
 
         with open(f'{self.repo_path}/config/{param_file}') as f:
             params = json.load(f)
@@ -311,7 +299,7 @@ class Runner():
 
         # validation時にbest_iterationを保存している場合はそちらを優先する
         if len(self.best_ntrees) > 0:
-            n = self.best_base_ntrees[t-1] if use_best_base_tree else self.best_ntrees[t-1]
+            n = self.best_ntrees[t-1]
             self.logger.info(f'Q{t}: n_estimators {n}')
             model_params['n_estimators'] = n
 
@@ -470,166 +458,6 @@ class Runner():
             pickle.dump(self.fold_models, open(f'{self.output_path}fold_models.pkl', 'wb'))
 
 
-    def run_validation_first(self, 
-            save_oof=True, 
-            adhoc_params=None,
-            save_fold_models=True,
-            adhoc_questions=None
-        ):
-
-        user_cnt = len(self.ALL_USERS)
-        self.logger.info(f'We will train with {user_cnt} users info: First Stage.')
-
-        arr = [0.728, 0.978, 0.933, 0.8, 0.548, 0.776, 0.736, 0.612, 0.734, 0.505, 0.642, 0.86 , 0.275, 0.707, 0.481, 0.733, 0.684, 0.95]
-        self.base_oof = pd.DataFrame(data=np.multiply(np.ones((len(self.ALL_USERS), 1)), arr), index=self.ALL_USERS) # Question t はカラム t-1 に対応する
-        best_base_ntrees_mat = np.zeros([self.n_fold, 18])
-        
-        best_ntrees_mat = np.zeros([self.n_fold, 18])
-
-        random_state_validation = self.validation_options.get('random_state')
-        self.logger.info(f'Start validation with {self.n_fold} folds, random_state {random_state_validation}.')
-        kf = KFold(n_splits=self.n_fold, shuffle=True, random_state = random_state_validation)
-        kf_split_list = list(kf.split(X=self.df1))
-
-        # ハイパラ最適化のため
-        if adhoc_questions is not None:
-            self.questions = adhoc_questions
-
-        for t in self.questions:
-
-            for k, (train_index, test_index) in enumerate(kf_split_list):
-                print_model_info = False if k else True
-
-                if k==0 or (t <= 2 and k <= 2):
-                    self.logger.info(f'Question {t}, Fold {k}.')
-                
-                if t<=3: 
-                    grp = '0-4'
-                    df = self.df1
-                elif t<=13: 
-                    grp = '5-12'
-                    df = self.df2
-                elif t<=22: 
-                    grp = '13-22'
-                    df = self.df3
-                
-                # TRAIN DATA
-                train_x = df.iloc[train_index]
-                train_users = train_x.index.values
-                train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[train_users]
-
-                # VALID DATA
-                valid_x = df.iloc[test_index]
-                valid_users = valid_x.index.values
-                valid_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[valid_users]
-
-                clf, ntree = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params, print_model_info=print_model_info)
-                best_base_ntrees_mat[k, t-1] = ntree
-                
-                self.base_oof.loc[valid_users, t-1] = clf.predict_proba(valid_x)[:,1]
-
-                if save_fold_models:
-                    self.fold_models_base[f'q{t}_fold{k}_base'] = clf
-
-        if best_base_ntrees_mat[0, 0] > 1:
-            self.logger.info('Save best base iterations.')
-            best_base_ntrees = pd.Series(best_base_ntrees_mat.mean(axis=0).astype('int'))
-            best_base_ntrees.to_csv(f'{self.output_path}best_num_base_trees.csv')
-            self.best_base_ntrees = list(best_base_ntrees)
-            self.note['best_base_ntrees'] = self.best_base_ntrees
-
-        if save_oof:
-            self.logger.info('Export oof_base_redict_proba.')
-            self.base_oof.to_csv(f'{self.output_path}oof_base_predict_proba.csv')
-        
-        if save_fold_models:
-            pickle.dump(self.fold_models_base, open(f'{self.output_path}fold_models_base.pkl', 'wb'))
-
-        self.logger.info('Done first stage.')
-
-
-    def run_validation_second(self, 
-            save_oof=True, 
-            adhoc_params=None,
-            save_fold_models=True,
-            adhoc_questions=None
-        ):
-
-        user_cnt = len(self.ALL_USERS)
-        self.logger.info(f'We will train with {user_cnt} users info.')
-
-        arr = [0.728, 0.978, 0.933, 0.8, 0.548, 0.776, 0.736, 0.612, 0.734, 0.505, 0.642, 0.86 , 0.275, 0.707, 0.481, 0.733, 0.684, 0.95]
-        self.oof = pd.DataFrame(data=np.multiply(np.ones((len(self.ALL_USERS), 1)), arr), index=self.ALL_USERS) # Question t はカラム t-1 に対応する
-        best_ntrees_mat = np.zeros([self.n_fold, 18])
-
-        random_state_validation = self.validation_options.get('random_state')
-        self.logger.info(f'Start validation with {self.n_fold} folds, random_state {random_state_validation}.')
-        kf = KFold(n_splits=self.n_fold, shuffle=True, random_state = random_state_validation)
-        kf_split_list = list(kf.split(X=self.df1))
-
-        for t in self.questions:
-
-            for k, (train_index, test_index) in enumerate(kf_split_list):
-                print_model_info = False if k else True
-
-                if k==0 or (t <= 2 and k <= 2):
-                    self.logger.info(f'Question {t}, Fold {k}.')
-                
-                if t<=3: 
-                    grp = '0-4'
-                    df = self.df1
-                    target_prev = [i for i in range(3)]
-                elif t<=13: 
-                    grp = '5-12'
-                    df = self.df2
-                    target_prev = [i for i in range(13)]
-                elif t<=22: 
-                    grp = '13-22'
-                    df = self.df3
-                    target_prev = [i for i in range(18)]
-
-                if self.model_options.get('exclude_self'):
-                    target_prev.pop(t-1) # 自分自身を除外
-
-                if k==0:
-                    self.logger.info(f'Join other answers : {target_prev}')
-
-                # TRAIN DATA
-                train_x = df.iloc[train_index]
-                train_users = train_x.index.values
-                prev_answers = self.base_oof.loc[train_users, target_prev].copy()
-                train_x = train_x.merge(prev_answers, left_index=True, right_index=True, how='left')
-                train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[train_users]
-                
-                # VALID DATA
-                valid_x = df.iloc[test_index]
-                valid_users = valid_x.index.values
-                prev_answers = self.base_oof.loc[valid_users, target_prev].copy()
-                valid_x = valid_x.merge(prev_answers, left_index=True, right_index=True, how='left')
-                valid_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[valid_users]
-
-                clf, ntree = self.get_trained_clf(t, train_x, train_y, valid_x, valid_y, adhoc_params, print_model_info=print_model_info, second=True)
-                best_ntrees_mat[k, t-1] = ntree
-                
-                self.oof.loc[valid_users, t-1] = clf.predict_proba(valid_x)[:,1]
-
-                if save_fold_models:
-                    self.fold_models[f'q{t}_fold{k}'] = clf
-
-        if best_ntrees_mat[0, 0] > 1:
-            self.logger.info('Save best iterations.')
-            self.best_ntrees = pd.Series(best_ntrees_mat.mean(axis=0).astype('int'))
-            self.best_ntrees.to_csv(f'{self.output_path}best_num_trees.csv')
-            self.note['best_ntrees'] = list(self.best_ntrees)
-            
-        if save_oof:
-            self.logger.info('Export oof_predict_proba.')
-            self.oof.to_csv(f'{self.output_path}oof_predict_proba.csv')
-        
-        if save_fold_models:
-            pickle.dump(self.fold_models, open(f'{self.output_path}fold_models.pkl', 'wb'))
-
-
     def evaluate_validation(self, ):
         self.logger.info('Start evaluating validations.')
 
@@ -714,74 +542,6 @@ class Runner():
         pickle.dump(self.models, open(f'{self.output_path}models.pkl', 'wb'))
         self.logger.info('Export trained model.')
 
-
-    def train_all_clf_first(self, save_model=True):
-        self.logger.info(f'Train clf base using all train data.')
-
-        # ITERATE THRU QUESTIONS 1 THRU 18
-        for t in self.questions:
-            self.logger.info(f'Question {t}.')
-            
-            # USE THIS TRAIN DATA WITH THESE QUESTIONS
-            if t<=3: 
-                grp = '0-4'
-                df = self.df1
-            elif t<=13: 
-                grp = '5-12'
-                df = self.df2
-            elif t<=22: 
-                grp = '13-22'
-                df = self.df3
-                
-            # TRAIN DATA
-            train_x = df
-            train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[self.ALL_USERS]
-            clf, ntree = self.get_trained_clf(t, train_x, train_y, print_model_info=True, use_best_base_tree=True)
-
-            # SAVE MODEL.
-            self.models['models'][f'{grp}_{t}_first'] = clf
-
-        self.logger.info(f'Saved trained model.')
-
-
-    def train_all_clf_second(self, save_model=True):
-        self.logger.info(f'Train clf using all train data with other questions.')
-
-        # ITERATE THRU QUESTIONS 1 THRU 18
-        for t in self.questions:
-            self.logger.info(f'Question {t}.')
-            
-            # USE THIS TRAIN DATA WITH THESE QUESTIONS
-            if t<=3: 
-                grp = '0-4'
-                df = self.df1
-                target_prev = [i for i in range(3)]
-            elif t<=13: 
-                grp = '5-12'
-                df = self.df2
-                target_prev = [i for i in range(13)]
-            elif t<=22: 
-                grp = '13-22'
-                df = self.df3
-                target_prev = [i for i in range(18)]
-
-            if self.model_options.get('exclude_self'):
-                target_prev.pop(t-1) # 自分自身を除外
-            self.logger.info(f'Join other answers : {target_prev}')
-                
-            # TRAIN DATA
-            train_x = df
-            prev_answers = self.oof.loc[self.ALL_USERS, target_prev].copy()
-            train_x = train_x.merge(prev_answers, left_index=True, right_index=True, how='left')
-            
-            train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[self.ALL_USERS]
-            clf, ntree = self.get_trained_clf(t, train_x, train_y, print_model_info=True, second=True)
-
-            # SAVE MODEL.
-            self.models['models'][f'{grp}_{t}'] = clf
-
-        pickle.dump(self.models, open(f'{self.output_path}models.pkl', 'wb'))
-        self.logger.info('Export trained model.')
 
     def write_sheet(self, ):
         self.logger.info('Write scores to google sheet.')

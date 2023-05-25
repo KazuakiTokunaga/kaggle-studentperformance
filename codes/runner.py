@@ -30,7 +30,8 @@ class Runner():
             'sampling': 1000,
             'split_labels': True,
             'low_mem': False,
-            'load_additional': False
+            'load_additional': False,
+            'additional_grp2_3': False
         },
         feature_options={
             'version': 2,
@@ -94,11 +95,10 @@ class Runner():
         
         dataloader = loader.DataLoader(input_path=self.input_path, log_path=self.log_path, options=self.load_options)
         self.df_train, self.df_test, self.df_labels, self.df_submission, self.df_train_additional, self.df_labels_additional = dataloader.load()
-        self.ORIGINAL_USERS = self.df_train.get_column('session_id').unique()
 
         if self.load_options.get('load_additional'):
-            self.df_train = pl.concat([self.df_train, self.df_train_additional])
-            self.df_labels = pl.concat([self.df_labels, self.df_labels_additional])
+            self.ORIGINAL_USERS = self.df_train.filter(pl.col('original')==1).get_column('session_id').unique()
+
 
     def delete_df_train(self, ):
         self.logger.info('Delete df_train and run a full collection.')

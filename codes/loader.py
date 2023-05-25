@@ -11,7 +11,8 @@ class DataLoader():
         'sampling': 5000,
         'split_labels': True,
         'low_mem': False,
-        'load_additional': False
+        'load_additional': False,
+        'additional_grp2_3': False
     }):
 
         self.logger = utils.Logger(log_path)
@@ -24,13 +25,25 @@ class DataLoader():
         df_test = pd.read_csv(f'{self.input_path}/test.csv')
         df_submission = pd.read_csv(f'{self.input_path}/sample_submission.csv')
 
-        if self.options.get('low_mem'):
+        if self.options.get('load_additional'):
+            if self.options.get('additional_grp2_3'):
+                self.logger.info('Use train data with additional grp2-3.')
+                df_train = pl.read_parquet(f'{self.input_path}/train_additional_grp2_3.parquet').drop(["fullscreen", "hq", "music"])    
+                df_labels = pd.read_parquet(f'{self.input_path}/train_labels_additional_grp2_3.parquet')
+            else:
+                self.logger.info('Use train data with additional all grps.')
+                df_train = pl.read_parquet(f'{self.input_path}/train_additional.parquet').drop(["fullscreen", "hq", "music"])    
+                df_labels = pd.read_parquet(f'{self.input_path}/train_labels_additional.parquet')
+        
+        elif self.options.get('low_mem'):
             self.logger.info(f'Use low_memory parquet.')
             df_train = pl.read_parquet(f'{self.input_path}/train_low_mem.parquet').drop(["fullscreen", "hq", "music"])    
             df_train = df_train.with_columns(df_train['text'].cast(pl.Utf8))
+            df_labels = pd.read_parquet(f'{self.input_path}/train_labels.parquet')
+
         else:
             df_train = pl.read_parquet(f'{self.input_path}/train.parquet').drop(["fullscreen", "hq", "music"])
-        df_labels = pd.read_parquet(f'{self.input_path}/train_labels.parquet')
+            df_labels = pd.read_parquet(f'{self.input_path}/train_labels.parquet')
 
         if self.options.get('split_labels'):
             df_labels = preprocess.split_df_labels(df_labels)
@@ -44,12 +57,6 @@ class DataLoader():
     
             if self.options.get('split_labels'):
                 df_labels = df_labels[df_labels['session'].isin(sample_session)]
-        
-        df_train_additional = None
-        df_labels_additional = None
-        if self.options.get('load_additional'):
-            self.logger.info(f'Load additional data.')
-            df_train_additional = pl.read_parquet(f'{self.input_path}/train_additional.parquet')
-            df_labels_additional = pd.read_parquet(f'{self.input_path}/train_labels_additional.parquet')
 
-        return df_train, df_test, df_labels, df_submission, df_train_additional, df_labels_additional
+
+        return df_train, df_test, df_labels, df_submission

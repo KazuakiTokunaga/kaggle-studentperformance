@@ -10,7 +10,8 @@ class DataLoader():
     def __init__(self, input_path='../input', log_path=None, options={
         'sampling': 5000,
         'split_labels': True,
-        'low_mem': False
+        'low_mem': False,
+        'load_additional': False
     }):
 
         self.logger = utils.Logger(log_path)
@@ -43,5 +44,11 @@ class DataLoader():
     
             if self.options.get('split_labels'):
                 df_labels = df_labels[df_labels['session'].isin(sample_session)]
+        
+        df_train_additional = None
+        df_labels_additional = None
+        if self.options('load_additional'):
+            df_train_additional = pl.read_parquet(f'{self.input_path}/train_additional.parquet').drop(["fullscreen", "hq", "music"])
+            df_labels_additional = pd.read_parquet(f'{self.input_path}/train_labels_additional.parquet')
 
-        return df_train, df_test, df_labels, df_submission
+        return df_train, df_test, df_labels, df_submission, df_train_additional, df_labels_additional

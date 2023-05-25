@@ -600,20 +600,24 @@ class Runner():
             self.logger.info(f'Q{k}: F1 = {m}')
             self.scores.append(m)
 
+
+
     def evaluate_validation_with_addition(self, ):
         self.logger.info('Start evaluating validations.')
 
         # PUT TRUE LABELS INTO DATAFRAME WITH 18 COLUMNS
-        true = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ALL_USERS)
+        true = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ORIGINAL_USERS)
         for k in range(18):
             # GET TRUE LABELS
-            tmp = self.df_labels.loc[self.df_labels.q == k+1].set_index('session').loc[self.ALL_USERS]
+            tmp = self.df_labels.loc[self.df_labels.q == k+1].set_index('session').loc[self.ORIGINAL_USERS]
             true[k] = tmp.correct.values
 
         # Extract target columns.
         question_idx = [i-1 for i in self.questions]
-        oof_target = self.oof[question_idx].copy()
+        oof_target = self.oof.loc[self.ORIGINAL_USERS, question_idx].copy()
         true = true[question_idx]
+
+        self.logger.info(f'Evaluate oof shape: {self.oof_target.shape}')
         
         # FIND BEST THRESHOLD TO CONVERT PROBS INTO 1s AND 0s
         scores = []; thresholds = []

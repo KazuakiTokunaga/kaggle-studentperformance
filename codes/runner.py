@@ -234,6 +234,8 @@ class Runner():
                 self.df3 = utils.pl_to_pd(self.df3)
             
             self.ALL_USERS = self.df1.index.unique()
+            self.USERS2 = self.df2.index.unique()
+            self.USERS3 = self.df3.index.unique()
         
             if fillna:
                 self.logger.info('Execute fillna with -1 to pandas df.')
@@ -470,9 +472,6 @@ class Runner():
             adhoc_questions=None
         ):
 
-        self.USERS2 = self.df2.index.unique()
-        self.USERS3 = self.df3.index.unique()
-
         user_cnt = len(self.ALL_USERS)
         self.logger.info(f'We will train with {user_cnt} users info')
 
@@ -606,7 +605,7 @@ class Runner():
         self.logger.info('Start evaluating validations.')
 
         # PUT TRUE LABELS INTO DATAFRAME WITH 18 COLUMNS
-        true = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ORIGINAL_USERS)
+        true = pd.DataFrame(data=np.zeros((len(self.ORIGINAL_USERS),18)), index=self.ORIGINAL_USERS)
         for k in range(18):
             # GET TRUE LABELS
             tmp = self.df_labels.loc[self.df_labels.q == k+1].set_index('session').loc[self.ORIGINAL_USERS]
@@ -661,19 +660,22 @@ class Runner():
             if t<=3: 
                 grp = '0-4'
                 df = self.df1
+                USERS = self.ALL_USERS
             elif t<=13: 
                 grp = '5-12'
                 df = self.df2
+                USERS = self.USERS2
             elif t<=22: 
                 grp = '13-22'
                 df = self.df3
+                USERS = self.USERS3
                 
             # TRAIN DATA
             train_x = df
             prev_answers = self.oof[[i for i in range(t-1)]].copy()
             train_x = train_x.merge(prev_answers, left_index=True, right_index=True, how='left')
             
-            train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[self.ALL_USERS]
+            train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[USERS]
 
             clf, ntree = self.get_trained_clf(t, train_x, train_y, print_model_info=True)
 

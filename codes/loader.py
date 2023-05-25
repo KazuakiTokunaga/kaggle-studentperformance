@@ -47,7 +47,8 @@ class DataLoader():
         
         df_train_additional = None
         df_labels_additional = None
-        if self.options('load_additional'):
+        if self.options.get('load_additional'):
+            self.logger.info(f'Load additional data.')
             df_train_additional = pl.read_parquet(f'{self.input_path}/train_additional.parquet').drop(["fullscreen", "hq", "music"])
             df_labels_additional = pd.read_parquet(f'{self.input_path}/train_labels_additional.parquet')
 

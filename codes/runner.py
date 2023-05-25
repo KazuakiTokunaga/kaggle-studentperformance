@@ -98,6 +98,7 @@ class Runner():
 
         if self.load_options.get('load_additional'):
             self.ORIGINAL_USERS = self.df_train.filter(pl.col('original')==1).get_column('session_id').unique()
+            self.logger.info(f'Count of Original Users: {len(self.ORIGINAL_USERS)}')
 
 
     def delete_df_train(self, ):

@@ -672,7 +672,7 @@ class Runner():
                 
             # TRAIN DATA
             train_x = df
-            prev_answers = self.oof[[i for i in range(t-1)]].copy()
+            prev_answers = self.oof.loc[USERS, [i for i in range(t-1)]].copy()
             train_x = train_x.merge(prev_answers, left_index=True, right_index=True, how='left')
             
             train_y = self.df_labels.loc[self.df_labels.q==t].set_index('session').loc[USERS]

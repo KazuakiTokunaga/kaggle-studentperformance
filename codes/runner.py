@@ -96,7 +96,7 @@ class Runner():
         self.df_train, self.df_test, self.df_labels, self.df_submission, self.df_train_additional, self.df_labels_additional = dataloader.load()
         self.ORIGINAL_USERS = self.df_train.get_column('session_id').unique()
 
-        if self.load_options('load_additional'):
+        if self.load_options.get('load_additional'):
             self.df_train = pl.concat([self.df_train, self.df_train_additional])
             self.df_labels = pl.concat([self.df_labels, self.df_labels_additional])
 

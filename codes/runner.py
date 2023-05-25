@@ -480,6 +480,7 @@ class Runner():
         if not self.feature_options.get('load_oof'):
             # self.oof = pd.DataFrame(data=np.multiply(np.ones((len(self.ALL_USERS), 1)), arr), index=self.ALL_USERS) # Question t はカラム t-1 に対応する
             self.oof = pd.DataFrame(data=np.zeros((len(self.ALL_USERS), 18)), index=self.ALL_USERS) # Question t はカラム t-1 に対応する
+            self.logger.info(f'shape oof: {self.oof.shape}')
         best_ntrees_mat = np.zeros([self.n_fold, 18])
 
         random_state_validation = self.validation_options.get('random_state')
@@ -555,6 +556,51 @@ class Runner():
 
 
     def evaluate_validation(self, ):
+        self.logger.info('Start evaluating validations.')
+
+        # PUT TRUE LABELS INTO DATAFRAME WITH 18 COLUMNS
+        true = pd.DataFrame(data=np.zeros((len(self.ALL_USERS),18)), index=self.ALL_USERS)
+        for k in range(18):
+            # GET TRUE LABELS
+            tmp = self.df_labels.loc[self.df_labels.q == k+1].set_index('session').loc[self.ALL_USERS]
+            true[k] = tmp.correct.values
+
+        # Extract target columns.
+        question_idx = [i-1 for i in self.questions]
+        oof_target = self.oof[question_idx].copy()
+        true = true[question_idx]
+        
+        # FIND BEST THRESHOLD TO CONVERT PROBS INTO 1s AND 0s
+        scores = []; thresholds = []
+        best_score = 0; best_threshold = 0
+
+        self.logger.info('Search optimal threshold.')
+        for threshold in np.arange(0.60,0.65,0.001):
+            preds = (oof_target.values.reshape((-1))>threshold).astype('int')
+            m = f1_score(true.values.reshape((-1)), preds, average='macro')   
+            scores.append(m)
+            thresholds.append(threshold)
+            if m>best_score:
+                best_score = m
+                best_threshold = threshold
+
+        self.models['optimal_threshold'] = np.round(best_threshold, 6)
+        self.note['best_threshold'] = best_threshold
+        self.logger.info(f'optimal threshold: {best_threshold}')
+        
+        self.logger.info('When using optimal threshold...')
+        self.scores = []
+        
+        m = f1_score(true.values.reshape((-1)), (oof_target.values.reshape((-1))>best_threshold).astype('int'), average='macro')
+        self.logger.info(f'Overall F1 = {m}')
+        self.scores.append(m)
+
+        for k in question_idx:
+            m = f1_score(true[k].values, (oof_target[k].values>best_threshold).astype('int'), average='macro')
+            self.logger.info(f'Q{k}: F1 = {m}')
+            self.scores.append(m)
+
+    def evaluate_validation_with_addition(self, ):
         self.logger.info('Start evaluating validations.')
 
         # PUT TRUE LABELS INTO DATAFRAME WITH 18 COLUMNS

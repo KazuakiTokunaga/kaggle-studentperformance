@@ -94,7 +94,7 @@ class Runner():
     def load_dataset(self, ):
         
         dataloader = loader.DataLoader(input_path=self.input_path, log_path=self.log_path, options=self.load_options)
-        self.df_train, self.df_test, self.df_labels, self.df_submission, self.df_train_additional, self.df_labels_additional = dataloader.load()
+        self.df_train, self.df_test, self.df_labels, self.df_submission = dataloader.load()
 
         if self.load_options.get('load_additional'):
             self.ORIGINAL_USERS = self.df_train.filter(pl.col('original')==1).get_column('session_id').unique()
@@ -478,7 +478,8 @@ class Runner():
 
         arr = [0.728, 0.978, 0.933, 0.8, 0.548, 0.776, 0.736, 0.612, 0.734, 0.505, 0.642, 0.86 , 0.275, 0.707, 0.481, 0.733, 0.684, 0.95]
         if not self.feature_options.get('load_oof'):
-            self.oof = pd.DataFrame(data=np.multiply(np.ones((len(self.ALL_USERS), 1)), arr), index=self.ALL_USERS) # Question t はカラム t-1 に対応する
+            # self.oof = pd.DataFrame(data=np.multiply(np.ones((len(self.ALL_USERS), 1)), arr), index=self.ALL_USERS) # Question t はカラム t-1 に対応する
+            self.oof = pd.DataFrame(data=np.zeros((len(self.ALL_USERS), 18)), index=self.ALL_USERS) # Question t はカラム t-1 に対応する
         best_ntrees_mat = np.zeros([self.n_fold, 18])
 
         random_state_validation = self.validation_options.get('random_state')

@@ -616,7 +616,7 @@ class Runner():
         oof_target = self.oof.loc[self.ORIGINAL_USERS, question_idx].copy()
         true = true[question_idx]
 
-        self.logger.info(f'Evaluate oof shape: {self.oof_target.shape}')
+        self.logger.info(f'Evaluate oof shape: {oof_target.shape}')
         
         # FIND BEST THRESHOLD TO CONVERT PROBS INTO 1s AND 0s
         scores = []; thresholds = []

@@ -34,6 +34,8 @@ class DataLoader():
                 self.logger.info('Use train data with additional all grps.')
                 df_train = pl.read_parquet(f'{self.input_path}/train_additional.parquet').drop(["fullscreen", "hq", "music"])    
                 df_labels = pd.read_parquet(f'{self.input_path}/train_labels_additional.parquet')
+
+            df_train = df_train.filter(~pl.col('session_id').is_in([22080308213749430, 22080309230203028])) # grp0-4にログがないが正解ラベルがあるユーザー
         
         elif self.options.get('low_mem'):
             self.logger.info(f'Use low_memory parquet.')

@@ -665,11 +665,11 @@ class Runner():
             elif t<=13: 
                 grp = '5-12'
                 df = self.df2
-                USERS = self.USERS2
+                USERS = self.USERS2 if self.model_options.get('load_additional') else self.ALL_USERS
             elif t<=22: 
                 grp = '13-22'
                 df = self.df3
-                USERS = self.USERS3
+                USERS = self.USERS3 if self.model_options.get('load_additional') else self.ALL_USERS
                 
             # TRAIN DATA
             train_x = df

@@ -39,6 +39,7 @@ class DataLoader():
             df_train = df_train.filter(~pl.col('session_id').is_in([22080308213749430, 22080309230203028])) # grp0-4にログがないが正解ラベルがあるユーザー
 
             if self.options.get('exclude_low_index'):
+                self.logger.info('Exclude session_id with little idx in grp0-4.')
                 df_train = df_train.filter(~pl.col('session_id').is_in([[ # grp0-4のidxが少なすぎるユーザー
                     19100214524945590,
                     19100320360093440,

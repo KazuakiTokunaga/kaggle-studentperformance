@@ -36,12 +36,16 @@ class DataLoader():
                 df_train = pl.read_parquet(f'{self.input_path}/train_additional.parquet').drop(["fullscreen", "hq", "music"])    
                 df_labels = pd.read_parquet(f'{self.input_path}/train_labels_additional.parquet')
 
-            df_train = df_train.filter(~pl.col('session_id').is_in([22080308213749430, 22080309230203028])) # grp0-4にログがないが正解ラベルがあるユーザー
+            df_train = df_train.filter(~pl.col('session_id').is_in([
+                22080308213749430, 
+                22080309230203028, # grp0-4にログがないが正解ラベルがあるユーザー
+                22080409272258496 # grp0-4にログがあるがgrp5-12のログがない
+            ])) 
 
             if self.options.get('exclude_low_index'):
                 self.logger.info('Exclude session_id with little idx in grp0-4.')
-                df_train = df_train.filter(~pl.col('session_id').is_in([ # grp0-4のidxが少なすぎるユーザー
-                    19100214524945590,
+                df_train = df_train.filter(~pl.col('session_id').is_in([
+                    19100214524945590, # grp0-4のidxが少なすぎるユーザー
                     19100320360093440,
                     19100612343439052,
                     19100618271938656,

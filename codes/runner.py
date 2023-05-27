@@ -32,7 +32,7 @@ class Runner():
             'low_mem': False,
             'load_additional': False,
             'additional_grp2_3': False,
-            'exclude_low_index': False.
+            'exclude_low_index': False,
             'exclude_coord_null': False
         },
         feature_options={

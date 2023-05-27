@@ -40,7 +40,7 @@ class DataLoader():
 
             if self.options.get('exclude_low_index'):
                 self.logger.info('Exclude session_id with little idx in grp0-4.')
-                df_train = df_train.filter(~pl.col('session_id').is_in([[ # grp0-4のidxが少なすぎるユーザー
+                df_train = df_train.filter(~pl.col('session_id').is_in([ # grp0-4のidxが少なすぎるユーザー
                     19100214524945590,
                     19100320360093440,
                     19100612343439052,
@@ -196,7 +196,7 @@ class DataLoader():
                     22100313040242244,
                     22100315262004190,
                     22100610464941670
-                ]]))
+                ]))
         
         elif self.options.get('low_mem'):
             self.logger.info(f'Use low_memory parquet.')

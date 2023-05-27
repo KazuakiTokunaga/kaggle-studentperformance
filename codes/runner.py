@@ -31,7 +31,8 @@ class Runner():
             'split_labels': True,
             'low_mem': False,
             'load_additional': False,
-            'additional_grp2_3': False
+            'additional_grp2_3': False,
+            'exclude_low_index': False
         },
         feature_options={
             'version': 2,

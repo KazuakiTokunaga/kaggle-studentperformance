@@ -99,7 +99,7 @@ class Runner():
         self.df_train, self.df_test, self.df_labels, self.df_submission = dataloader.load()
 
         if self.load_options.get('exclude_coord_null'):
-            self.logger.info('Exclude coord null session_id in additional data.'):
+            self.logger.info('Exclude coord null session_id in additional data.')
             exclude_session = pl.read_csv(f'{self.repo_path}/config/exclude_additional_session').get_column('session_id').to_list()
             self.df_train = self.df_train.filter(~pl.col('session_id').is_in(exclude_session))
 

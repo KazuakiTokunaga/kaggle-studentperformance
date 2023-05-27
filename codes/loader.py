@@ -201,7 +201,7 @@ class DataLoader():
                     22100315262004190,
                     22100610464941670
                 ]))
-        
+                
         elif self.options.get('low_mem'):
             self.logger.info(f'Use low_memory parquet.')
             df_train = pl.read_parquet(f'{self.input_path}/train_low_mem.parquet').drop(["fullscreen", "hq", "music"])    

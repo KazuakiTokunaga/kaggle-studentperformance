@@ -32,7 +32,8 @@ class Runner():
             'low_mem': False,
             'load_additional': False,
             'additional_grp2_3': False,
-            'exclude_low_index': False
+            'exclude_low_index': False.
+            'exclude_coord_null': False
         },
         feature_options={
             'version': 2,
@@ -96,6 +97,11 @@ class Runner():
         
         dataloader = loader.DataLoader(input_path=self.input_path, log_path=self.log_path, options=self.load_options)
         self.df_train, self.df_test, self.df_labels, self.df_submission = dataloader.load()
+
+        if self.load_options.get('exclude_coord_null'):
+            self.logger.info('Exclude coord null session_id in additional data.'):
+            exclude_session = pl.read_csv(f'{self.repo_path}/config/exclude_additional_session').get_column('session_id').to_list()
+            self.df_train = self.df_train.filter(~pl.col('session_id').is_in(exclude_session))
 
         if self.load_options.get('load_additional'):
             self.ORIGINAL_USERS = self.df_train.filter(pl.col('original')==1).get_column('session_id').unique()

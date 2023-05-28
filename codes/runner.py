@@ -341,7 +341,7 @@ class Runner():
                 clf = xgb.XGBClassifier(**model_params)
                 if self.model_options.get('sample_weight'):
                     if print_model_info:
-                        self.logger_info(f'Use sampling weight.')
+                        self.logger.info(f'Use sampling weight.')
                     clf.fit(
                         train_x, 
                         train_y['correct'],

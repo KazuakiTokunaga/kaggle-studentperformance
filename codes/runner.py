@@ -64,6 +64,7 @@ class Runner():
             'each_folder_name': None, 
             'best_ntrees': [],
             'sample_weight': False,
+            'weight_value': [],
             'random': True,
             'random_state': 42
         }):
@@ -84,6 +85,7 @@ class Runner():
             'optimal_threshold': 0.620
         }
         self.model_kind = self.model_options.get('model')
+        self.weight_value = self.model_options.get('weight_value')
         self.best_ntrees = model_options.get('best_ntrees')
         self.note = dict()
         self.fold_models_base = dict()
@@ -267,8 +269,12 @@ class Runner():
         res = []
         for id in idx_list:
             year = int(str(x)[:2])
-            if year == 22:
-                res.append(2)
+            if year == 20:
+                res.append(self.weight_value[0])
+            elif year == 21:
+                res.append(self.weight_value[1])
+            elif year == 22:
+                res.append(self.weight_value[2])
             else:
                 res.append(1)
 

@@ -263,7 +263,16 @@ class Runner():
     def get_weight(self, df):
 
         idx_list = df.index
-        return [1.5 if int(str(x)[:2]) == 22 else 1 for x in idx_list]
+
+        res = []
+        for id in idx_list:
+            year = int(str(x)[:2])
+            if year == 22:
+                res.append(2)
+            else:
+                res.append(1)
+
+        return res
 
     def get_trained_clf(self, 
             t, 

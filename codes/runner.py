@@ -369,6 +369,7 @@ class Runner():
                     clf.fit(train_x, train_y['correct'], verbose = 0, eval_set=eval_set)
                 ntree = clf.best_ntree_limit
             
+
             elif model_kind == 'lgb':
                 stopping_rounds = model_params.pop('early_stopping_rounds')
 
@@ -382,6 +383,7 @@ class Runner():
                 )
                 ntree = clf.best_iteration_
             
+
             elif model_kind == 'cat':
                 
                 train_pool = Pool(train_x.astype('float32'), train_y['correct'])
@@ -404,7 +406,18 @@ class Runner():
 
             if model_kind == 'xgb':
                 clf =  xgb.XGBClassifier(**model_params)
-                clf.fit(train_x, train_y['correct'], verbose = 0)
+
+                if self.model_options.get('sample_weight'):
+                    if print_model_info:
+                        self.logger.info(f'Use sampling weight.')
+                    clf.fit(
+                        train_x, 
+                        train_y['correct'],
+                        sample_weight = self.get_weight(train_x), 
+                        verbose = 0, 
+                    )
+                else:
+                    clf.fit(train_x, train_y['correct'], verbose = 0)
             
             elif model_kind == 'lgb':
                 clf = lgb.LGBMClassifier(**model_params)

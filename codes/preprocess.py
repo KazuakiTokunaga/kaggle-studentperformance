@@ -433,6 +433,9 @@ def add_random_feature(df, n=10):
 
 def add_columns_session(df, id=6):
 
+    if not id:
+        return df
+    
     time_columns = [
         pl.col('session_id').apply(lambda x: int(str(x)[:2])).alias('year'),
         pl.col('session_id').apply(lambda x: int(str(x)[2:4])+1).alias('month'),

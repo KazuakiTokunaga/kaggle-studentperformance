@@ -259,6 +259,10 @@ class Runner():
             self.oof = pd.read_csv(f'{self.input_path}/{self.file_name}.csv', index_col='session_id')
             self.oof.columns = [int(i) for i in self.oof.columns]
 
+    def get_weight(self, df):
+
+        idx_list = df.index
+        return [1.5 for x in idx_list if int(str(x)[:2]) == 22 else 1]
 
     def get_trained_clf(self, 
             t, 
@@ -334,7 +338,19 @@ class Runner():
             
             if model_kind == 'xgb':
                 clf = xgb.XGBClassifier(**model_params)
-                clf.fit(train_x, train_y['correct'], verbose = 0, eval_set=eval_set)
+                if self.model_options.get('sample_weight'):
+                    if print_model_info:
+                        self.logger_info(f'Use sampling weight.')
+                    clf.fit(
+                        train_x, 
+                        train_y['correct'],
+                        sample_weight = self.get_weight(train_x), 
+                        verbose = 0, 
+                        eval_set=eval_set,
+                        sample_weight_eval_set=[self.get_weight(valid_x)]
+                    )
+                else:
+                    clf.fit(train_x, train_y['correct'], verbose = 0, eval_set=eval_set)
                 ntree = clf.best_ntree_limit
             
             elif model_kind == 'lgb':

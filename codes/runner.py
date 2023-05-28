@@ -262,7 +262,7 @@ class Runner():
     def get_weight(self, df):
 
         idx_list = df.index
-        return [1.5 for x in idx_list if int(str(x)[:2]) == 22 else 1]
+        return [1.5 if int(str(x)[:2]) == 22 else 1 for x in idx_list]
 
     def get_trained_clf(self, 
             t, 

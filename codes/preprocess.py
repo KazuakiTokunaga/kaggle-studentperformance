@@ -382,6 +382,13 @@ def feature_engineer_pl(x, grp,
         tmp = tmp.join(tmp2, on='session_id', how='left')
         df = df.join(tmp, on='session_id', how='left')
     
+    if version>=3:
+        df = df.with_columns([
+            *[(pl.col(f'{c}_ET_sum_{feature_suffix}') / pl.col(f'{c}_LEVEL_count{feature_suffix}')).alias(f'{c}_et_per_cnt_{feature_suffix}') for c in LEVELS]
+        ]).with_columns([
+            *[pl.when(pl.col(f'{c}_et_per_cnt_{feature_suffix}').is_infinite()).then(pl.lit(0)).otherwise(pl.col(f'{c}_et_per_cnt_{feature_suffix}')).alias(f'{c}_et_per_cnt_{feature_suffix}') for c in LEVELS]
+        ])
+
     if level_diff:
         df = df.join(df_level_diff_summary, on='session_id', how='left')
     if cut_above and grp != '13-22':

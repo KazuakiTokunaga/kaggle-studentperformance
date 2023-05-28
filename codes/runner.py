@@ -63,6 +63,7 @@ class Runner():
             'each_params': False,
             'each_folder_name': None, 
             'best_ntrees': [],
+            'sample_weight': False,
             'random': True,
             'random_state': 42
         }):

@@ -268,7 +268,7 @@ class Runner():
 
         res = []
         for id in idx_list:
-            year = int(str(x)[:2])
+            year = int(str(id)[:2])
             if year == 20:
                 res.append(self.weight_value[0])
             elif year == 21:

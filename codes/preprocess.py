@@ -419,7 +419,7 @@ def feature_engineer_pl(x, grp,
     return df
 
 
-def add_random_feature(df, n=10):
+def add_random_feature(df, n=30):
     
     height = df.shape[0]
     data = np.random.randint(1, 1000, size=(height, n))

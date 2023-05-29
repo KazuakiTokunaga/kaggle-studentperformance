@@ -166,17 +166,10 @@ class Runner():
         self.df1 = preprocess.drop_columns(self.df1, thre=self.thre)
         self.df1 = preprocess.add_columns_session(self.df1, id=self.time_id)
 
-        if self.select:
-            exclude_df1 = json.load(open(f'{self.repo_path}/config/exclude_df1{self.exclude_suffix}.json', 'r'))
-            exclude_df1 = [i for i in exclude_df1 if i in self.df1.columns]
-            self.df1 = self.df1.drop(exclude_df1)
-
         if self.add_random:
             self.df1 = preprocess.add_random_feature(self.df1)
 
-        self.models['features'][grp] = self.df1.columns
-        self.logger.info(f'df1 done: {self.df1.shape}')
-        
+        self.logger.info('df1 done.')
 
         grp = '5-12'
         self.df2 = preprocess.feature_engineer_pl(
@@ -187,21 +180,14 @@ class Runner():
         )
         self.df2 = preprocess.drop_columns(self.df2, thre=self.thre)
 
-        if self.select:
-            exclude_df2 = json.load(open(f'{self.repo_path}/config/exclude_df2{self.exclude_suffix}.json', 'r'))
-            exclude_df2 = [i for i in exclude_df2 if i in self.df2.columns]
-            self.df2 = self.df2.drop(exclude_df2)
-
         if self.merge_features:
-            exclude_df1af = []
-            self.df2 = self.df2.join(self.df1.drop(exclude_df1af), on='session_id', how='left')
+            self.df2 = self.df2.join(self.df1, on='session_id', how='left')
         else:
             self.df2 = preprocess.add_columns_session(self.df2, id=self.time_id)
             if self.add_random:
                 self.df2 = preprocess.add_random_feature(self.df2)
 
-        self.models['features'][grp] = self.df2.columns
-        self.logger.info(f'df2 done: {self.df2.shape}')
+        self.logger.info('df2 done.')
 
         grp = '13-22'
         self.df3 = preprocess.feature_engineer_pl(
@@ -211,21 +197,40 @@ class Runner():
             **params)
         self.df3 = preprocess.drop_columns(self.df3, thre=self.thre)
 
-        if self.select:
-            exclude_df3 = json.load(open(f'{self.repo_path}/config/exclude_df3{self.exclude_suffix}.json', 'r'))
-            exclude_df3 = [i for i in exclude_df3 if i in self.df3.columns]
-            self.df3 = self.df3.drop(exclude_df3)
 
         if self.merge_features:
-            exclude_df2af = []
-            self.df3 = self.df3.join(self.df2.drop(exclude_df2af), on='session_id', how='left')
+            self.df3 = self.df3.join(self.df2, on='session_id', how='left')
         else:
             self.df3 = preprocess.add_columns_session(self.df3, id=self.time_id)
             if self.add_random:
                 self.df3 = preprocess.add_random_feature(self.df3)
 
+        self.logger.info('df3 done.')
+
+        if self.select:
+            self.logger.info('Execute feature selection.')
+            exclude_df1_base = json.load(open(f'{self.repo_path}/config/exclude_df1{self.exclude_suffix}.json', 'r'))
+            exclude_df2_base = json.load(open(f'{self.repo_path}/config/exclude_df2{self.exclude_suffix}.json', 'r'))
+            exclude_df3_base = json.load(open(f'{self.repo_path}/config/exclude_df3{self.exclude_suffix}.json', 'r'))
+
+            exclude_df1 = [i for i in exclude_df1_base if i in self.df1.columns]
+            self.df1 = self.df1.drop(exclude_df1)
+
+            exclude_df2 = [i for i in exclude_df2_base if i in self.df2.columns]
+            self.df2 = self.df2.drop(exclude_df2)
+
+            exclude_df3 = [i for i in exclude_df3_base if i in self.df3.columns]
+            self.df3 = self.df3.drop(exclude_df3)
+
+
+        self.models['features'][grp] = self.df1.columns
+        self.logger.info(f'df1 shape: {self.df1.shape}')
+
+        self.models['features'][grp] = self.df2.columns
+        self.logger.info(f'df2 shape: {self.df2.shape}')
+
         self.models['features'][grp] = self.df3.columns
-        self.logger.info(f'df3 done: {self.df3.shape}')
+        self.logger.info(f'df3 shape: {self.df3.shape}')
 
         self.note['df1_shape'] = self.df1.shape
         self.note['df2_shape'] = self.df2.shape

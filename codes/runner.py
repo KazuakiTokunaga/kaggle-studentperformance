@@ -81,6 +81,7 @@ class Runner():
         self.model_options = model_options
         self.models = {
             'features': {},
+            'features_original': {},
             'models': {},
             'optimal_threshold': 0.620
         }
@@ -207,6 +208,11 @@ class Runner():
 
         self.logger.info('df3 done.')
 
+        # 特徴量選択する前のカラム
+        self.models['features_original']['0-4'] = self.df1.columns
+        self.models['features_original']['5-12'] = self.df2.columns
+        self.models['features_original']['13-22'] = self.df3.columns
+
         if self.select:
             self.logger.info('Execute feature selection.')
             exclude_df1_base = json.load(open(f'{self.repo_path}/config/exclude_df1{self.exclude_suffix}.json', 'r'))
@@ -224,12 +230,11 @@ class Runner():
 
 
         self.models['features']['0-4'] = self.df1.columns
-        self.logger.info(f'df1 shape: {self.df1.shape}')
-
         self.models['features']['5-12'] = self.df2.columns
-        self.logger.info(f'df2 shape: {self.df2.shape}')
-
         self.models['features']['13-22'] = self.df3.columns
+
+        self.logger.info(f'df1 shape: {self.df1.shape}')
+        self.logger.info(f'df2 shape: {self.df2.shape}')
         self.logger.info(f'df3 shape: {self.df3.shape}')
 
         self.note['df1_shape'] = self.df1.shape

@@ -223,13 +223,13 @@ class Runner():
             self.df3 = self.df3.drop(exclude_df3)
 
 
-        self.models['features'][grp] = self.df1.columns
+        self.models['features']['0-4'] = self.df1.columns
         self.logger.info(f'df1 shape: {self.df1.shape}')
 
-        self.models['features'][grp] = self.df2.columns
+        self.models['features']['5-12'] = self.df2.columns
         self.logger.info(f'df2 shape: {self.df2.shape}')
 
-        self.models['features'][grp] = self.df3.columns
+        self.models['features']['13-22'] = self.df3.columns
         self.logger.info(f'df3 shape: {self.df3.shape}')
 
         self.note['df1_shape'] = self.df1.shape

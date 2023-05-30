@@ -221,9 +221,9 @@ class Runner():
 
             tmp = [c for c in exclude_df1_base if not c.endswith('grp0-4') and not c.endswith('grp0-4_above')]
             print('df1', tmp)
-            tmp = [c for c in exclude_df2_base if not c.endswith('grp5-12') and not c.endswith('grp5-12_above')]
+            tmp = [c for c in exclude_df2_base if not c.endswith('grp0-4') and not c.endswith('grp0-4_above') and not c.endswith('grp5-12') and not c.endswith('grp5-12_above')]
             print('df2', tmp)
-            tmp = [c for c in exclude_df3_base if not c.endswith('grp13-22') and not c.endswith('grp13-22_above')]
+            tmp = [c for c in exclude_df3_base if not c.endswith('grp0-4') and not c.endswith('grp0-4_above') and not c.endswith('grp5-12') and not c.endswith('grp5-12_above') and not c.endswith('grp13-22') and not c.endswith('grp13-22_above')]
             print('df3', tmp)
 
             exclude_df1 = [i for i in exclude_df1_base if i in self.df1.columns]

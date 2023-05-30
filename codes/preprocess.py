@@ -306,7 +306,7 @@ def feature_engineer_pl(x, grp,
                 pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals'))|(pl.col("fqid")=="journals.pic_2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"journals_bingo_indexCount_{feature_suffix_extra}"),
                 pl.col("elapsed_time").filter((pl.col("text")=="Hmmm... not sure. Why don't you try the library?")|(pl.col("text")=="Oh, hello there!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"go_to_library_duration_{feature_suffix_extra}"), # Level 9 図書館への移動
                 pl.col("index").filter((pl.col("text")=="Hmmm... not sure. Why don't you try the library?")|(pl.col("text")=="Oh, hello there!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"go_to_library_indexCount_{feature_suffix_extra}"),
-                pl.col("elapsed_time").filter((pl.col("text")=="You could ask the archivist. He knows everybody!")|(pl.col("text")=="Do you have any info on Theodora Youmans?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"go_to_archivist_duration"_{feature_suffix_extra}), # Level 11 文書館への移動
+                pl.col("elapsed_time").filter((pl.col("text")=="You could ask the archivist. He knows everybody!")|(pl.col("text")=="Do you have any info on Theodora Youmans?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"go_to_archivist_duration_{feature_suffix_extra}"), # Level 11 文書館への移動
                 pl.col("index").filter((pl.col("text")=="You could ask the archivist. He knows everybody!")|(pl.col("text")=="Do you have any info on Theodora Youmans?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"go_to_archivist_indexCount_{feature_suffix_extra}"),
 
                 # Level 6: メガネ

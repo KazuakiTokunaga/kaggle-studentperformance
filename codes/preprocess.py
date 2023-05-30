@@ -270,12 +270,14 @@ def feature_engineer_pl(x, grp,
     df = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
   
     if use_extra:
+        feature_suffix_extra = 'extra_' + feature_suffix
+
         if grp=='0-4':
             aggs = [
-                pl.col("elapsed_time").filter((pl.col("text")=="It's a women's basketball jersey!")|(pl.col("text")=="That settles it.")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("shirt_watch_duration"),
-                pl.col("index").filter((pl.col("text")=="It's a women's basketball jersey!")|(pl.col("text")=="That settles it.")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("shirt_watch_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("text")=="Now where did I put my notebook?")|(pl.col("text")=="Found it!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("notebook_found_duration"),
-                pl.col("index").filter((pl.col("text")=="Now where did I put my notebook?")|(pl.col("text")=="Found it!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("notebook_found_indexCount"),
+                pl.col("elapsed_time").filter((pl.col("text")=="It's a women's basketball jersey!")|(pl.col("text")=="That settles it.")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"shirt_watch_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="It's a women's basketball jersey!")|(pl.col("text")=="That settles it.")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"shirt_watch_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter((pl.col("text")=="Now where did I put my notebook?")|(pl.col("text")=="Found it!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"notebook_found_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="Now where did I put my notebook?")|(pl.col("text")=="Found it!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"notebook_found_indexCount_{feature_suffix_extra}"),
 
                 pl.col("elapsed_time").filter(pl.col("text")=="Hey Jo, let's take a look at the shirt!").max().alias("to_shirt_be_et"),
                 pl.col("index").filter(pl.col("text")=="Hey Jo, let's take a look at the shirt!").max().alias("to_shirt_be_id"),
@@ -285,8 +287,8 @@ def feature_engineer_pl(x, grp,
             tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
 
             columns = [
-              (pl.col('to_shirt_af_et') - pl.col('to_shirt_be_et')).alias('to_shirt_et'),
-              (pl.col('to_shirt_af_id') - pl.col('to_shirt_be_id')).alias('to_shirt_id')
+              (pl.col('to_shirt_af_et') - pl.col('to_shirt_be_et')).alias(f'to_shirt_et_{feature_suffix_extra}'),
+              (pl.col('to_shirt_af_id') - pl.col('to_shirt_be_id')).alias(f'to_shirt_id_{feature_suffix_extra}')
             ]
             tmp = tmp.with_columns(columns).drop('to_shirt_af_et', 'to_shirt_af_id', 'to_shirt_be_et', 'to_shirt_be_id')
 
@@ -294,18 +296,18 @@ def feature_engineer_pl(x, grp,
 
         if grp=='5-12':
             aggs = [
-                pl.col("elapsed_time").filter((pl.col("text")=="Here's the log book.")|(pl.col("fqid")=='logbook.page.bingo')).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("logbook_bingo_duration"),
-                pl.col("index").filter((pl.col("text")=="Here's the log book.")|(pl.col("fqid")=='logbook.page.bingo')).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("logbook_bingo_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("fqid")=="businesscards")|(pl.col("fqid")=='businesscards.card_bingo.bingo')).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("businesscard_bingo_duration"),
-                pl.col("index").filter((pl.col("fqid")=="businesscards")|(pl.col("fqid")=='businesscards.card_bingo.bingo')).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("businesscard_bingo_indexCount"),
-                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader'))|(pl.col("fqid")=="reader.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("reader_bingo_duration"),
-                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader'))|(pl.col("fqid")=="reader.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("reader_bingo_indexCount"),
-                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals'))|(pl.col("fqid")=="journals.pic_2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("journals_bingo_duration"),
-                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals'))|(pl.col("fqid")=="journals.pic_2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("journals_bingo_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("text")=="Hmmm... not sure. Why don't you try the library?")|(pl.col("text")=="Oh, hello there!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("go_to_library_duration"), # Level 9 図書館への移動
-                pl.col("index").filter((pl.col("text")=="Hmmm... not sure. Why don't you try the library?")|(pl.col("text")=="Oh, hello there!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("go_to_library_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("text")=="You could ask the archivist. He knows everybody!")|(pl.col("text")=="Do you have any info on Theodora Youmans?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("go_to_archivist_duration"), # Level 11 文書館への移動
-                pl.col("index").filter((pl.col("text")=="You could ask the archivist. He knows everybody!")|(pl.col("text")=="Do you have any info on Theodora Youmans?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("go_to_archivist_indexCount"),
+                pl.col("elapsed_time").filter((pl.col("text")=="Here's the log book.")|(pl.col("fqid")=='logbook.page.bingo')).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"logbook_bingo_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="Here's the log book.")|(pl.col("fqid")=='logbook.page.bingo')).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"logbook_bingo_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter((pl.col("fqid")=="businesscards")|(pl.col("fqid")=='businesscards.card_bingo.bingo')).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"businesscard_bingo_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("fqid")=="businesscards")|(pl.col("fqid")=='businesscards.card_bingo.bingo')).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"businesscard_bingo_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader'))|(pl.col("fqid")=="reader.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"reader_bingo_duration_{feature_suffix_extra}"),
+                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader'))|(pl.col("fqid")=="reader.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"reader_bingo_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals'))|(pl.col("fqid")=="journals.pic_2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"journals_bingo_duration_{feature_suffix_extra}"),
+                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals'))|(pl.col("fqid")=="journals.pic_2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"journals_bingo_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter((pl.col("text")=="Hmmm... not sure. Why don't you try the library?")|(pl.col("text")=="Oh, hello there!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"go_to_library_duration_{feature_suffix_extra}"), # Level 9 図書館への移動
+                pl.col("index").filter((pl.col("text")=="Hmmm... not sure. Why don't you try the library?")|(pl.col("text")=="Oh, hello there!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"go_to_library_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter((pl.col("text")=="You could ask the archivist. He knows everybody!")|(pl.col("text")=="Do you have any info on Theodora Youmans?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"go_to_archivist_duration"_{feature_suffix_extra}), # Level 11 文書館への移動
+                pl.col("index").filter((pl.col("text")=="You could ask the archivist. He knows everybody!")|(pl.col("text")=="Do you have any info on Theodora Youmans?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"go_to_archivist_indexCount_{feature_suffix_extra}"),
 
                 # Level 6: メガネ
                 pl.col("elapsed_time").filter(pl.col("text_fqid")=="tunic.historicalsociety.frontdesk.archivist.hello").max().alias("found_glasses_be_et"), 
@@ -316,8 +318,8 @@ def feature_engineer_pl(x, grp,
             tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
 
             columns = [
-              (pl.col('found_glasses_af_et') - pl.col('found_glasses_be_et')).alias('found_glasses_et'),
-              (pl.col('found_glasses_af_id') - pl.col('found_glasses_be_id')).alias('found_glasses_id')
+              (pl.col('found_glasses_af_et') - pl.col('found_glasses_be_et')).alias(f'found_glasses_et_{feature_suffix_extra}'),
+              (pl.col('found_glasses_af_id') - pl.col('found_glasses_be_id')).alias(f'found_glasses_id_{feature_suffix_extra}')
             ]
             tmp = tmp.with_columns(columns).drop('found_glasses_af_et', 'found_glasses_af_id', 'found_glasses_be_et', 'found_glasses_be_id')
 
@@ -325,24 +327,24 @@ def feature_engineer_pl(x, grp,
 
         if grp=='13-22':
             aggs = [
-                pl.col("elapsed_time").filter((pl.col("fqid")=="I'll go look at everyone's pictures!")|(pl.col("text")=="Those are the same glasses!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l15_glasses_bingo_duration"),
-                pl.col("index").filter((pl.col("text")=="I'll go look at everyone's pictures!")|(pl.col("text")=="Those are the same glasses!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l15_glasses_bingo_indexCount"),              
-                pl.col("elapsed_time").filter((pl.col("text")=="Yes! It's the key for Teddy's cage!")|(pl.col("text")=="Those are the same glasses!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l15_archivist_key_duration"),
-                pl.col("index").filter((pl.col("text")=="Yes! It's the key for Teddy's cage!")|(pl.col("text")=="Those are the same glasses!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l15_archivist_key_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("text")=="Your grampa is waiting for you in the collection room.")|(pl.col("text")=="The archivist had him locked up!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l17_grampa_wating_duration"),
-                pl.col("index").filter((pl.col("text")=="Your grampa is waiting for you in the collection room.")|(pl.col("text")=="The archivist had him locked up!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l17_grampa_wating_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("text")=="Go take a look!")|(pl.col("text")=="That hoofprint doesn't match the flag!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l18_hoofprint_bingo_duration"),
-                pl.col("index").filter((pl.col("text")=="Go take a look!")|(pl.col("text")=="That hoofprint doesn't match the flag!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l18_hoofprint_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("text")=="Hmm. You could try the Aldo Leopold Wildlife Center.")|(pl.col("text")=="Oh no! What happened to that crane?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l18_go_to_wildlife_duration"),
-                pl.col("index").filter((pl.col("text")=="Hmm. You could try the Aldo Leopold Wildlife Center.")|(pl.col("text")=="Oh no! What happened to that crane?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l18_go_to_wildlife_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("text")=="Hey, nice dog! What breed is he?")|(pl.col("text")=="Actually, I went to school with somebody who LOVES old flags.")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l19_go_to_flag_expert_duration"),
-                pl.col("index").filter((pl.col("text")=="Hey, nice dog! What breed is he?")|(pl.col("text")=="Actually, I went to school with somebody who LOVES old flags.")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l19_go_to_flag_expert_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("text")=="It's an ecology flag!")|(pl.col("text")=="Hey, I've seen that symbol before! Check it out!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l19_ecologyflag_check_duration"),
-                pl.col("index").filter((pl.col("text")=="It's an ecology flag!")|(pl.col("text")=="Hey, I've seen that symbol before! Check it out!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l19_ecologyflag_check_indexCount"),
-                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader_flag'))|(pl.col("text_fqid")=="tunic.library.microfiche.reader_flag.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l20_reader_flag_duration"),
-                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader_flag'))|(pl.col("text_fqid")=="tunic.library.microfiche.reader_flag.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l20_reader_flag_indexCount"),
-                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals_flag'))|(pl.col("fqid")=="journals_flag.pic_0.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l21_journalsFlag_bingo_duration"),
-                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals_flag'))|(pl.col("fqid")=="journals_flag.pic_0.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l21_journalsFlag_bingo_indexCount"),
+                pl.col("elapsed_time").filter((pl.col("fqid")=="I'll go look at everyone's pictures!")|(pl.col("text")=="Those are the same glasses!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l15_glasses_bingo_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="I'll go look at everyone's pictures!")|(pl.col("text")=="Those are the same glasses!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l15_glasses_bingo_indexCount_{feature_suffix_extra}"),              
+                pl.col("elapsed_time").filter((pl.col("text")=="Yes! It's the key for Teddy's cage!")|(pl.col("text")=="Those are the same glasses!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l15_archivist_key_duration"_{feature_suffix_extra}),
+                pl.col("index").filter((pl.col("text")=="Yes! It's the key for Teddy's cage!")|(pl.col("text")=="Those are the same glasses!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l15_archivist_key_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter((pl.col("text")=="Your grampa is waiting for you in the collection room.")|(pl.col("text")=="The archivist had him locked up!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l17_grampa_wating_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="Your grampa is waiting for you in the collection room.")|(pl.col("text")=="The archivist had him locked up!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l17_grampa_wating_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter((pl.col("text")=="Go take a look!")|(pl.col("text")=="That hoofprint doesn't match the flag!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l18_hoofprint_bingo_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="Go take a look!")|(pl.col("text")=="That hoofprint doesn't match the flag!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l18_hoofprint_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter((pl.col("text")=="Hmm. You could try the Aldo Leopold Wildlife Center.")|(pl.col("text")=="Oh no! What happened to that crane?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l18_go_to_wildlife_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="Hmm. You could try the Aldo Leopold Wildlife Center.")|(pl.col("text")=="Oh no! What happened to that crane?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l18_go_to_wildlife_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter((pl.col("text")=="Hey, nice dog! What breed is he?")|(pl.col("text")=="Actually, I went to school with somebody who LOVES old flags.")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l19_go_to_flag_expert_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="Hey, nice dog! What breed is he?")|(pl.col("text")=="Actually, I went to school with somebody who LOVES old flags.")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l19_go_to_flag_expert_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter((pl.col("text")=="It's an ecology flag!")|(pl.col("text")=="Hey, I've seen that symbol before! Check it out!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l19_ecologyflag_check_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="It's an ecology flag!")|(pl.col("text")=="Hey, I've seen that symbol before! Check it out!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l19_ecologyflag_check_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader_flag'))|(pl.col("text_fqid")=="tunic.library.microfiche.reader_flag.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l20_reader_flag_duration_{feature_suffix_extra}"),
+                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader_flag'))|(pl.col("text_fqid")=="tunic.library.microfiche.reader_flag.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l20_reader_flag_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals_flag'))|(pl.col("fqid")=="journals_flag.pic_0.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l21_journalsFlag_bingo_duration_{feature_suffix_extra}"),
+                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals_flag'))|(pl.col("fqid")=="journals_flag.pic_0.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l21_journalsFlag_bingo_indexCount_{feature_suffix_extra}"),
             ]
             tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
             df = df.join(tmp, on="session_id", how='left')

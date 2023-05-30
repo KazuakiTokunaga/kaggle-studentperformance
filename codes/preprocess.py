@@ -88,6 +88,7 @@ def feature_engineer_pl(x, grp,
         cut_above=True,
         room_click=True,
         use_csv=False, 
+        modify_elapsed_time = False,
         flr_list = None,
         tl_list = None,
         df_navigate_master = None,
@@ -170,6 +171,22 @@ def feature_engineer_pl(x, grp,
             *[pl.col('elapsed_time_diff_to').filter(pl.col('event_name')==e).sum().alias(f'elapsed_time_diff_to_{e}_{feature_suffix2}') for e in event_name_feature],
             *[pl.col('elapsed_time_diff_to').filter(pl.col('level')==l).sum().alias(f'elapsed_time_diff_to_{l}_{feature_suffix2}') for l in LEVELS]
         ])
+
+        # 置き換えに対応するため
+        x = x.with_columns(
+            pl.when(pl.col('elapsed_time_diff')>=10000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over10000'),
+            pl.when(pl.col('elapsed_time_diff')>=20000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over20000'),
+            pl.when(pl.col('elapsed_time_diff')>=50000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over50000'),
+            pl.when(pl.col('elapsed_time_diff')>=100000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over100000'),
+            pl.when(pl.col('elapsed_time_diff')>=200000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over200000'),
+            pl.when(pl.col('elapsed_time_diff')>=500000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over500000'),
+        )
+
+    if modify_elapsed_time:
+        x = x.with_columns(
+            pl.when(pl.col('elapsed_time_diff')>=20000).then(pl.lit(20000)).otherwise(pl.col('elapsed_time_diff')).alias('elapsed_time_diff'), # 0.3%くらい
+        )
+
 
     # メインの処理
     aggs = [
@@ -394,8 +411,16 @@ def feature_engineer_pl(x, grp,
             
             *[pl.col("elapsed_time_diff").filter(pl.col("room_fqid") == c).quantile(0.2, "nearest").alias(f"{c}_room_ET_quantile2_{feature_suffix}") for c in room_lists],
             *[pl.col("elapsed_time_diff").filter(pl.col("room_fqid") == c).quantile(0.7, "nearest").alias(f"{c}_room_ET_quantile7_{feature_suffix}") for c in room_lists],
-            *[pl.col("elapsed_time_diff").filter(pl.col("room_fqid") == c).quantile(0.9, "nearest").alias(f"{c}_room_ET_quantile9_{feature_suffix}") for c in room_lists]
+            *[pl.col("elapsed_time_diff").filter(pl.col("room_fqid") == c).quantile(0.9, "nearest").alias(f"{c}_room_ET_quantile9_{feature_suffix}") for c in room_lists],
+
+            pl.col("elapsed_time_over10000").sum().alias(f"elapsed_time_over10000_{feature_suffix}"),
+            pl.col("elapsed_time_over20000").sum().alias(f"elapsed_time_over20000_{feature_suffix}"),
+            pl.col("elapsed_time_over50000").sum().alias(f"elapsed_time_over50000_{feature_suffix}"),
+            pl.col("elapsed_time_over100000").sum().alias(f"elapsed_time_over100000_{feature_suffix}"),
+            pl.col("elapsed_time_over200000").sum().alias(f"elapsed_time_over200000_{feature_suffix}"),
+            pl.col("elapsed_time_over500000").sum().alias(f"elapsed_time_over500000_{feature_suffix}")
         ]
+        
         tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
         df = df.join(tmp, on="session_id", how='left')
 

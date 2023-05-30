@@ -47,6 +47,7 @@ class Runner():
             'level_diff': False,
             'cut_above': False,
             'room_click': False,
+            'modify_elapsed_time': False,
             'use_csv': False,
             'add_random': False
         },
@@ -154,6 +155,7 @@ class Runner():
             'level_diff': self.feature_options.get('level_diff'),
             'room_click': self.feature_options.get('room_click'),
             'use_csv': self.feature_options.get('use_csv'),
+            'modify_elapsed_time': self.feature_options.get('modify_elapsed_time')
         }
 
         # sessionごとにまとめる

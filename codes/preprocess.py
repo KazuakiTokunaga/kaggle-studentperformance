@@ -135,7 +135,7 @@ def feature_engineer_pl(x, grp,
             (pl.col('elapsed_time_max').filter((pl.col('level')>=5)&(pl.col('level')<=11)).max() - pl.col('elapsed_time_min').filter(pl.col('level')==12).min()).alias(f'elapsed_time_diff_max5-11_min12_{feature_suffix}'),
             (pl.col('elapsed_time_max').filter((pl.col('level')>=13)&(pl.col('level')<=21)).max() - pl.col('elapsed_time_min').filter(pl.col('level')==22).min()).alias(f'elapsed_time_diff_max13-21_min22_{feature_suffix}'),
         ]).with_columns(
-            *[pl.col(f'elapsed_time_level_diff_{n}'_{feature_suffix}).apply(lambda s: s if s < 0 else 0, return_dtype=pl.Int64).alias(f'elapsed_time_level_diff_fixed_{n}_{feature_suffix}') for n in [i for i in LEVELS if i not in [4,13,22]]],
+            *[pl.col(f'elapsed_time_level_diff_{n}_{feature_suffix}').apply(lambda s: s if s < 0 else 0, return_dtype=pl.Int64).alias(f'elapsed_time_level_diff_fixed_{n}_{feature_suffix}') for n in [i for i in LEVELS if i not in [4,13,22]]],
             pl.col(f'elapsed_time_diff_max0-3_min4_{feature_suffix}').apply(lambda s: s if s > 0 else 0, return_dtype=pl.Int64).alias(f'elapsed_time_diff_fixed_max0_3_min4_{feature_suffix}'),
             pl.col(f'elapsed_time_diff_max5-11_min12_{feature_suffix}').apply(lambda s: s if s > 0 else 0, return_dtype=pl.Int64).alias(f'elapsed_time_diff_fixed_max5-11_min12_{feature_suffix}'),
             pl.col(f'elapsed_time_diff_max13-21_min22_{feature_suffix}').apply(lambda s: s if s > 0 else 0, return_dtype=pl.Int64).alias(f'elapsed_time_diff_fixed_max13-21_min22_{feature_suffix}'),

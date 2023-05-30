@@ -382,6 +382,24 @@ def feature_engineer_pl(x, grp,
         tmp = tmp.join(tmp2, on='session_id', how='left')
         df = df.join(tmp, on='session_id', how='left')
 
+
+    if version>=3:
+
+        # 集計統計量の追加
+        aggs = [
+            
+            *[pl.col("elapsed_time_diff").filter(pl.col("text_fqid")==c).quantile(0.2, "nearest").alias(f"{c}_text_ET_quantile2_{feature_suffix}") for c in text_lists],
+            *[pl.col("elapsed_time_diff").filter(pl.col("text_fqid")==c).quantile(0.7, "nearest").alias(f"{c}_text_ET_quantile7_{feature_suffix}") for c in text_lists],
+            *[pl.col("elapsed_time_diff").filter(pl.col("text_fqid")==c).quantile(0.9, "nearest").alias(f"{c}_text_ET_quantile9_{feature_suffix}") for c in text_lists],
+            
+            *[pl.col("elapsed_time_diff").filter(pl.col("room_fqid") == c).quantile(0.2, "nearest").alias(f"{c}_room_ET_quantile2_{feature_suffix}") for c in room_lists],
+            *[pl.col("elapsed_time_diff").filter(pl.col("room_fqid") == c).quantile(0.7, "nearest").alias(f"{c}_room_ET_quantile7_{feature_suffix}") for c in room_lists],
+            *[pl.col("elapsed_time_diff").filter(pl.col("room_fqid") == c).quantile(0.9, "nearest").alias(f"{c}_room_ET_quantile9_{feature_suffix}") for c in room_lists]
+        ]
+        tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
+        df = df.join(tmp, on="session_id", how='left')
+
+
     if level_diff:
         df = df.join(df_level_diff_summary, on='session_id', how='left')
     if cut_above and grp != '13-22':

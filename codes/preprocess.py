@@ -406,6 +406,22 @@ def feature_engineer_pl(x, grp,
 
         # 集計統計量の追加
         aggs = [
+
+            pl.col("elapsed_time_over10000").sum().alias(f"elapsed_time_over10000_{feature_suffix}"),
+            pl.col("elapsed_time_over20000").sum().alias(f"elapsed_time_over20000_{feature_suffix}"),
+            pl.col("elapsed_time_over50000").sum().alias(f"elapsed_time_over50000_{feature_suffix}"),
+            pl.col("elapsed_time_over100000").sum().alias(f"elapsed_time_over100000_{feature_suffix}"),
+            pl.col("elapsed_time_over200000").sum().alias(f"elapsed_time_over200000_{feature_suffix}"),
+            pl.col("elapsed_time_over500000").sum().alias(f"elapsed_time_over500000_{feature_suffix}")
+        ]
+        
+        tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
+        df = df.join(tmp, on="session_id", how='left')
+
+    if version>=4:
+
+        # 集計統計量の追加
+        aggs = [
             
             *[pl.col("elapsed_time_diff").filter(pl.col("text_fqid")==c).quantile(0.2, "nearest").alias(f"{c}_text_ET_quantile2_{feature_suffix}") for c in text_lists],
             *[pl.col("elapsed_time_diff").filter(pl.col("text_fqid")==c).quantile(0.7, "nearest").alias(f"{c}_text_ET_quantile7_{feature_suffix}") for c in text_lists],
@@ -414,13 +430,6 @@ def feature_engineer_pl(x, grp,
             *[pl.col("elapsed_time_diff").filter(pl.col("room_fqid") == c).quantile(0.2, "nearest").alias(f"{c}_room_ET_quantile2_{feature_suffix}") for c in room_lists],
             *[pl.col("elapsed_time_diff").filter(pl.col("room_fqid") == c).quantile(0.7, "nearest").alias(f"{c}_room_ET_quantile7_{feature_suffix}") for c in room_lists],
             *[pl.col("elapsed_time_diff").filter(pl.col("room_fqid") == c).quantile(0.9, "nearest").alias(f"{c}_room_ET_quantile9_{feature_suffix}") for c in room_lists],
-
-            pl.col("elapsed_time_over10000").sum().alias(f"elapsed_time_over10000_{feature_suffix}"),
-            pl.col("elapsed_time_over20000").sum().alias(f"elapsed_time_over20000_{feature_suffix}"),
-            pl.col("elapsed_time_over50000").sum().alias(f"elapsed_time_over50000_{feature_suffix}"),
-            pl.col("elapsed_time_over100000").sum().alias(f"elapsed_time_over100000_{feature_suffix}"),
-            pl.col("elapsed_time_over200000").sum().alias(f"elapsed_time_over200000_{feature_suffix}"),
-            pl.col("elapsed_time_over500000").sum().alias(f"elapsed_time_over500000_{feature_suffix}")
         ]
         
         tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")

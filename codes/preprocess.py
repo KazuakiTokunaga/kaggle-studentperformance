@@ -172,15 +172,15 @@ def feature_engineer_pl(x, grp,
             *[pl.col('elapsed_time_diff_to').filter(pl.col('level')==l).sum().alias(f'elapsed_time_diff_to_{l}_{feature_suffix2}') for l in LEVELS]
         ])
 
-        # 置き換えに対応するため
-        x = x.with_columns(
-            pl.when(pl.col('elapsed_time_diff')>=10000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over10000'),
-            pl.when(pl.col('elapsed_time_diff')>=20000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over20000'),
-            pl.when(pl.col('elapsed_time_diff')>=50000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over50000'),
-            pl.when(pl.col('elapsed_time_diff')>=100000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over100000'),
-            pl.when(pl.col('elapsed_time_diff')>=200000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over200000'),
-            pl.when(pl.col('elapsed_time_diff')>=500000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over500000'),
-        )
+    # 置き換えに対応するため
+    x = x.with_columns(
+        pl.when(pl.col('elapsed_time_diff')>=10000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over10000'),
+        pl.when(pl.col('elapsed_time_diff')>=20000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over20000'),
+        pl.when(pl.col('elapsed_time_diff')>=50000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over50000'),
+        pl.when(pl.col('elapsed_time_diff')>=100000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over100000'),
+        pl.when(pl.col('elapsed_time_diff')>=200000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over200000'),
+        pl.when(pl.col('elapsed_time_diff')>=500000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over500000'),
+    )
 
     if modify_elapsed_time:
         x = x.with_columns(

@@ -8,8 +8,8 @@
         "max_depth": 3,
         "min_child_weight": 5.0,
         "alpha": 0,
-        "subsample":0.7,
-        "colsample_bytree": 0.7,
+        "subsample":0.8,
+        "colsample_bytree": 0.5,
         "random_state": 42,
         "early_stopping_rounds": 100
     },

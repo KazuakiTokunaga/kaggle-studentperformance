@@ -33,7 +33,8 @@ class Runner():
             'load_additional': False,
             'additional_grp2_3': False,
             'exclude_low_index': False,
-            'exclude_coord_null': False
+            'exclude_coord_null': False,
+            'sort': True
         },
         feature_options={
             'version': 2,
@@ -111,6 +112,10 @@ class Runner():
         if self.load_options.get('load_additional'):
             self.ORIGINAL_USERS = self.df_train.filter(pl.col('original')==1).get_column('session_id').unique()
             self.logger.info(f'Count of Original Users: {len(self.ORIGINAL_USERS)}')
+
+        if self.load_options.get('sort'):
+            self.logger.info(f'Sort train data.')
+            self.df_train = self.df_train.sort('session_id', 'index')
 
 
     def delete_df_train(self, ):

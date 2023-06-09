@@ -624,7 +624,7 @@ class Runner():
             pickle.dump(self.fold_models, open(f'{self.output_path}fold_models.pkl', 'wb'))
 
 
-    def evaluate_validation(self, ):
+    def evaluate_validation(self, fixed_thre=None):
         self.logger.info('Start evaluating validations.')
 
         # PUT TRUE LABELS INTO DATAFRAME WITH 18 COLUMNS
@@ -643,15 +643,21 @@ class Runner():
         scores = []; thresholds = []
         best_score = 0; best_threshold = 0
 
-        self.logger.info('Search optimal threshold.')
-        for threshold in np.arange(0.60,0.65,0.001):
-            preds = (oof_target.values.reshape((-1))>threshold).astype('int')
-            m = f1_score(true.values.reshape((-1)), preds, average='macro')   
-            scores.append(m)
-            thresholds.append(threshold)
-            if m>best_score:
-                best_score = m
-                best_threshold = threshold
+        if fixed_thre is None:
+            self.logger.info('Search optimal threshold.')
+            for threshold in np.arange(0.60,0.65,0.001):
+                preds = (oof_target.values.reshape((-1))>threshold).astype('int')
+                m = f1_score(true.values.reshape((-1)), preds, average='macro')   
+                scores.append(m)
+                thresholds.append(threshold)
+                if m>best_score:
+                    best_score = m
+                    best_threshold = threshold
+        else:
+            best_threshold = fixed_thre
+            preds = (oof_target.values.reshape((-1))>best_threshold).astype('int')
+            best_score = f1_score(true.values.reshape((-1)), preds, average='macro')  
+
 
         self.models['optimal_threshold'] = np.round(best_threshold, 6)
         self.note['best_threshold'] = best_threshold

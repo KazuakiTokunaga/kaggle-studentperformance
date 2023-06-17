@@ -5,12 +5,12 @@
         "objective": "binary:logistic",
         "eval_metric":"logloss",
         "learning_rate": 0.02,
-        "max_depth": 3,
-        "min_child_weight": 0.1,
-        "subsample":0.7,
-        "colsample_bytree": 0.7,
+        "alpha": 10,
+        "max_depth": 6,
+        "subsample":0.8,
+        "colsample_bytree": 0.5,
         "random_state": 42,
-        "early_stopping_rounds": 100
+        "early_stopping_rounds": 60
     },
     "n_estimators": [1200]
 }

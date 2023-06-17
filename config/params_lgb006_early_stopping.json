@@ -2,9 +2,9 @@
     "base": {
         "objective": "binary",
         "learning_rate": 0.02,
-        "max_depth": 8,
+        "max_depth": 7,
         "reg_alpha": 10,
-        "num_leaves": 16,
+        "num_leaves": 20,
         "subsample": 0.8,
         "colsample_bytree": 0.5,
         "early_stopping_rounds": 120

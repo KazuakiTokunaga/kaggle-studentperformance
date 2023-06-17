@@ -88,6 +88,7 @@ def feature_engineer_pl(x, grp,
         cut_above=True,
         room_click=True,
         use_csv=False, 
+        modify_elapsed_time = False,
         flr_list = None,
         tl_list = None,
         df_navigate_master = None,
@@ -126,24 +127,24 @@ def feature_engineer_pl(x, grp,
             (pl.col('next_min') - pl.col('elapsed_time_max')).alias('level_diff'),
         ])
         df_level_diff_summary = df_level_diff.groupby('session_id').agg([
-            *[pl.col('elapsed_time_total').filter(pl.col('level')==l).max().alias(f'elapsed_time_total_level_{l}') for l in LEVELS],
-            *[pl.col('level_diff').filter(pl.col('level')==l).max().alias(f'elapsed_time_level_diff_{l}') for l in [i for i in LEVELS if i not in [4,13,22]]],
-            (pl.col('elapsed_time_max').filter((pl.col('level')>=0)&(pl.col('level')<=4)).max()).alias('elapsed_time_max0-4'),
-            (pl.col('elapsed_time_max').filter((pl.col('level')>=5)&(pl.col('level')<=12)).max()).alias('elapsed_time_max5-12'),
-            (pl.col('elapsed_time_max').filter((pl.col('level')>=13)&(pl.col('level')<=22)).max()).alias('elapsed_time_max13-22'),
-            (pl.col('elapsed_time_max').filter((pl.col('level')>=0)&(pl.col('level')<=3)).max() - pl.col('elapsed_time_min').filter(pl.col('level')==4).min()).alias('elapsed_time_diff_max0-3_min4'),
-            (pl.col('elapsed_time_max').filter((pl.col('level')>=5)&(pl.col('level')<=11)).max() - pl.col('elapsed_time_min').filter(pl.col('level')==12).min()).alias('elapsed_time_diff_max5-11_min12'),
-            (pl.col('elapsed_time_max').filter((pl.col('level')>=13)&(pl.col('level')<=21)).max() - pl.col('elapsed_time_min').filter(pl.col('level')==22).min()).alias('elapsed_time_diff_max13-21_min22'),
+            *[pl.col('elapsed_time_total').filter(pl.col('level')==l).max().alias(f'elapsed_time_total_level_{l}_{feature_suffix}') for l in LEVELS],
+            *[pl.col('level_diff').filter(pl.col('level')==l).max().alias(f'elapsed_time_level_diff_{l}_{feature_suffix}') for l in [i for i in LEVELS if i not in [4,13,22]]],
+            (pl.col('elapsed_time_max').filter((pl.col('level')>=0)&(pl.col('level')<=4)).max()).alias(f'elapsed_time_max0-4_{feature_suffix}'),
+            (pl.col('elapsed_time_max').filter((pl.col('level')>=5)&(pl.col('level')<=12)).max()).alias(f'elapsed_time_max5-12_{feature_suffix}'),
+            (pl.col('elapsed_time_max').filter((pl.col('level')>=13)&(pl.col('level')<=22)).max()).alias(f'elapsed_time_max13-22_{feature_suffix}'),
+            (pl.col('elapsed_time_max').filter((pl.col('level')>=0)&(pl.col('level')<=3)).max() - pl.col('elapsed_time_min').filter(pl.col('level')==4).min()).alias(f'elapsed_time_diff_max0-3_min4_{feature_suffix}'),
+            (pl.col('elapsed_time_max').filter((pl.col('level')>=5)&(pl.col('level')<=11)).max() - pl.col('elapsed_time_min').filter(pl.col('level')==12).min()).alias(f'elapsed_time_diff_max5-11_min12_{feature_suffix}'),
+            (pl.col('elapsed_time_max').filter((pl.col('level')>=13)&(pl.col('level')<=21)).max() - pl.col('elapsed_time_min').filter(pl.col('level')==22).min()).alias(f'elapsed_time_diff_max13-21_min22_{feature_suffix}'),
         ]).with_columns(
-            *[pl.col(f'elapsed_time_level_diff_{n}').apply(lambda s: s if s < 0 else 0, return_dtype=pl.Int64).alias(f'elapsed_fime_level_diff_fixed_{n}') for n in [i for i in LEVELS if i not in [4,13,22]]],
-            pl.col('elapsed_time_diff_max0-3_min4').apply(lambda s: s if s > 0 else 0, return_dtype=pl.Int64).alias('elapsed_time_diff_fixed_max0_3_min4'),
-            pl.col('elapsed_time_diff_max5-11_min12').apply(lambda s: s if s > 0 else 0, return_dtype=pl.Int64).alias('elapsed_time_diff_fixed_max5-11_min12'),
-            pl.col('elapsed_time_diff_max13-21_min22').apply(lambda s: s if s > 0 else 0, return_dtype=pl.Int64).alias('elapsed_time_diff_fixed_max13-21_min22'),
+            *[pl.col(f'elapsed_time_level_diff_{n}_{feature_suffix}').apply(lambda s: s if s < 0 else 0, return_dtype=pl.Int64).alias(f'elapsed_time_level_diff_fixed_{n}_{feature_suffix}') for n in [i for i in LEVELS if i not in [4,13,22]]],
+            pl.col(f'elapsed_time_diff_max0-3_min4_{feature_suffix}').apply(lambda s: s if s > 0 else 0, return_dtype=pl.Int64).alias(f'elapsed_time_diff_fixed_max0_3_min4_{feature_suffix}'),
+            pl.col(f'elapsed_time_diff_max5-11_min12_{feature_suffix}').apply(lambda s: s if s > 0 else 0, return_dtype=pl.Int64).alias(f'elapsed_time_diff_fixed_max5-11_min12_{feature_suffix}'),
+            pl.col(f'elapsed_time_diff_max13-21_min22_{feature_suffix}').apply(lambda s: s if s > 0 else 0, return_dtype=pl.Int64).alias(f'elapsed_time_diff_fixed_max13-21_min22_{feature_suffix}'),
         ).drop(
-            *[f'elapsed_time_level_diff_{l}' for l in [i for i in range(22) if i not in [4,13,22]]],
-            'elapsed_time_diff_max0-3_min4',
-            'elapsed_time_diff_max5-11_min12',
-            'elapsed_time_diff_max13-21_min22'
+            *[f'elapsed_time_level_diff_{l}_{feature_suffix}' for l in [i for i in range(22) if i not in [4,13,22]]],
+            f'elapsed_time_diff_max0-3_min4_{feature_suffix}',
+            f'elapsed_time_diff_max5-11_min12_{feature_suffix}',
+            f'elapsed_time_diff_max13-21_min22_{feature_suffix}'
         )
 
     if cut_above:
@@ -170,6 +171,22 @@ def feature_engineer_pl(x, grp,
             *[pl.col('elapsed_time_diff_to').filter(pl.col('event_name')==e).sum().alias(f'elapsed_time_diff_to_{e}_{feature_suffix2}') for e in event_name_feature],
             *[pl.col('elapsed_time_diff_to').filter(pl.col('level')==l).sum().alias(f'elapsed_time_diff_to_{l}_{feature_suffix2}') for l in LEVELS]
         ])
+
+    # 置き換えに対応するため
+    x = x.with_columns(
+        pl.when(pl.col('elapsed_time_diff')>=10000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over10000'),
+        pl.when(pl.col('elapsed_time_diff')>=20000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over20000'),
+        pl.when(pl.col('elapsed_time_diff')>=50000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over50000'),
+        pl.when(pl.col('elapsed_time_diff')>=100000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over100000'),
+        pl.when(pl.col('elapsed_time_diff')>=200000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over200000'),
+        pl.when(pl.col('elapsed_time_diff')>=500000).then(pl.lit(1)).otherwise(pl.lit(0)).alias('elapsed_time_over500000'),
+    )
+
+    if modify_elapsed_time:
+        x = x.with_columns(
+            pl.when(pl.col('elapsed_time_diff')>=20000).then(pl.lit(20000)).otherwise(pl.col('elapsed_time_diff')).alias('elapsed_time_diff'), # 0.3%くらい
+        )
+
 
     # メインの処理
     aggs = [
@@ -253,12 +270,14 @@ def feature_engineer_pl(x, grp,
     df = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
   
     if use_extra:
+        feature_suffix_extra = 'extra_' + feature_suffix
+
         if grp=='0-4':
             aggs = [
-                pl.col("elapsed_time").filter((pl.col("text")=="It's a women's basketball jersey!")|(pl.col("text")=="That settles it.")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("shirt_watch_duration"),
-                pl.col("index").filter((pl.col("text")=="It's a women's basketball jersey!")|(pl.col("text")=="That settles it.")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("shirt_watch_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("text")=="Now where did I put my notebook?")|(pl.col("text")=="Found it!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("notebook_found_duration"),
-                pl.col("index").filter((pl.col("text")=="Now where did I put my notebook?")|(pl.col("text")=="Found it!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("notebook_found_indexCount"),
+                pl.col("elapsed_time").filter((pl.col("text")=="It's a women's basketball jersey!")|(pl.col("text")=="That settles it.")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"shirt_watch_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="It's a women's basketball jersey!")|(pl.col("text")=="That settles it.")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"shirt_watch_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter((pl.col("text")=="Now where did I put my notebook?")|(pl.col("text")=="Found it!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"notebook_found_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="Now where did I put my notebook?")|(pl.col("text")=="Found it!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"notebook_found_indexCount_{feature_suffix_extra}"),
 
                 pl.col("elapsed_time").filter(pl.col("text")=="Hey Jo, let's take a look at the shirt!").max().alias("to_shirt_be_et"),
                 pl.col("index").filter(pl.col("text")=="Hey Jo, let's take a look at the shirt!").max().alias("to_shirt_be_id"),
@@ -268,8 +287,8 @@ def feature_engineer_pl(x, grp,
             tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
 
             columns = [
-              (pl.col('to_shirt_af_et') - pl.col('to_shirt_be_et')).alias('to_shirt_et'),
-              (pl.col('to_shirt_af_id') - pl.col('to_shirt_be_id')).alias('to_shirt_id')
+              (pl.col('to_shirt_af_et') - pl.col('to_shirt_be_et')).alias(f'to_shirt_et_{feature_suffix_extra}'),
+              (pl.col('to_shirt_af_id') - pl.col('to_shirt_be_id')).alias(f'to_shirt_id_{feature_suffix_extra}')
             ]
             tmp = tmp.with_columns(columns).drop('to_shirt_af_et', 'to_shirt_af_id', 'to_shirt_be_et', 'to_shirt_be_id')
 
@@ -277,18 +296,18 @@ def feature_engineer_pl(x, grp,
 
         if grp=='5-12':
             aggs = [
-                pl.col("elapsed_time").filter((pl.col("text")=="Here's the log book.")|(pl.col("fqid")=='logbook.page.bingo')).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("logbook_bingo_duration"),
-                pl.col("index").filter((pl.col("text")=="Here's the log book.")|(pl.col("fqid")=='logbook.page.bingo')).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("logbook_bingo_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("fqid")=="businesscards")|(pl.col("fqid")=='businesscards.card_bingo.bingo')).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("businesscard_bingo_duration"),
-                pl.col("index").filter((pl.col("fqid")=="businesscards")|(pl.col("fqid")=='businesscards.card_bingo.bingo')).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("businesscard_bingo_indexCount"),
-                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader'))|(pl.col("fqid")=="reader.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("reader_bingo_duration"),
-                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader'))|(pl.col("fqid")=="reader.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("reader_bingo_indexCount"),
-                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals'))|(pl.col("fqid")=="journals.pic_2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("journals_bingo_duration"),
-                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals'))|(pl.col("fqid")=="journals.pic_2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("journals_bingo_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("text")=="Hmmm... not sure. Why don't you try the library?")|(pl.col("text")=="Oh, hello there!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("go_to_library_duration"), # Level 9 図書館への移動
-                pl.col("index").filter((pl.col("text")=="Hmmm... not sure. Why don't you try the library?")|(pl.col("text")=="Oh, hello there!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("go_to_library_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("text")=="You could ask the archivist. He knows everybody!")|(pl.col("text")=="Do you have any info on Theodora Youmans?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("go_to_archivist_duration"), # Level 11 文書館への移動
-                pl.col("index").filter((pl.col("text")=="You could ask the archivist. He knows everybody!")|(pl.col("text")=="Do you have any info on Theodora Youmans?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("go_to_archivist_indexCount"),
+                pl.col("elapsed_time").filter((pl.col("text")=="Here's the log book.")|(pl.col("fqid")=='logbook.page.bingo')).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"logbook_bingo_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="Here's the log book.")|(pl.col("fqid")=='logbook.page.bingo')).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"logbook_bingo_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter((pl.col("fqid")=="businesscards")|(pl.col("fqid")=='businesscards.card_bingo.bingo')).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"businesscard_bingo_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("fqid")=="businesscards")|(pl.col("fqid")=='businesscards.card_bingo.bingo')).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"businesscard_bingo_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader'))|(pl.col("fqid")=="reader.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"reader_bingo_duration_{feature_suffix_extra}"),
+                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader'))|(pl.col("fqid")=="reader.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"reader_bingo_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals'))|(pl.col("fqid")=="journals.pic_2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"journals_bingo_duration_{feature_suffix_extra}"),
+                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals'))|(pl.col("fqid")=="journals.pic_2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"journals_bingo_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter((pl.col("text")=="Hmmm... not sure. Why don't you try the library?")|(pl.col("text")=="Oh, hello there!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"go_to_library_duration_{feature_suffix_extra}"), # Level 9 図書館への移動
+                pl.col("index").filter((pl.col("text")=="Hmmm... not sure. Why don't you try the library?")|(pl.col("text")=="Oh, hello there!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"go_to_library_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter((pl.col("text")=="You could ask the archivist. He knows everybody!")|(pl.col("text")=="Do you have any info on Theodora Youmans?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"go_to_archivist_duration_{feature_suffix_extra}"), # Level 11 文書館への移動
+                pl.col("index").filter((pl.col("text")=="You could ask the archivist. He knows everybody!")|(pl.col("text")=="Do you have any info on Theodora Youmans?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"go_to_archivist_indexCount_{feature_suffix_extra}"),
 
                 # Level 6: メガネ
                 pl.col("elapsed_time").filter(pl.col("text_fqid")=="tunic.historicalsociety.frontdesk.archivist.hello").max().alias("found_glasses_be_et"), 
@@ -299,8 +318,8 @@ def feature_engineer_pl(x, grp,
             tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
 
             columns = [
-              (pl.col('found_glasses_af_et') - pl.col('found_glasses_be_et')).alias('found_glasses_et'),
-              (pl.col('found_glasses_af_id') - pl.col('found_glasses_be_id')).alias('found_glasses_id')
+              (pl.col('found_glasses_af_et') - pl.col('found_glasses_be_et')).alias(f'found_glasses_et_{feature_suffix_extra}'),
+              (pl.col('found_glasses_af_id') - pl.col('found_glasses_be_id')).alias(f'found_glasses_id_{feature_suffix_extra}')
             ]
             tmp = tmp.with_columns(columns).drop('found_glasses_af_et', 'found_glasses_af_id', 'found_glasses_be_et', 'found_glasses_be_id')
 
@@ -308,24 +327,24 @@ def feature_engineer_pl(x, grp,
 
         if grp=='13-22':
             aggs = [
-                pl.col("elapsed_time").filter((pl.col("fqid")=="I'll go look at everyone's pictures!")|(pl.col("text")=="Those are the same glasses!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l15_glasses_bingo_duration"),
-                pl.col("index").filter((pl.col("text")=="I'll go look at everyone's pictures!")|(pl.col("text")=="Those are the same glasses!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l15_glasses_bingo_indexCount"),              
-                pl.col("elapsed_time").filter((pl.col("text")=="Yes! It's the key for Teddy's cage!")|(pl.col("text")=="Those are the same glasses!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l15_archivist_key_duration"),
-                pl.col("index").filter((pl.col("text")=="Yes! It's the key for Teddy's cage!")|(pl.col("text")=="Those are the same glasses!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l15_archivist_key_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("text")=="Your grampa is waiting for you in the collection room.")|(pl.col("text")=="The archivist had him locked up!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l17_grampa_wating_duration"),
-                pl.col("index").filter((pl.col("text")=="Your grampa is waiting for you in the collection room.")|(pl.col("text")=="The archivist had him locked up!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l17_grampa_wating_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("text")=="Go take a look!")|(pl.col("text")=="That hoofprint doesn't match the flag!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l18_hoofprint_bingo_duration"),
-                pl.col("index").filter((pl.col("text")=="Go take a look!")|(pl.col("text")=="That hoofprint doesn't match the flag!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l18_hoofprint_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("text")=="Hmm. You could try the Aldo Leopold Wildlife Center.")|(pl.col("text")=="Oh no! What happened to that crane?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l18_go_to_wildlife_duration"),
-                pl.col("index").filter((pl.col("text")=="Hmm. You could try the Aldo Leopold Wildlife Center.")|(pl.col("text")=="Oh no! What happened to that crane?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l18_go_to_wildlife_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("text")=="Hey, nice dog! What breed is he?")|(pl.col("text")=="Actually, I went to school with somebody who LOVES old flags.")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l19_go_to_flag_expert_duration"),
-                pl.col("index").filter((pl.col("text")=="Hey, nice dog! What breed is he?")|(pl.col("text")=="Actually, I went to school with somebody who LOVES old flags.")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l19_go_to_flag_expert_indexCount"),
-                pl.col("elapsed_time").filter((pl.col("text")=="It's an ecology flag!")|(pl.col("text")=="Hey, I've seen that symbol before! Check it out!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l19_ecologyflag_check_duration"),
-                pl.col("index").filter((pl.col("text")=="It's an ecology flag!")|(pl.col("text")=="Hey, I've seen that symbol before! Check it out!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l19_ecologyflag_check_indexCount"),
-                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader_flag'))|(pl.col("fqid")=="tunic.library.microfiche.reader_flag.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l20_reader_flag_duration"),
-                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader_flag'))|(pl.col("fqid")=="tunic.library.microfiche.reader_flag.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l20_reader_flag_indexCount"),
-                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals_flag'))|(pl.col("fqid")=="journals_flag.pic_0.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l21_journalsFlag_bingo_duration"),
-                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals_flag'))|(pl.col("fqid")=="journals_flag.pic_0.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias("l21_journalsFlag_bingo_indexCount"),
+                pl.col("elapsed_time").filter((pl.col("fqid")=="I'll go look at everyone's pictures!")|(pl.col("text")=="Those are the same glasses!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l15_glasses_bingo_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="I'll go look at everyone's pictures!")|(pl.col("text")=="Those are the same glasses!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l15_glasses_bingo_indexCount_{feature_suffix_extra}"),              
+                pl.col("elapsed_time").filter((pl.col("text")=="Yes! It's the key for Teddy's cage!")|(pl.col("text")=="Those are the same glasses!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l15_archivist_key_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="Yes! It's the key for Teddy's cage!")|(pl.col("text")=="Those are the same glasses!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l15_archivist_key_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter((pl.col("text")=="Your grampa is waiting for you in the collection room.")|(pl.col("text")=="The archivist had him locked up!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l17_grampa_wating_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="Your grampa is waiting for you in the collection room.")|(pl.col("text")=="The archivist had him locked up!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l17_grampa_wating_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter((pl.col("text")=="Go take a look!")|(pl.col("text")=="That hoofprint doesn't match the flag!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l18_hoofprint_bingo_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="Go take a look!")|(pl.col("text")=="That hoofprint doesn't match the flag!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l18_hoofprint_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter((pl.col("text")=="Hmm. You could try the Aldo Leopold Wildlife Center.")|(pl.col("text")=="Oh no! What happened to that crane?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l18_go_to_wildlife_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="Hmm. You could try the Aldo Leopold Wildlife Center.")|(pl.col("text")=="Oh no! What happened to that crane?")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l18_go_to_wildlife_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter((pl.col("text")=="Hey, nice dog! What breed is he?")|(pl.col("text")=="Actually, I went to school with somebody who LOVES old flags.")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l19_go_to_flag_expert_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="Hey, nice dog! What breed is he?")|(pl.col("text")=="Actually, I went to school with somebody who LOVES old flags.")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l19_go_to_flag_expert_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter((pl.col("text")=="It's an ecology flag!")|(pl.col("text")=="Hey, I've seen that symbol before! Check it out!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l19_ecologyflag_check_duration_{feature_suffix_extra}"),
+                pl.col("index").filter((pl.col("text")=="It's an ecology flag!")|(pl.col("text")=="Hey, I've seen that symbol before! Check it out!")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l19_ecologyflag_check_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader_flag'))|(pl.col("text_fqid")=="tunic.library.microfiche.reader_flag.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l20_reader_flag_duration_{feature_suffix_extra}"),
+                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='reader_flag'))|(pl.col("text_fqid")=="tunic.library.microfiche.reader_flag.paper2.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l20_reader_flag_indexCount_{feature_suffix_extra}"),
+                pl.col("elapsed_time").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals_flag'))|(pl.col("fqid")=="journals_flag.pic_0.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l21_journalsFlag_bingo_duration_{feature_suffix_extra}"),
+                pl.col("index").filter(((pl.col("event_name")=='navigate_click')&(pl.col("fqid")=='journals_flag'))|(pl.col("fqid")=="journals_flag.pic_0.bingo")).apply(lambda s: s.max()-s.min() if s.len()>0 else 0).alias(f"l21_journalsFlag_bingo_indexCount_{feature_suffix_extra}"),
             ]
             tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
             df = df.join(tmp, on="session_id", how='left')
@@ -339,12 +358,14 @@ def feature_engineer_pl(x, grp,
             low = int(session_cnt * thre) 
             
             flr_list = x.select('fqid', 'level', 'room_fqid', 'session_id').groupby('fqid', 'level', 'room_fqid').n_unique().filter(pl.col('session_id')>=low).drop('session_id')
+            flr_list = flr_list.with_columns(flr_list['fqid'].cast(pl.Utf8))
             single_fqid = flr_list.groupby('fqid').count().rename({'count': 'fqid_count'}).filter(pl.col('fqid_count')==1).get_column('fqid').to_list()
             flr_list = flr_list.filter(~pl.col('fqid').is_in(single_fqid))
             flr_cs = flr_list.get_columns()
             
             tl_list = x.select('text_fqid', 'level', 'session_id').groupby('text_fqid', 'level').n_unique().filter(pl.col('session_id')>=low).drop('session_id')
-            single_text = tl_list.groupby('text_fqid').count().rename({'count': 'text_count'}).filter(pl.col('text_count')==1).get_column('text_fqid').to_list()
+            tl_list = tl_list.with_columns(tl_list['text_fqid'].cast(pl.Utf8))
+            single_text = tl_list.groupby('text_fqid').count().rename({'count': 'text_count'}).filter(pl.col('text_count')==1).get_column('text_fqid').cast(pl.Utf8).to_list()
             tl_list = tl_list.filter(~pl.col('text_fqid').is_in(single_text))
             tl_cs = tl_list.get_columns()
         
@@ -379,7 +400,42 @@ def feature_engineer_pl(x, grp,
         tmp2 = click_list.filter(pl.col('count')>=5).groupby('session_id').count().select('session_id', pl.col('count').alias(f'click_same_over5_count_{feature_suffix}'))
         tmp = tmp.join(tmp2, on='session_id', how='left')
         df = df.join(tmp, on='session_id', how='left')
-    
+
+
+    if version>=3:
+
+        # 集計統計量の追加
+        aggs = [
+
+            pl.col("elapsed_time_over10000").sum().alias(f"elapsed_time_over10000_{feature_suffix}"),
+            pl.col("elapsed_time_over20000").sum().alias(f"elapsed_time_over20000_{feature_suffix}"),
+            pl.col("elapsed_time_over50000").sum().alias(f"elapsed_time_over50000_{feature_suffix}"),
+            pl.col("elapsed_time_over100000").sum().alias(f"elapsed_time_over100000_{feature_suffix}"),
+            pl.col("elapsed_time_over200000").sum().alias(f"elapsed_time_over200000_{feature_suffix}"),
+            pl.col("elapsed_time_over500000").sum().alias(f"elapsed_time_over500000_{feature_suffix}")
+        ]
+        
+        tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
+        df = df.join(tmp, on="session_id", how='left')
+
+    if version>=4:
+
+        # 集計統計量の追加
+        aggs = [
+            
+            *[pl.col("elapsed_time_diff").filter(pl.col("text_fqid")==c).quantile(0.2, "nearest").alias(f"{c}_text_ET_quantile2_{feature_suffix}") for c in text_lists],
+            *[pl.col("elapsed_time_diff").filter(pl.col("text_fqid")==c).quantile(0.7, "nearest").alias(f"{c}_text_ET_quantile7_{feature_suffix}") for c in text_lists],
+            *[pl.col("elapsed_time_diff").filter(pl.col("text_fqid")==c).quantile(0.9, "nearest").alias(f"{c}_text_ET_quantile9_{feature_suffix}") for c in text_lists],
+            
+            *[pl.col("elapsed_time_diff").filter(pl.col("room_fqid") == c).quantile(0.2, "nearest").alias(f"{c}_room_ET_quantile2_{feature_suffix}") for c in room_lists],
+            *[pl.col("elapsed_time_diff").filter(pl.col("room_fqid") == c).quantile(0.7, "nearest").alias(f"{c}_room_ET_quantile7_{feature_suffix}") for c in room_lists],
+            *[pl.col("elapsed_time_diff").filter(pl.col("room_fqid") == c).quantile(0.9, "nearest").alias(f"{c}_room_ET_quantile9_{feature_suffix}") for c in room_lists],
+        ]
+        
+        tmp = x.groupby(["session_id"], maintain_order=True).agg(aggs).sort("session_id")
+        df = df.join(tmp, on="session_id", how='left')
+
+
     if level_diff:
         df = df.join(df_level_diff_summary, on='session_id', how='left')
     if cut_above and grp != '13-22':
@@ -417,7 +473,7 @@ def feature_engineer_pl(x, grp,
     return df
 
 
-def add_random_feature(df, n=10):
+def add_random_feature(df, n=30):
     
     height = df.shape[0]
     data = np.random.randint(1, 1000, size=(height, n))
@@ -431,6 +487,21 @@ def add_random_feature(df, n=10):
 
 def add_columns_session(df, id=6):
 
+    if not id:
+        return df
+    
+    # yearを使わない
+    if id == 8:
+        time_columns = [
+            pl.col('session_id').apply(lambda x: int(str(x)[2:4])+1).alias('month'),
+            pl.col('session_id').apply(lambda x: int(str(x)[4:6])).alias('day'),
+            pl.col('session_id').apply(lambda x: int(str(x)[6:8])).alias('hour'),
+            pl.col('session_id').apply(lambda x: int(str(x)[8:10])).alias('minute'),
+            pl.col('session_id').apply(lambda x: int(str(x)[10:12])).alias('second')
+        ]
+        df = df.with_columns(*time_columns)
+        return df
+    
     time_columns = [
         pl.col('session_id').apply(lambda x: int(str(x)[:2])).alias('year'),
         pl.col('session_id').apply(lambda x: int(str(x)[2:4])+1).alias('month'),

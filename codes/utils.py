@@ -31,12 +31,12 @@ def get_commit_hash(repo_path='/kaggle/working/kaggle_studentperformance/'):
 
 class Logger:
 
-    def __init__(self, log_path='/kaggle/working'):
+    def __init__(self, log_path='/kaggle/working/'):
         self.general_logger = logging.getLogger('general')
         self.result_logger = logging.getLogger('result')
         stream_handler = logging.StreamHandler()
-        file_general_handler = logging.FileHandler(f'{log_path}/general.log')
-        file_result_handler = logging.FileHandler(f'{log_path}/result.log')
+        file_general_handler = logging.FileHandler(f'{log_path}general.log')
+        file_result_handler = logging.FileHandler(f'{log_path}result.log')
         if len(self.general_logger.handlers) == 0:
             self.general_logger.addHandler(stream_handler)
             self.general_logger.addHandler(file_general_handler)
